@@ -197,7 +197,9 @@ interface DoctorDocument {
 }
 ```
 
-### 3. `/appointments/{appointmentId}`
+### 3. `/appointments/{appointmentId}` (Single-Read Self-Contained Snapshot)
+> **Zero N+1 Guarantee**: Every appointment contains all display fields (Doctor details, Clinic, Patient name, Fees) directly in the document. Fetching 1 appointment ticket = **exactly 1 read**, with ZERO secondary doctor or clinic lookups!
+
 ```typescript
 interface AppointmentDocument {
   id: string;                         // "apt-1730000000"
@@ -223,7 +225,7 @@ interface AppointmentDocument {
 }
 ```
 
-### 4. `/prescriptions/{prescriptionId}`
+### 4. `/prescriptions/{prescriptionId}` (Single-Read Self-Contained Record)
 ```typescript
 interface PrescriptionDocument {
   id: string;                         // "presc-1730000000"
@@ -239,6 +241,133 @@ interface PrescriptionDocument {
   uploadedAt: FirebaseFirestore.Timestamp;
 }
 ```
+
+### 5. Smart Single-Write Architecture & Server-Side Aggregations (`count` & `sum`)
+
+> **Why This Is Smarter**:
+> 1. **Exactly 1 Write per Booking**: Every booking writes **ONLY 1 document** (`/appointments/{aptId}`). Zero document lock contention, zero counter hotspots during peak hours, and < 15ms write speed!
+> 2. **Server-Side Aggregation (`count()` & `sum()`)**: Google Firestore's server engine aggregates matches directly on the cloud index.
+> 3. **Google Billing Rule**: Google charges **1 read for every 1,000 index items matched**. A query scanning 1,000 bookings costs **EXACTLY 1 READ** ($0.00000038)! Even scanning 1 Lakh bookings costs only 100 reads!
+
+---
+
+#### A. How Admin & Doctor Fetch Sales & Booking Numbers (1 Read Each)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Admin
+    participant UI as Admin / Doctor Dashboard
+    participant FS as Cloud Firestore Engine
+
+    Note over UI,FS: Patient booked -> ONLY 1 document written to /appointments!
+
+    Admin->>UI: Opens Dashboard
+    UI->>FS: getAggregateFromServer(where('bookingDate', '==', today), { count(), sum('fee') })
+    FS-->>UI: Returns { totalBookings: 45, totalSales: ₹22,500 } (COST: 1 READ!)
+    UI->>Admin: Displays live KPIs instantly
+
+    alt Admin views specific doctor's numbers (e.g. Dr. Ananya)
+        UI->>FS: getAggregateFromServer(where('bookingDate', '==', today), where('doctorId', '==', 'doc-1'), { count(), sum('fee') })
+        FS-->>UI: Returns { doctorBookings: 18, doctorSales: ₹9,000 } (COST: 1 READ!)
+    else Admin views booking tickets
+        UI->>FS: Paginated query: where('bookingDate', '==', today), limit(25)
+        FS-->>UI: Returns 25 appointment cards
+    end
+```
+
+---
+
+#### B. Implementation Code Patterns
+
+##### 1. Clean 1-Write Booking Function:
+```typescript
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+
+export async function bookAppointment(db: Firestore, bookingData: AppointmentInput): Promise<string> {
+  const today = new Date().toISOString().split("T")[0]; // "YYYY-MM-DD"
+  
+  // Exactly 1 write: self-contained snapshot with fee & bookingDate
+  const docRef = await addDoc(collection(db, "appointments"), {
+    ...bookingData,
+    bookingDate: today,
+    createdAt: serverTimestamp(),
+  });
+
+  return docRef.id;
+}
+```
+
+##### 2. Admin: Get Today's Overall Bookings & Total Sales (1 Read):
+```typescript
+import { query, collection, where, getAggregateFromServer, count, sum } from "firebase/firestore";
+
+export async function getTodayOverallSales(db: Firestore, todayDate: string) {
+  const q = query(
+    collection(db, "appointments"),
+    where("bookingDate", "==", todayDate)
+  );
+
+  const snapshot = await getAggregateFromServer(q, {
+    totalPatients: count(),
+    totalRevenue: sum("consultationFee"),
+  });
+
+  return {
+    totalPatients: snapshot.data().totalPatients, // e.g. 45
+    totalRevenue: snapshot.data().totalRevenue,   // e.g. 22500
+  };
+}
+```
+
+##### 3. Doctor & Admin: Get Specific Doctor's Patients & Sales Today (1 Read):
+```typescript
+export async function getDoctorDailySales(db: Firestore, doctorId: string, todayDate: string) {
+  const q = query(
+    collection(db, "appointments"),
+    where("bookingDate", "==", todayDate),
+    where("doctorId", "==", doctorId)
+  );
+
+  const snapshot = await getAggregateFromServer(q, {
+    doctorPatients: count(),
+    doctorRevenue: sum("consultationFee"),
+  });
+
+  return {
+    doctorPatients: snapshot.data().doctorPatients, // e.g. 18
+    doctorRevenue: snapshot.data().doctorRevenue,   // e.g. 9000
+  };
+}
+```
+
+##### 4. Admin: View Booking Tickets (Paginated & Filtered):
+```typescript
+// Query for all bookings today (paginated)
+const qAll = query(
+  collection(db, "appointments"),
+  where("bookingDate", "==", todayDate),
+  orderBy("createdAt", "desc"),
+  limit(25)
+);
+
+// Query filtered by doctor (executed on server composite index)
+const qByDoc = query(
+  collection(db, "appointments"),
+  where("bookingDate", "==", todayDate),
+  where("doctorId", "==", selectedDoctorId),
+  orderBy("createdAt", "desc"),
+  limit(25)
+);
+```
+
+---
+
+#### C. Optional Future Scale: Cloud Function Rollup (for 50+ Doctors in 1 Read)
+When your clinic network grows past 50 doctors and Admin wants a table of all 50 doctors' numbers in a single document:
+- A Google Cloud Function `onDocumentCreated("appointments/{id}")` runs in the background (Google gives **2 Million free invocations/month**).
+- It rolls up daily doctor counts into `/analytics_daily/{today}`.
+- Booking on the client remains **strictly 1 write**!
 
 ---
 
@@ -314,7 +443,9 @@ service cloud.firestore {
 | Collection | Fields | Query Purpose |
 | :--- | :--- | :--- |
 | `appointments` | `patientUid` ASC + `createdAt` DESC | Patient's recent bookings list |
-| `appointments` | `doctorId` ASC + `followupDate` ASC + `status` ASC | Doctor's daily triage queue |
+| `appointments` | `bookingDate` ASC + `createdAt` DESC | **Admin: All bookings made today** |
+| `appointments` | `bookingDate` ASC + `doctorId` ASC + `createdAt` DESC | **Admin: Today's bookings filtered by doctor** |
+| `appointments` | `doctorId` ASC + `followupDate` ASC + `status` ASC | Doctor's daily consultation queue |
 | `appointments` | `clinicName` ASC + `status` ASC + `createdAt` DESC | Admin ground desk queue |
 | `prescriptions` | `patientUid` ASC + `uploadedAt` DESC | Patient's prescription timeline |
 | `doctors` | `isActive` ASC + `rating` DESC | Home page doctor display |
@@ -326,7 +457,7 @@ service cloud.firestore {
 | Service | Daily Usage | Free Tier Allowance | Monthly Cost |
 | :--- | :--- | :--- | :--- |
 | **Firestore Reads** | ~35,000 – 45,000 / day | 50,000 / day | **$0.00** (Free Tier) |
-| **Firestore Writes** | ~2,500 – 4,000 / day | 20,000 / day | **$0.00** (Free Tier) |
+| **Firestore Writes** | ~1,500 – 2,000 / day (1 write per booking) | 20,000 / day | **$0.00** (Free Tier) |
 | **Cloudinary Media** | 250 slips/day × 150 KB = **37.5 MB/day** (~1.1 GB/mo) | 25 GB free storage & bandwidth / month | **$0.00** (Well within Cloudinary Free Plan) |
 | **SMS OTP** | ~1,500 OTPs / day | Indian DLT gateway (₹0.15/SMS) | **₹200 – ₹250 / day** (Dev testing = ₹0) |
 
