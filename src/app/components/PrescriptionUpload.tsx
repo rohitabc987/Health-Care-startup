@@ -28,7 +28,7 @@ export function PrescriptionUpload({ patientUid, onUploadSuccess }: Prescription
   const [doctorName, setDoctorName] = useState(INITIAL_DOCTORS[0].name);
   const [clinicName, setClinicName] = useState(INITIAL_DOCTORS[0].clinic);
   const [visitDate, setVisitDate] = useState("2026-10-25");
-  const [chiefComplaint, setChiefComplaint] = useState("Routine 7-day follow-up slip");
+  const [chiefComplaint, setChiefComplaint] = useState("Doctor consultation & prescription record");
   const [uploadSuccess, setUploadSuccess] = useState(false);
 
   useEffect(() => {
@@ -100,7 +100,7 @@ export function PrescriptionUpload({ patientUid, onUploadSuccess }: Prescription
           </div>
           <div>
             <h3 className="text-sm font-bold text-gray-900 leading-tight">
-              Snapshot Paper Prescription
+              Upload Prescription / Medical Slip
             </h3>
             <p className="text-[11px] text-gray-400">Ground Team & Patient Quick Upload</p>
           </div>
@@ -137,7 +137,7 @@ export function PrescriptionUpload({ patientUid, onUploadSuccess }: Prescription
               Take a photo or choose from files
             </h4>
             <p className="text-[11px] text-gray-500 mt-1 max-w-xs mx-auto">
-              Our ground team photographs the doctor&apos;s physical slip right outside the clinic.
+              Upload your prescription slip, diagnostic report, or clinic slip so your doctor has your complete health records.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-2.5 justify-center mt-4">
@@ -222,13 +222,13 @@ export function PrescriptionUpload({ patientUid, onUploadSuccess }: Prescription
 
           <div>
             <label className="text-[11px] font-bold text-gray-700 block mb-1">
-              Follow-up Reason / Symptoms
+              Consultation Reason / Diagnosis / Symptoms
             </label>
             <input
               type="text"
               value={chiefComplaint}
               onChange={(e) => setChiefComplaint(e.target.value)}
-              placeholder="e.g. Check wound healing, antibiotics day 7"
+              placeholder="e.g. Online consultation, fever & cough, antibiotics check"
               className="w-full px-3 py-2 rounded-xl border border-gray-300 bg-white font-medium text-gray-800 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
             />
           </div>
@@ -256,12 +256,12 @@ export function PrescriptionUpload({ patientUid, onUploadSuccess }: Prescription
               ) : uploadSuccess ? (
                 <span className="flex items-center gap-1.5 text-white">
                   <CheckCircle2 className="w-4 h-4" />
-                  Prescription Saved!
+                  Record Saved!
                 </span>
               ) : (
                 <>
                   <Upload className="w-4 h-4" />
-                  Save to Patient Vault
+                  Save to Health Vault
                 </>
               )}
             </button>

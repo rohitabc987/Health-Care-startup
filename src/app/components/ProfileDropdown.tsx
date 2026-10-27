@@ -108,10 +108,10 @@ export function ProfileDropdown({ isOpen, onClose, currentLocation = "Viram Khan
           <div className="mt-3 pt-2.5 border-t border-emerald-100/80 flex items-center justify-between text-[11px]">
             <span className="text-gray-500 flex items-center gap-1">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Ground Onboarded:</span>
+              <span>Doctor-Patient Portal:</span>
             </span>
             <span className="font-semibold text-emerald-800 bg-white px-2 py-0.5 rounded-full border border-emerald-200">
-              Zero Queue Active
+              Active & Verified
             </span>
           </div>
         </div>
@@ -130,7 +130,7 @@ export function ProfileDropdown({ isOpen, onClose, currentLocation = "Viram Khan
               </div>
               <div className="text-left">
                 <p className="font-bold text-gray-900 group-hover:text-emerald-900">Patient Profile</p>
-                <p className="text-[11px] text-gray-400">Health ID, demographics & account</p>
+                <p className="text-[11px] text-gray-400">Health ID, medical records & account</p>
               </div>
             </div>
             <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
@@ -147,8 +147,8 @@ export function ProfileDropdown({ isOpen, onClose, currentLocation = "Viram Khan
                 <CalendarCheck className="w-4 h-4" />
               </div>
               <div className="text-left">
-                <p className="font-bold text-gray-900 group-hover:text-emerald-900">My Bookings</p>
-                <p className="text-[11px] text-gray-400">Track active follow-up triage</p>
+                <p className="font-bold text-gray-900 group-hover:text-emerald-900">My Appointments</p>
+                <p className="text-[11px] text-gray-400">Track online consults & clinic bookings</p>
               </div>
             </div>
             {activeBookingsCount > 0 ? (
@@ -171,8 +171,8 @@ export function ProfileDropdown({ isOpen, onClose, currentLocation = "Viram Khan
                 <FileText className="w-4 h-4" />
               </div>
               <div className="text-left">
-                <p className="font-bold text-gray-900 group-hover:text-emerald-900">Prescription Vault</p>
-                <p className="text-[11px] text-gray-400">View & snapshot paper slips</p>
+                <p className="font-bold text-gray-900 group-hover:text-emerald-900">Medical Records Vault</p>
+                <p className="text-[11px] text-gray-400">View & upload medical history</p>
               </div>
             </div>
             <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
@@ -189,8 +189,8 @@ export function ProfileDropdown({ isOpen, onClose, currentLocation = "Viram Khan
                 <Stethoscope className="w-4 h-4" />
               </div>
               <div className="text-left">
-                <p className="font-bold text-gray-900 group-hover:text-emerald-900">Partnered Doctors</p>
-                <p className="text-[11px] text-gray-400">Directory & schedule follow-ups</p>
+                <p className="font-bold text-gray-900 group-hover:text-emerald-900">Verified Doctors</p>
+                <p className="text-[11px] text-gray-400">Directory & book appointments</p>
               </div>
             </div>
             <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
@@ -211,8 +211,8 @@ export function ProfileDropdown({ isOpen, onClose, currentLocation = "Viram Khan
                   <PhoneCall className="w-4 h-4" />
                 </div>
                 <div className="text-left">
-                  <p className="font-bold text-gray-900">Booking Support</p>
-                  <p className="text-[11px] text-gray-400">Call triage operations (1800-PRONTO)</p>
+                  <p className="font-bold text-gray-900">Healthcare Support</p>
+                  <p className="text-[11px] text-gray-400">Call helpline (1800-PRONTO)</p>
                 </div>
               </div>
               <span className="text-[10px] bg-indigo-100 text-indigo-800 font-bold px-2 py-0.5 rounded-full">

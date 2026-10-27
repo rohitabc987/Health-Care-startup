@@ -58,7 +58,7 @@ export function DoctorCard({ doctor, onBookingSuccess }: DoctorCardProps) {
           <button
             type="button"
             onClick={() => setIsModalOpen(true)}
-            aria-label={`Book follow-up with ${doctor.name}`}
+            aria-label={`Book appointment with ${doctor.name}`}
             className="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-white text-emerald-600 border border-emerald-500/30 shadow-md flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-all active:scale-90"
           >
             <Plus className="w-5 h-5 stroke-[2.5]" />
@@ -89,18 +89,18 @@ export function DoctorCard({ doctor, onBookingSuccess }: DoctorCardProps) {
               <span className="text-sm font-black text-gray-900">₹{doctor.consultationFee}</span>
               <span className="text-[11px] line-through text-gray-400">₹{doctor.regularFee}</span>
               <span className="text-[10px] text-emerald-800 font-semibold bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-100">
-                Follow-up Fee
+                Consultation Fee
               </span>
             </div>
           </div>
 
-          {/* Primary High-Contrast "Book Follow-up" Button */}
+          {/* Primary High-Contrast "Book Appointment" Button */}
           <button
             type="button"
             onClick={() => setIsModalOpen(true)}
             className="mt-2.5 w-full py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white text-xs font-semibold rounded-xl shadow-xs transition-all flex items-center justify-center gap-1.5"
           >
-            <span>Book Follow-up</span>
+            <span>Book Appointment</span>
           </button>
         </div>
       </div>

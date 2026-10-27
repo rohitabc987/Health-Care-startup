@@ -93,7 +93,7 @@ export function BookingCard({ appointment, onStatusChange }: BookingCardProps) {
           </p>
           {appointment.consultationFee && (
             <span className="inline-block mt-1 text-[10px] font-bold text-gray-700 bg-gray-100 px-1.5 py-0.2 rounded">
-              Follow-up Fee: ₹{appointment.consultationFee}
+              Consultation Fee: ₹{appointment.consultationFee}
             </span>
           )}
         </div>
@@ -109,7 +109,7 @@ export function BookingCard({ appointment, onStatusChange }: BookingCardProps) {
             <Calendar className="w-4 h-4" />
           </div>
           <div>
-            <p className="text-[10px] text-gray-400 font-medium">Follow-up Date</p>
+            <p className="text-[10px] text-gray-400 font-medium">Appointment Date</p>
             <p className="font-bold text-gray-800">{appointment.followupDate}</p>
           </div>
         </div>
@@ -119,7 +119,7 @@ export function BookingCard({ appointment, onStatusChange }: BookingCardProps) {
             <Clock className="w-4 h-4" />
           </div>
           <div className="min-w-0">
-            <p className="text-[10px] text-gray-400 font-medium">Triage Window</p>
+            <p className="text-[10px] text-gray-400 font-medium">Consultation Window</p>
             <p className="font-bold text-gray-800 truncate">{appointment.timeWindow}</p>
           </div>
         </div>
@@ -149,8 +149,8 @@ export function BookingCard({ appointment, onStatusChange }: BookingCardProps) {
         <div className="bg-emerald-50/70 border border-emerald-100 p-3 rounded-xl flex items-start gap-2.5">
           <PhoneCall className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
           <div className="text-[11px] text-emerald-950 leading-relaxed">
-            <span className="font-bold">What happens next:</span> Our internal medical GP will call you during your selected window on{" "}
-            <span className="font-semibold">{appointment.followupDate}</span>. Have your physical prescription handy!
+            <span className="font-bold">What happens next:</span> Your doctor will review your medical records and consult with you during your selected window on{" "}
+            <span className="font-semibold">{appointment.followupDate}</span>. Have your records handy!
           </div>
         </div>
       )}
@@ -158,7 +158,7 @@ export function BookingCard({ appointment, onStatusChange }: BookingCardProps) {
       {/* Doctor Notes / Reason */}
       {appointment.notes && (
         <p className="text-[11px] text-gray-500 italic px-1">
-          Patient Notes: &quot;{appointment.notes}&quot;
+          Consultation Notes / Reason: &quot;{appointment.notes}&quot;
         </p>
       )}
 
@@ -169,7 +169,7 @@ export function BookingCard({ appointment, onStatusChange }: BookingCardProps) {
           onClick={() => setShowDetails(!showDetails)}
           className="text-xs text-gray-500 hover:text-gray-900 font-medium flex items-center gap-1 transition-colors"
         >
-          <span>{showDetails ? "Hide Ops Tools" : "Triage Simulation Tools"}</span>
+          <span>{showDetails ? "Hide Doctor Tools" : "Doctor Consultation & Ops Tools"}</span>
           <ChevronRight className={`w-3.5 h-3.5 transition-transform ${showDetails ? "rotate-90" : ""}`} />
         </button>
 
@@ -184,7 +184,7 @@ export function BookingCard({ appointment, onStatusChange }: BookingCardProps) {
                   className="flex-1 py-2 px-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition-all"
                 >
                   <Zap className="w-3.5 h-3.5" />
-                  <span>Simulate: Escalate to Physical</span>
+                  <span>Doctor: Escalate to Clinic</span>
                 </button>
                 <button
                   type="button"
@@ -193,7 +193,7 @@ export function BookingCard({ appointment, onStatusChange }: BookingCardProps) {
                   className="flex-1 py-2 px-3 bg-emerald-700 hover:bg-emerald-800 text-white font-medium text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition-all"
                 >
                   <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>Simulate: Resolve Online</span>
+                  <span>Doctor: Complete Online Consult</span>
                 </button>
               </>
             )}
@@ -212,7 +212,7 @@ export function BookingCard({ appointment, onStatusChange }: BookingCardProps) {
 
             {appointment.status === "Screening Complete" && (
               <p className="text-[11px] text-gray-400 py-1">
-                ✓ Follow-up triage concluded successfully. No physical exam was needed.
+                ✓ Consultation & care concluded successfully. Prescription & records updated.
               </p>
             )}
           </div>

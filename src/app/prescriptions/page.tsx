@@ -73,13 +73,13 @@ export default function PrescriptionsPage() {
       <div className="bg-white p-4 sm:p-6 rounded-3xl border border-gray-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-black text-gray-900">Prescription Vault</h1>
+            <h1 className="text-xl sm:text-2xl font-black text-gray-900">Medical Records & Prescriptions</h1>
             <span className="text-xs font-bold bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full">
               Encrypted Vault
             </span>
           </div>
           <p className="text-xs sm:text-sm text-gray-500 mt-1">
-            Physical paper prescriptions snapshot by ground team or uploaded from phone.
+            Complete patient medical history: paper prescriptions, diagnostic notes, and lab reports accessible by doctor & patient.
           </p>
         </div>
 
@@ -103,10 +103,10 @@ export default function PrescriptionsPage() {
           <div className="p-4 bg-emerald-50/70 border border-emerald-200/80 rounded-3xl text-xs space-y-1.5 text-emerald-950">
             <div className="flex items-center gap-2 font-bold text-emerald-900">
               <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              <span>Ground Team Onboarding Support</span>
+              <span>Unified Doctor-Patient Health Records</span>
             </div>
             <p className="text-[11px] leading-relaxed text-emerald-800">
-              Prescription slips are analyzed by our general physicians before your scheduled follow-up window. Your physical paper remains safely with you.
+              All medical records and prescription slips are securely archived so your doctor has your complete history during online consultations and follow-up care.
             </p>
           </div>
         </div>
@@ -116,7 +116,7 @@ export default function PrescriptionsPage() {
           <div className="flex items-center justify-between px-1">
             <h2 className="text-xs sm:text-sm font-black uppercase tracking-wider text-gray-800 flex items-center gap-2">
               <FileText className="w-4 h-4 text-emerald-600" />
-              Prescription History ({prescriptions.length})
+              Prescription & Medical History ({prescriptions.length})
             </h2>
             <span className="text-xs text-gray-400">Chronological Feed</span>
           </div>
@@ -159,7 +159,7 @@ export default function PrescriptionsPage() {
                     </h3>
                     <p className="text-xs text-gray-500 truncate">{p.clinicName}</p>
                     <p className="text-xs text-gray-500 italic line-clamp-2 pt-0.5">
-                      &quot;{p.chiefComplaint || "Routine follow-up"}&quot;
+                      &quot;{p.chiefComplaint || "General consultation"}&quot;
                     </p>
                   </div>
                 </div>
@@ -179,7 +179,7 @@ export default function PrescriptionsPage() {
                     href="/"
                     className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-3 py-1.5 rounded-xl shadow-xs transition-all flex items-center gap-1"
                   >
-                    <span>Book Follow-up</span>
+                    <span>Book Consultation</span>
                     <ArrowRight className="w-3 h-3" />
                   </Link>
                 </div>

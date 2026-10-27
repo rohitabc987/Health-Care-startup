@@ -35,7 +35,7 @@ export function DesktopHeader() {
                 </span>
               </div>
               <p className="text-[11px] text-gray-400 font-medium leading-none">
-                Zero-Queue Clinic Follow-ups
+                Doctor & Patient Healthcare Platform
               </p>
             </div>
           </Link>

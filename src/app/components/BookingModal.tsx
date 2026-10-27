@@ -102,8 +102,8 @@ export function BookingModal({ doctor, isOpen, onClose, onSuccess }: BookingModa
               Rx
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900 text-base leading-tight">Schedule Follow-up</h3>
-              <p className="text-xs text-emerald-700 font-medium">{doctor.clinic}</p>
+              <h3 className="font-semibold text-gray-900 text-base leading-tight">Book Doctor Appointment</h3>
+              <p className="text-xs text-emerald-700 font-medium">Online Consultation & Clinic Care • {doctor.clinic}</p>
             </div>
           </div>
           <button
@@ -145,7 +145,7 @@ export function BookingModal({ doctor, isOpen, onClose, onSuccess }: BookingModa
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
                   <Calendar className="w-3.5 h-3.5 text-emerald-600" />
-                  Select Target Follow-up Date
+                  Select Appointment / Follow-up Date
                 </label>
                 <span className="text-[11px] text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full">
                   Step 1 of 2
@@ -181,7 +181,7 @@ export function BookingModal({ doctor, isOpen, onClose, onSuccess }: BookingModa
               <div className="pt-2">
                 <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5 mb-2.5">
                   <Clock className="w-3.5 h-3.5 text-emerald-600" />
-                  Choose Digital Triage Window
+                  Choose Consultation Window
                 </label>
                 <div className="space-y-2">
                   {timeWindows.map((tw) => (
@@ -225,7 +225,7 @@ export function BookingModal({ doctor, isOpen, onClose, onSuccess }: BookingModa
               <div className="p-3 bg-amber-50 rounded-2xl border border-amber-200/80 flex items-start gap-2.5">
                 <Sparkles className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                 <p className="text-[11px] text-amber-900 leading-snug">
-                  <span className="font-bold">Zero physical queue:</span> Our internal GP consults you online first. If healing well, your follow-up is completed without traveling. If physical care is required, you are fast-tracked into the clinic immediately!
+                  <span className="font-bold">Seamless Doctor-Patient Care:</span> Consult your doctor online or visit the clinic with zero queue wait. All your medical history and prescriptions are accessible to the doctor during consultation!
                 </p>
               </div>
 
@@ -262,7 +262,7 @@ export function BookingModal({ doctor, isOpen, onClose, onSuccess }: BookingModa
                   <span className="font-bold text-gray-900">{selectedTimeWindow}</span>
                 </div>
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-gray-500">Follow-up Doctor:</span>
+                  <span className="text-gray-500">Consulting Doctor:</span>
                   <span className="font-bold text-gray-900">{doctor.name}</span>
                 </div>
                 <div className="flex justify-between items-center text-xs">
@@ -272,7 +272,7 @@ export function BookingModal({ doctor, isOpen, onClose, onSuccess }: BookingModa
                 <div className="pt-2 border-t border-slate-200 flex justify-between items-center text-xs">
                   <div>
                     <span className="text-gray-500 block">Consultation Fee:</span>
-                    <span className="text-[10px] text-gray-400">Doctor follow-up consultation rate</span>
+                    <span className="text-[10px] text-gray-400">Doctor consultation rate</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span className="line-through text-gray-400">₹{doctor.regularFee}</span>
@@ -285,13 +285,13 @@ export function BookingModal({ doctor, isOpen, onClose, onSuccess }: BookingModa
 
               <div>
                 <label className="text-xs font-bold text-gray-700 block mb-1">
-                  Reason / Chief Complaint (Optional)
+                  Reason / Symptoms / Chief Complaint (Optional)
                 </label>
                 <input
                   type="text"
                   value={patientNotes}
                   onChange={(e) => setPatientNotes(e.target.value)}
-                  placeholder="e.g. Fever gone, check blood test results"
+                  placeholder="e.g. Online consultation for fever & cough, blood test review, or follow-up"
                   className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
                 />
               </div>
@@ -334,15 +334,15 @@ export function BookingModal({ doctor, isOpen, onClose, onSuccess }: BookingModa
               </div>
 
               <div>
-                <h4 className="text-lg font-bold text-gray-900">Follow-up Confirmed!</h4>
+                <h4 className="text-lg font-bold text-gray-900">Appointment Confirmed!</h4>
                 <p className="text-xs text-gray-500 mt-1 max-w-xs mx-auto">
-                  Your appointment with <span className="font-semibold text-gray-800">{doctor.name}</span> has been logged directly into Firestore.
+                  Your appointment with <span className="font-semibold text-gray-800">{doctor.name}</span> has been confirmed. All your medical history and prescription records will be available for the doctor.
                 </p>
               </div>
 
               {bookingConfirmedId && (
                 <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-2xl max-w-xs mx-auto">
-                  <span className="text-[10px] text-emerald-800 uppercase tracking-widest font-bold">Fast-Track Pass ID</span>
+                  <span className="text-[10px] text-emerald-800 uppercase tracking-widest font-bold">Appointment Pass ID</span>
                   <p className="font-mono font-bold text-sm text-emerald-950 mt-0.5">{bookingConfirmedId}</p>
                 </div>
               )}
@@ -353,7 +353,7 @@ export function BookingModal({ doctor, isOpen, onClose, onSuccess }: BookingModa
                   What happens next?
                 </div>
                 <p className="text-[11px] leading-relaxed">
-                  Our internal medical GP team will review your uploaded prescription and call you during your selected window on <span className="font-semibold text-gray-800">{targetDateInfo.formatted}</span>.
+                  Your doctor will review your medical records and connect with you online during your selected window on <span className="font-semibold text-gray-800">{targetDateInfo.formatted}</span>. If an in-person clinic visit is needed, your slot is already fast-tracked.
                 </p>
               </div>
 

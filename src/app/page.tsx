@@ -76,40 +76,40 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Hero Value Proposition Banner (No wallet, no free terms, emphasizes qualification-based triage) */}
+      {/* Hero Value Proposition Banner */}
       <div className="relative overflow-hidden bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-800 text-white rounded-3xl p-5 md:p-8 shadow-xl shadow-emerald-950/10 border border-emerald-600/30">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
           <div className="md:col-span-8 space-y-3">
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider bg-white/20 text-white px-3 py-1 rounded-full backdrop-blur-md border border-white/20">
-                <Sparkles className="w-3.5 h-3.5 text-amber-300" /> Ground Onboarded
+                <Sparkles className="w-3.5 h-3.5 text-amber-300" /> Complete Doctor & Patient Platform
               </span>
               <span className="inline-flex items-center gap-1 text-xs font-semibold bg-emerald-500/30 text-emerald-100 px-3 py-1 rounded-full border border-emerald-400/30">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-300" /> Zero Doctor Tech Friction
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-300" /> Online Consultations & Clinic Care
               </span>
             </div>
 
             <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight leading-tight">
-              Skip Clinic Queues for Routine Follow-ups
+              Book Appointments, Consult Doctors Online & Access Complete Patient Records
             </h1>
 
             <p className="text-xs sm:text-sm text-emerald-100 max-w-2xl leading-relaxed">
-              Our ground team registers you right outside the clinic and archives your physical prescription. On your follow-up date, our internal GP triages your recovery. If an exam is required, we fast-track your physical slot with the clinic.
+              A comprehensive healthcare platform connecting patients and doctors: book in-clinic and online appointments, talk directly with verified specialists, maintain complete digital medical histories, and experience zero-queue smart follow-up care.
             </p>
 
-            {/* Quick Metrics (No Free terms) */}
+            {/* Quick Metrics */}
             <div className="pt-2 grid grid-cols-3 gap-2 sm:gap-4 max-w-lg">
               <div className="bg-white/10 backdrop-blur-xs p-2.5 rounded-2xl border border-white/15">
-                <p className="text-base sm:text-xl font-black text-white">0 Mins</p>
-                <p className="text-[10px] sm:text-xs text-emerald-200">Clinic Wait Time</p>
+                <p className="text-base sm:text-xl font-black text-white">Online & Clinic</p>
+                <p className="text-[10px] sm:text-xs text-emerald-200">Doctor Consultations</p>
               </div>
               <div className="bg-white/10 backdrop-blur-xs p-2.5 rounded-2xl border border-white/15">
-                <p className="text-base sm:text-xl font-black text-white">Fast-Track</p>
-                <p className="text-[10px] sm:text-xs text-emerald-200">Priority Pass</p>
+                <p className="text-base sm:text-xl font-black text-white">100% Digital</p>
+                <p className="text-[10px] sm:text-xs text-emerald-200">Patient Health Records</p>
               </div>
               <div className="bg-white/10 backdrop-blur-xs p-2.5 rounded-2xl border border-white/15">
-                <p className="text-base sm:text-xl font-black text-white">4.9 ★</p>
-                <p className="text-[10px] sm:text-xs text-emerald-200">Verified Specialists</p>
+                <p className="text-base sm:text-xl font-black text-white">Zero Queue</p>
+                <p className="text-[10px] sm:text-xs text-emerald-200">Smart Follow-up Care</p>
               </div>
             </div>
           </div>
@@ -120,16 +120,16 @@ export default function HomePage() {
               <FileText className="w-8 h-8 stroke-[2.2]" />
             </div>
             <div>
-              <h3 className="font-bold text-sm text-white">Have a Paper Prescription?</h3>
+              <h3 className="font-bold text-sm text-white">Patient Medical Records</h3>
               <p className="text-xs text-emerald-100 mt-1">
-                Upload your clinic slip to schedule your digital screening.
+                Upload prescriptions and access complete medical records for seamless consultations.
               </p>
             </div>
             <Link
               href="/prescriptions"
               className="w-full py-2.5 px-4 bg-white text-emerald-800 font-bold text-xs rounded-xl hover:bg-emerald-50 transition-all shadow-md text-center"
             >
-              Open Prescription Vault →
+              Open Medical Vault →
             </Link>
           </div>
         </div>
@@ -190,13 +190,13 @@ export default function HomePage() {
         <div className="flex items-center justify-between mb-3">
           <div>
             <h2 className="text-xs sm:text-sm font-black uppercase tracking-wider text-gray-800">
-              Partnered Doctors & Specialists ({filteredDoctors.length})
+              Verified Doctors & Specialists ({filteredDoctors.length})
             </h2>
-            <p className="text-[11px] text-gray-400">Consultation fees set directly by clinic doctor</p>
+            <p className="text-[11px] text-gray-400">Book in-clinic or online teleconsultations</p>
           </div>
           <span className="text-xs text-emerald-700 font-semibold flex items-center gap-1">
             <ShieldCheck className="w-3.5 h-3.5" />
-            Zero Wait Fast-Track
+            Online & Clinic Care
           </span>
         </div>
 

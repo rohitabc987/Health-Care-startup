@@ -5,15 +5,16 @@ import { BottomNav } from "./components/BottomNav";
 import { DesktopHeader } from "./components/DesktopHeader";
 
 export const metadata: Metadata = {
-  title: "Pronto Health | Hyperlocal Medical Triage & Queue-Bypass",
+  title: "Pronto Health | Complete Doctor & Patient Healthcare Platform",
   description:
-    "Zero-queue clinic follow-ups and paper prescription vault. Our internal GPs triage your recovery online, fast-tracking physical clinic visits only when necessary.",
+    "Unified healthcare software for doctors and patients: book appointments, consult doctors online, manage complete patient medical records, and experience zero-queue smart follow-up care.",
   keywords: [
-    "clinic follow-up",
-    "doctor triage",
-    "paper prescription upload",
-    "zero queue clinic",
-    "hyperlocal healthcare",
+    "doctor appointment booking",
+    "online doctor consultation",
+    "telehealth software",
+    "patient medical records",
+    "doctor practice software",
+    "smart clinic follow-up",
     "Pronto medical",
   ],
 };

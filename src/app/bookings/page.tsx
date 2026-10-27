@@ -78,13 +78,13 @@ export default function BookingsPage() {
       <div className="bg-white p-4 sm:p-6 rounded-3xl border border-gray-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-black text-gray-900">My Bookings & Triage</h1>
+            <h1 className="text-xl sm:text-2xl font-black text-gray-900">My Appointments & Consultations</h1>
             <span className="text-xs font-bold bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full">
               Live Feed
             </span>
           </div>
           <p className="text-xs sm:text-sm text-gray-500 mt-1">
-            Track your upcoming follow-up screenings and fast-tracked physical clinic passes.
+            Track your upcoming online consultations, doctor appointments, and clinic passes.
           </p>
         </div>
 
@@ -132,10 +132,10 @@ export default function BookingsPage() {
               className="w-44 h-44 sm:w-56 sm:h-56 object-contain rounded-2xl drop-shadow-sm mb-4"
             />
             <h3 className="text-base sm:text-lg font-bold text-gray-800">
-              No bookings found
+              No appointments found
             </h3>
             <p className="text-xs sm:text-sm text-gray-400 mt-1 max-w-sm">
-              You have no active follow-up triage appointments scheduled. Book a follow-up with any of our partnered clinic doctors.
+              You have no active appointments scheduled. Book an online consultation or clinic visit with any of our verified doctors.
             </p>
             <Link
               href="/"
@@ -154,9 +154,9 @@ export default function BookingsPage() {
       ) : (
         <div className="bg-white rounded-3xl border border-gray-200/80 p-12 text-center flex flex-col items-center justify-center">
           <CheckCircle className="w-12 h-12 text-gray-300 mb-2" />
-          <h3 className="text-sm font-bold text-gray-700">No past bookings yet</h3>
+          <h3 className="text-sm font-bold text-gray-700">No past appointments yet</h3>
           <p className="text-xs text-gray-400 mt-1">
-            Completed triage check-ups will be archived here for your health history.
+            Completed doctor consultations and health check-ups will be archived here in your medical record.
           </p>
         </div>
       )}

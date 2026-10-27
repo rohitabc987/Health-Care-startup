@@ -78,7 +78,7 @@ export default function ProfilePage() {
             </span>
           </div>
           <p className="text-xs sm:text-sm text-gray-500 mt-1">
-            Manage your personal profile and registered neighborhood clinic cluster.
+            Manage your personal profile, medical records, and preferred clinic network.
           </p>
         </div>
 
@@ -114,12 +114,12 @@ export default function ProfilePage() {
                 <span>Account Status:</span>
                 <span className="font-semibold text-emerald-700 flex items-center gap-1">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                  Clinic Ground Onboarded
+                  Verified Patient & Doctor Access
                 </span>
               </div>
               <div className="flex items-center justify-between text-gray-600">
-                <span>Zero-Queue Physical Bypass:</span>
-                <span className="font-semibold text-emerald-700">Eligible (Fast-Track Pass)</span>
+                <span>Smart Follow-up & Clinic Bypass:</span>
+                <span className="font-semibold text-emerald-700">Active (Zero-Queue Pass)</span>
               </div>
             </div>
           </div>
@@ -133,12 +133,12 @@ export default function ProfilePage() {
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <h3 className="text-sm font-bold text-gray-900">Prescription Vault</h3>
+                    <h3 className="text-sm font-bold text-gray-900">Medical Records Vault</h3>
                     <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">
-                      Digital Slips
+                      Full History
                     </span>
                   </div>
-                  <p className="text-[11px] text-gray-500">Digitized paper slips & uploads</p>
+                  <p className="text-[11px] text-gray-500">Prescriptions, reports & doctor notes</p>
                 </div>
               </div>
 
@@ -151,7 +151,7 @@ export default function ProfilePage() {
               </Link>
             </div>
             <p className="text-xs text-gray-600 leading-relaxed">
-              Paper prescriptions captured during clinic onboarding are securely archived here for internal GP follow-up triage. You can snapshot new slips anytime.
+              Medical records and prescriptions are securely stored here for doctors to review during online teleconsultations and follow-up care. You can snapshot and upload new records anytime.
             </p>
           </div>
 
@@ -165,8 +165,8 @@ export default function ProfilePage() {
                 <CalendarCheck className="w-4 h-4" />
               </div>
               <div>
-                <p className="font-bold text-xs text-gray-900">My Follow-up Bookings</p>
-                <p className="text-[11px] text-gray-400">Track active recovery screening & clinic bypass status</p>
+                <p className="font-bold text-xs text-gray-900">My Appointments & Bookings</p>
+                <p className="text-[11px] text-gray-400">Track doctor consults, online visits & smart follow-up passes</p>
               </div>
             </div>
             <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-emerald-600 group-hover:translate-x-0.5 transition-all" />
@@ -240,7 +240,7 @@ export default function ProfilePage() {
             )}
 
             <p className="text-[11px] text-gray-400 leading-snug">
-              When our online GP escalates your case, our ground team alerts the receptionist at your selected clinic cluster to bypass the physical waiting queue.
+              When an in-person evaluation is needed, your doctor and our team coordinate with your selected clinic cluster to bypass physical queues.
             </p>
           </div>
 
@@ -251,8 +251,8 @@ export default function ProfilePage() {
                 <PhoneCall className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-bold text-sm text-gray-900">24/7 Triage Operations Desk</h3>
-                <p className="text-xs text-gray-500">Need help with your clinic follow-up or bypass code?</p>
+                <h3 className="font-bold text-sm text-gray-900">24/7 Healthcare Operations Desk</h3>
+                <p className="text-xs text-gray-500">Need help with your doctor appointment, consultation, or clinic pass?</p>
               </div>
             </div>
 

@@ -454,7 +454,7 @@ export async function uploadPrescriptionPhoto(
     visitDate: metadata.visitDate || new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
     imageUrl: downloadUrl,
     uploadedAt: "Just now • Mobile Camera Snapshot",
-    chiefComplaint: metadata.chiefComplaint || "Physical visit follow-up slip",
+    chiefComplaint: metadata.chiefComplaint || "Clinic prescription & consultation record",
   };
 
   const current = getStoredPrescriptions();
