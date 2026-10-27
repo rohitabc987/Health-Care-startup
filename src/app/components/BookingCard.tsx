@@ -2,14 +2,14 @@
 
 import React, { useState } from "react";
 import { Appointment, updateAppointmentStatus } from "@/lib/firebase";
-import { 
-  Calendar, 
-  Clock, 
-  MapPin, 
-  PhoneCall, 
-  AlertCircle, 
-  CheckCircle2, 
-  Zap, 
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  PhoneCall,
+  AlertCircle,
+  CheckCircle2,
+  Zap,
   FileText,
   ChevronRight,
   ShieldAlert,
@@ -93,7 +93,7 @@ export function BookingCard({ appointment, onStatusChange }: BookingCardProps) {
           </p>
           {appointment.consultationFee && (
             <span className="inline-block mt-1 text-[10px] font-bold text-gray-700 bg-gray-100 px-1.5 py-0.2 rounded">
-              Consultation Fee: ₹{appointment.consultationFee}
+              Follow-up Fee: ₹{appointment.consultationFee}
             </span>
           )}
         </div>
@@ -109,7 +109,7 @@ export function BookingCard({ appointment, onStatusChange }: BookingCardProps) {
             <Calendar className="w-4 h-4" />
           </div>
           <div>
-            <p className="text-[10px] text-gray-400 font-medium">Appointment Date</p>
+            <p className="text-[10px] text-gray-400 font-medium">Follow-up Date</p>
             <p className="font-bold text-gray-800">{appointment.followupDate}</p>
           </div>
         </div>
@@ -119,7 +119,7 @@ export function BookingCard({ appointment, onStatusChange }: BookingCardProps) {
             <Clock className="w-4 h-4" />
           </div>
           <div className="min-w-0">
-            <p className="text-[10px] text-gray-400 font-medium">Consultation Window</p>
+            <p className="text-[10px] text-gray-400 font-medium">Follow-up Window</p>
             <p className="font-bold text-gray-800 truncate">{appointment.timeWindow}</p>
           </div>
         </div>
@@ -149,8 +149,8 @@ export function BookingCard({ appointment, onStatusChange }: BookingCardProps) {
         <div className="bg-emerald-50/70 border border-emerald-100 p-3 rounded-xl flex items-start gap-2.5">
           <PhoneCall className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
           <div className="text-[11px] text-emerald-950 leading-relaxed">
-            <span className="font-bold">What happens next:</span> Your doctor will review your medical records and consult with you during your selected window on{" "}
-            <span className="font-semibold">{appointment.followupDate}</span>. Have your records handy!
+            <span className="font-bold">What happens next:</span> Your doctor will consult with you online during your selected window on{" "}
+            <span className="font-semibold">{appointment.followupDate}</span>. Have your physical prescription handy!
           </div>
         </div>
       )}

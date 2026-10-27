@@ -102,8 +102,8 @@ export function BookingModal({ doctor, isOpen, onClose, onSuccess }: BookingModa
               Rx
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900 text-base leading-tight">Book Doctor Appointment</h3>
-              <p className="text-xs text-emerald-700 font-medium">Online Consultation & Clinic Care • {doctor.clinic}</p>
+              <h3 className="font-semibold text-gray-900 text-base leading-tight">Book Doctor Follow-up</h3>
+              <p className="text-xs text-emerald-700 font-medium">Zero-Queue Clinic Follow-up • {doctor.clinic}</p>
             </div>
           </div>
           <button
@@ -145,7 +145,7 @@ export function BookingModal({ doctor, isOpen, onClose, onSuccess }: BookingModa
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
                   <Calendar className="w-3.5 h-3.5 text-emerald-600" />
-                  Select Appointment / Follow-up Date
+                  Select Follow-up Date
                 </label>
                 <span className="text-[11px] text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full">
                   Step 1 of 2
@@ -334,15 +334,15 @@ export function BookingModal({ doctor, isOpen, onClose, onSuccess }: BookingModa
               </div>
 
               <div>
-                <h4 className="text-lg font-bold text-gray-900">Appointment Confirmed!</h4>
+                <h4 className="text-lg font-bold text-gray-900">Follow-up Confirmed!</h4>
                 <p className="text-xs text-gray-500 mt-1 max-w-xs mx-auto">
-                  Your appointment with <span className="font-semibold text-gray-800">{doctor.name}</span> has been confirmed. All your medical history and prescription records will be available for the doctor.
+                  Your follow-up with <span className="font-semibold text-gray-800">{doctor.name}</span> has been confirmed. All your medical history and prescription records will be available for the doctor.
                 </p>
               </div>
 
               {bookingConfirmedId && (
                 <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-2xl max-w-xs mx-auto">
-                  <span className="text-[10px] text-emerald-800 uppercase tracking-widest font-bold">Appointment Pass ID</span>
+                  <span className="text-[10px] text-emerald-800 uppercase tracking-widest font-bold">Fast-Track Pass ID</span>
                   <p className="font-mono font-bold text-sm text-emerald-950 mt-0.5">{bookingConfirmedId}</p>
                 </div>
               )}
@@ -362,7 +362,7 @@ export function BookingModal({ doctor, isOpen, onClose, onSuccess }: BookingModa
                 onClick={handleFinish}
                 className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-2xl shadow-md text-xs transition-colors"
               >
-                View in My Bookings
+                View in My Follow-ups
               </button>
             </div>
           )}

@@ -4,14 +4,14 @@ import React, { useEffect, useRef } from "react";
 import Link from "next/link";
 import { useNavigation } from "@/context/NavigationContext";
 import { INITIAL_USER } from "@/lib/firebase";
-import { 
-  User, 
-  CalendarCheck, 
-  FileText, 
-  PhoneCall, 
-  ShieldCheck, 
-  ChevronRight, 
-  LogOut, 
+import {
+  User,
+  CalendarCheck,
+  FileText,
+  PhoneCall,
+  ShieldCheck,
+  ChevronRight,
+  LogOut,
   X,
   Stethoscope
 } from "lucide-react";
@@ -55,7 +55,7 @@ export function ProfileDropdown({ isOpen, onClose, currentLocation = "Viram Khan
   return (
     <>
       {/* Mobile Backdrop Overlay */}
-      <div 
+      <div
         className="fixed inset-0 z-40 bg-black/40 backdrop-blur-2xs md:hidden"
         onClick={onClose}
       />
@@ -87,10 +87,10 @@ export function ProfileDropdown({ isOpen, onClose, currentLocation = "Viram Khan
                   </span>
                 </div>
                 <p className="text-xs text-gray-500 font-mono mt-0.5">{INITIAL_USER.phone}</p>
-                <div className="flex items-center gap-1 text-[10px] text-emerald-700 font-semibold mt-0.5">
+                {/* <div className="flex items-center gap-1 text-[10px] text-emerald-700 font-semibold mt-0.5">
                   <span>Open Profile</span>
                   <ChevronRight className="w-3 h-3 group-hover/user:translate-x-0.5 transition-transform" />
-                </div>
+                </div> */}
               </div>
             </Link>
 
@@ -102,17 +102,6 @@ export function ProfileDropdown({ isOpen, onClose, currentLocation = "Viram Khan
             >
               <X className="w-3.5 h-3.5" />
             </button>
-          </div>
-
-          {/* Ground Team Status Pill */}
-          <div className="mt-3 pt-2.5 border-t border-emerald-100/80 flex items-center justify-between text-[11px]">
-            <span className="text-gray-500 flex items-center gap-1">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Doctor-Patient Portal:</span>
-            </span>
-            <span className="font-semibold text-emerald-800 bg-white px-2 py-0.5 rounded-full border border-emerald-200">
-              Active & Verified
-            </span>
           </div>
         </div>
 
@@ -129,14 +118,14 @@ export function ProfileDropdown({ isOpen, onClose, currentLocation = "Viram Khan
                 <User className="w-4 h-4" />
               </div>
               <div className="text-left">
-                <p className="font-bold text-gray-900 group-hover:text-emerald-900">Patient Profile</p>
+                <p className="font-bold text-gray-900 group-hover:text-emerald-900">View Profile</p>
                 <p className="text-[11px] text-gray-400">Health ID, medical records & account</p>
               </div>
             </div>
             <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
           </Link>
 
-          {/* Item 1: My Bookings */}
+          {/* Item 1: My Follow-ups */}
           <Link
             href="/bookings"
             onClick={onClose}
@@ -147,8 +136,8 @@ export function ProfileDropdown({ isOpen, onClose, currentLocation = "Viram Khan
                 <CalendarCheck className="w-4 h-4" />
               </div>
               <div className="text-left">
-                <p className="font-bold text-gray-900 group-hover:text-emerald-900">My Appointments</p>
-                <p className="text-[11px] text-gray-400">Track online consults & clinic bookings</p>
+                <p className="font-bold text-gray-900 group-hover:text-emerald-900">My Booking</p>
+                <p className="text-[11px] text-gray-400">Track active follow-up triage & clinic pass</p>
               </div>
             </div>
             {activeBookingsCount > 0 ? (
@@ -171,8 +160,8 @@ export function ProfileDropdown({ isOpen, onClose, currentLocation = "Viram Khan
                 <FileText className="w-4 h-4" />
               </div>
               <div className="text-left">
-                <p className="font-bold text-gray-900 group-hover:text-emerald-900">Medical Records Vault</p>
-                <p className="text-[11px] text-gray-400">View & upload medical history</p>
+                <p className="font-bold text-gray-900 group-hover:text-emerald-900">Prescription Vault</p>
+                <p className="text-[11px] text-gray-400">View & snapshot paper slips</p>
               </div>
             </div>
             <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
@@ -189,8 +178,8 @@ export function ProfileDropdown({ isOpen, onClose, currentLocation = "Viram Khan
                 <Stethoscope className="w-4 h-4" />
               </div>
               <div className="text-left">
-                <p className="font-bold text-gray-900 group-hover:text-emerald-900">Verified Doctors</p>
-                <p className="text-[11px] text-gray-400">Directory & book appointments</p>
+                <p className="font-bold text-gray-900 group-hover:text-emerald-900">Find Doctors</p>
+                <p className="text-[11px] text-gray-400">Directory & book follow-ups</p>
               </div>
             </div>
             <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
@@ -223,28 +212,6 @@ export function ProfileDropdown({ isOpen, onClose, currentLocation = "Viram Khan
         </div>
 
         {/* Footer: View Full Profile & Sign Out Demo */}
-        <div className="p-3 bg-gray-50 border-t border-gray-150 flex items-center justify-between text-xs">
-          <Link
-            href="/profile"
-            onClick={onClose}
-            className="font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-1 transition-colors"
-          >
-            <span>Open Profile Page</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </Link>
-
-          <button
-            type="button"
-            onClick={() => {
-              alert("Switch patient / Reset demo state");
-              onClose();
-            }}
-            className="text-gray-400 hover:text-rose-600 flex items-center gap-1 transition-colors"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span>Switch</span>
-          </button>
-        </div>
       </div>
     </>
   );

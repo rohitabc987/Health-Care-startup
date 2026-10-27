@@ -6,12 +6,12 @@ import { useRouter } from "next/navigation";
 import { INITIAL_DOCTORS, Doctor } from "@/lib/firebase";
 import { DoctorCard } from "./components/DoctorCard";
 import { ProfileDropdown } from "./components/ProfileDropdown";
-import { 
-  Sparkles, 
-  ShieldCheck, 
-  Search, 
-  Stethoscope, 
-  Activity, 
+import {
+  Sparkles,
+  ShieldCheck,
+  Search,
+  Stethoscope,
+  Activity,
   ArrowRight,
   Clock,
   Zap,
@@ -27,7 +27,7 @@ export default function HomePage() {
 
   // Filter doctors by specialty and search query
   const filteredDoctors = doctors.filter((doc) => {
-    const matchesSpecialty = 
+    const matchesSpecialty =
       selectedSpecialty === "All" || doc.specialty.toLowerCase().includes(selectedSpecialty.toLowerCase());
     const matchesSearch =
       doc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -56,14 +56,13 @@ export default function HomePage() {
 
         {/* Profile Avatar trigger */}
         <div className="relative">
-          <button 
+          <button
             type="button"
             onClick={() => setIsMobileProfileOpen(!isMobileProfileOpen)}
-            className={`w-8 h-8 rounded-full font-bold text-xs flex items-center justify-center transition-all ${
-              isMobileProfileOpen
-                ? "bg-emerald-600 text-white ring-2 ring-emerald-500/30"
-                : "bg-emerald-100 text-emerald-800 border border-emerald-300"
-            }`}
+            className={`w-8 h-8 rounded-full font-bold text-xs flex items-center justify-center transition-all ${isMobileProfileOpen
+              ? "bg-emerald-600 text-white ring-2 ring-emerald-500/30"
+              : "bg-emerald-100 text-emerald-800 border border-emerald-300"
+              }`}
             aria-label="Profile and Menu"
           >
             RV
@@ -76,60 +75,67 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Hero Value Proposition Banner */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-800 text-white rounded-3xl p-5 md:p-8 shadow-xl shadow-emerald-950/10 border border-emerald-600/30">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-          <div className="md:col-span-8 space-y-3">
+      {/* Patient-First Action Banner */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-800 text-white rounded-3xl p-4 py-6 sm:p-6 shadow-lg shadow-emerald-950/10 border border-emerald-600/30">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6 items-center">
+          <div className="md:col-span-8 space-y-2.5">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider bg-white/20 text-white px-3 py-1 rounded-full backdrop-blur-md border border-white/20">
-                <Sparkles className="w-3.5 h-3.5 text-amber-300" /> Complete Doctor & Patient Platform
+              <span className="inline-flex items-center gap-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider bg-white/20 text-white px-2.5 py-0.5 rounded-full backdrop-blur-md border border-white/20">
+                <Sparkles className="w-3 h-3 text-amber-300" /> Patient Care
               </span>
-              <span className="inline-flex items-center gap-1 text-xs font-semibold bg-emerald-500/30 text-emerald-100 px-3 py-1 rounded-full border border-emerald-400/30">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-300" /> Online Consultations & Clinic Care
+              <span className="inline-flex items-center gap-1 text-[10px] sm:text-xs font-semibold bg-emerald-500/30 text-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-400/30">
+                <ShieldCheck className="w-3 h-3 text-emerald-300" /> Zero Clinic Queue
               </span>
             </div>
 
             <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight leading-tight">
-              Book Appointments, Consult Doctors Online & Access Complete Patient Records
+              Book Your Clinic Follow-up
             </h1>
 
-            <p className="text-xs sm:text-sm text-emerald-100 max-w-2xl leading-relaxed">
-              A comprehensive healthcare platform connecting patients and doctors: book in-clinic and online appointments, talk directly with verified specialists, maintain complete digital medical histories, and experience zero-queue smart follow-up care.
+            <p className="text-xs sm:text-sm text-emerald-100 max-w-xl leading-relaxed">
+              Consult your doctor online from home or fast-track your physical visit. Upload your paper slip or select your doctor below to book your slot directly.
             </p>
 
-            {/* Quick Metrics */}
-            <div className="pt-2 grid grid-cols-3 gap-2 sm:gap-4 max-w-lg">
-              <div className="bg-white/10 backdrop-blur-xs p-2.5 rounded-2xl border border-white/15">
-                <p className="text-base sm:text-xl font-black text-white">Online & Clinic</p>
-                <p className="text-[10px] sm:text-xs text-emerald-200">Doctor Consultations</p>
-              </div>
-              <div className="bg-white/10 backdrop-blur-xs p-2.5 rounded-2xl border border-white/15">
-                <p className="text-base sm:text-xl font-black text-white">100% Digital</p>
-                <p className="text-[10px] sm:text-xs text-emerald-200">Patient Health Records</p>
-              </div>
-              <div className="bg-white/10 backdrop-blur-xs p-2.5 rounded-2xl border border-white/15">
-                <p className="text-base sm:text-xl font-black text-white">Zero Queue</p>
-                <p className="text-[10px] sm:text-xs text-emerald-200">Smart Follow-up Care</p>
-              </div>
+            {/* Direct Patient 1-Tap Actions */}
+            <div className="pt-1 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const el = document.getElementById("doctors-section");
+                  el?.scrollIntoView({ behavior: "smooth" });
+                }}
+                className="py-2.5 px-4 bg-white hover:bg-emerald-50 text-emerald-800 font-bold text-xs rounded-xl shadow-md transition-all active:scale-95 flex items-center gap-1.5"
+              >
+                <Stethoscope className="w-4 h-4 text-emerald-600" />
+                <span>Book Now</span>
+              </button>
+
+              <Link
+                href="/prescriptions"
+                className="py-2.5 px-3.5 bg-emerald-900/40 hover:bg-emerald-900/60 border border-white/20 text-white font-semibold text-xs rounded-xl backdrop-blur-xs transition-all active:scale-95 flex items-center gap-1.5"
+              >
+                <FileText className="w-4 h-4 text-emerald-300" />
+                <span>Upload Prescription</span>
+              </Link>
             </div>
           </div>
 
           {/* Right Action Card on Desktop */}
-          <div className="hidden md:flex md:col-span-4 flex-col justify-center items-center bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/20 text-center space-y-3">
-            <div className="w-14 h-14 rounded-2xl bg-white text-emerald-700 flex items-center justify-center shadow-lg">
-              <FileText className="w-8 h-8 stroke-[2.2]" />
+          <div className="hidden md:flex md:col-span-4 flex-col justify-center items-center bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20 text-center space-y-2">
+            <div className="w-12 h-12 rounded-xl bg-white text-emerald-700 flex items-center justify-center shadow-md">
+              <FileText className="w-6 h-6 stroke-[2.2]" />
             </div>
             <div>
-              <h3 className="font-bold text-sm text-white">Patient Medical Records</h3>
-              <p className="text-xs text-emerald-100 mt-1">
-                Upload prescriptions and access complete medical records for seamless consultations.
+              <h3 className="font-bold text-xs text-white">Have a Clinic Slip?</h3>
+              <p className="text-[11px] text-emerald-100 mt-0.5">
+                Snapshot your paper prescription to schedule triage.
               </p>
             </div>
             <Link
               href="/prescriptions"
-              className="w-full py-2.5 px-4 bg-white text-emerald-800 font-bold text-xs rounded-xl hover:bg-emerald-50 transition-all shadow-md text-center"
+              className="w-full py-2 px-3 bg-white text-emerald-800 font-bold text-xs rounded-xl hover:bg-emerald-50 transition-all shadow-xs text-center"
             >
-              Open Medical Vault →
+              Prescription Vault →
             </Link>
           </div>
         </div>
@@ -173,11 +179,10 @@ export default function HomePage() {
               key={spec}
               type="button"
               onClick={() => setSelectedSpecialty(spec)}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
-                selectedSpecialty === spec
-                  ? "bg-slate-900 text-white shadow-xs"
-                  : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
-              }`}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${selectedSpecialty === spec
+                ? "bg-slate-900 text-white shadow-xs"
+                : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
+                }`}
             >
               {spec}
             </button>
@@ -186,26 +191,26 @@ export default function HomePage() {
       </div>
 
       {/* Doctor Directory Grid */}
-      <div>
+      <div id="doctors-section" className="scroll-mt-20">
         <div className="flex items-center justify-between mb-3">
           <div>
             <h2 className="text-xs sm:text-sm font-black uppercase tracking-wider text-gray-800">
-              Verified Doctors & Specialists ({filteredDoctors.length})
+              Select Doctor ({filteredDoctors.length})
             </h2>
-            <p className="text-[11px] text-gray-400">Book in-clinic or online teleconsultations</p>
+            <p className="text-[11px] text-gray-400">Tap directly book your slot</p>
           </div>
           <span className="text-xs text-emerald-700 font-semibold flex items-center gap-1">
             <ShieldCheck className="w-3.5 h-3.5" />
-            Online & Clinic Care
+            Zero-Queue Pass
           </span>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
           {filteredDoctors.map((doc) => (
-            <DoctorCard 
-              key={doc.id} 
-              doctor={doc} 
-              onBookingSuccess={() => router.push("/bookings")} 
+            <DoctorCard
+              key={doc.id}
+              doctor={doc}
+              onBookingSuccess={() => router.push("/bookings")}
             />
           ))}
         </div>

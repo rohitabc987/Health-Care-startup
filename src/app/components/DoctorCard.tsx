@@ -38,10 +38,10 @@ export function DoctorCard({ doctor, onBookingSuccess }: DoctorCardProps) {
           )}
 
           {/* Guaranteed slot badge */}
-          <span className="text-[10px] text-emerald-700 bg-emerald-50 font-medium px-1.5 py-0.5 rounded-md border border-emerald-100 flex items-center gap-1">
+          {/* <span className="text-[10px] text-emerald-700 bg-emerald-50 font-medium px-1.5 py-0.5 rounded-md border border-emerald-100 flex items-center gap-1">
             <ShieldCheck className="w-3 h-3 text-emerald-600" />
             Verified
-          </span>
+          </span> */}
         </div>
 
         {/* Center Doctor Image Presentation */}
@@ -59,9 +59,9 @@ export function DoctorCard({ doctor, onBookingSuccess }: DoctorCardProps) {
             type="button"
             onClick={() => setIsModalOpen(true)}
             aria-label={`Book appointment with ${doctor.name}`}
-            className="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-white text-emerald-600 border border-emerald-500/30 shadow-md flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-all active:scale-90"
+            className="absolute bottom-2 right-2 w-6 h-6 md:w-8 md:h-8 rounded-full bg-white text-emerald-600 border border-emerald-500/30 shadow-md flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-all active:scale-90"
           >
-            <Plus className="w-5 h-5 stroke-[2.5]" />
+            <Plus className="w-3 h-3 md:w-5 md:h-5 stroke-[2.5]" />
           </button>
         </div>
 
@@ -88,19 +88,19 @@ export function DoctorCard({ doctor, onBookingSuccess }: DoctorCardProps) {
             <div className="flex items-baseline gap-1.5">
               <span className="text-sm font-black text-gray-900">₹{doctor.consultationFee}</span>
               <span className="text-[11px] line-through text-gray-400">₹{doctor.regularFee}</span>
-              <span className="text-[10px] text-emerald-800 font-semibold bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-100">
-                Consultation Fee
-              </span>
+              {/* <span className="text-[10px] text-emerald-800 font-semibold bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-100">
+                Follow-up Fee
+              </span> */}
             </div>
           </div>
 
-          {/* Primary High-Contrast "Book Appointment" Button */}
+          {/* Primary High-Contrast "Book Follow-up" Button */}
           <button
             type="button"
             onClick={() => setIsModalOpen(true)}
             className="mt-2.5 w-full py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white text-xs font-semibold rounded-xl shadow-xs transition-all flex items-center justify-center gap-1.5"
           >
-            <span>Book Appointment</span>
+            <span>Book Follow-up</span>
           </button>
         </div>
       </div>

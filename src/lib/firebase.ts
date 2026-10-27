@@ -198,7 +198,7 @@ export const INITIAL_PRESCRIPTIONS: PrescriptionRecord[] = [
     clinicName: "Apollo Clinic, Gomti Nagar",
     visitDate: "Oct 18, 2026",
     imageUrl: "/images/prescription-demo.jpg",
-    uploadedAt: "Oct 18, 2026 • Ground Team Verified",
+    uploadedAt: "Oct 18, 2026",
     chiefComplaint: "Post-hypertension & Amoxicillin review",
     scheduledFollowupDate: "Oct 25, 2026",
   },
@@ -269,7 +269,8 @@ function getStoredPrescriptions(): PrescriptionRecord[] {
       localStorage.setItem(LOCAL_STORAGE_KEY_PRESCRIPTIONS, JSON.stringify(INITIAL_PRESCRIPTIONS));
       return INITIAL_PRESCRIPTIONS;
     }
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : INITIAL_PRESCRIPTIONS;
   } catch {
     return INITIAL_PRESCRIPTIONS;
   }

@@ -78,13 +78,13 @@ export default function BookingsPage() {
       <div className="bg-white p-4 sm:p-6 rounded-3xl border border-gray-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-black text-gray-900">My Appointments & Consultations</h1>
+            <h1 className="text-xl sm:text-2xl font-black text-gray-900">My Follow-ups</h1>
             <span className="text-xs font-bold bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full">
-              Live Feed
+              Live Passes
             </span>
           </div>
           <p className="text-xs sm:text-sm text-gray-500 mt-1">
-            Track your upcoming online consultations, doctor appointments, and clinic passes.
+            Track your upcoming doctor follow-ups and zero-queue clinic passes.
           </p>
         </div>
 
@@ -110,7 +110,7 @@ export default function BookingsPage() {
                 : "text-gray-500 hover:text-gray-900"
             }`}
           >
-            Previous ({previousAppointments.length})
+            Past Follow-ups ({previousAppointments.length})
           </button>
         </div>
       </div>
@@ -128,20 +128,20 @@ export default function BookingsPage() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/images/calendar-empty.jpg"
-              alt="No bookings found"
+              alt="No follow-ups found"
               className="w-44 h-44 sm:w-56 sm:h-56 object-contain rounded-2xl drop-shadow-sm mb-4"
             />
             <h3 className="text-base sm:text-lg font-bold text-gray-800">
-              No appointments found
+              No follow-ups scheduled
             </h3>
             <p className="text-xs sm:text-sm text-gray-400 mt-1 max-w-sm">
-              You have no active appointments scheduled. Book an online consultation or clinic visit with any of our verified doctors.
+              You have no active doctor follow-ups scheduled. Select a doctor to book your zero-queue follow-up consultation.
             </p>
             <Link
               href="/"
               className="mt-6 py-3 px-6 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-semibold rounded-2xl shadow-md transition-all active:scale-95"
             >
-              Explore Partnered Doctors →
+              Book a Follow-up Now →
             </Link>
           </div>
         )
@@ -154,9 +154,9 @@ export default function BookingsPage() {
       ) : (
         <div className="bg-white rounded-3xl border border-gray-200/80 p-12 text-center flex flex-col items-center justify-center">
           <CheckCircle className="w-12 h-12 text-gray-300 mb-2" />
-          <h3 className="text-sm font-bold text-gray-700">No past appointments yet</h3>
+          <h3 className="text-sm font-bold text-gray-700">No past follow-ups yet</h3>
           <p className="text-xs text-gray-400 mt-1">
-            Completed doctor consultations and health check-ups will be archived here in your medical record.
+            Completed follow-up consultations will be archived here in your health record.
           </p>
         </div>
       )}

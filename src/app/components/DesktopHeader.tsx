@@ -15,7 +15,7 @@ export function DesktopHeader() {
   const navLinks = [
     { label: "Home", href: "/" },
     { label: "My Bookings", href: "/bookings", count: activeBookingsCount },
-    { label: "Prescription Vault", href: "/prescriptions" },
+    { label: "Prescriptions", href: "/prescriptions" },
   ];
 
   return (
@@ -48,11 +48,10 @@ export function DesktopHeader() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`relative py-5 text-sm transition-colors flex items-center gap-1.5 ${
-                    isActive
+                  className={`relative py-5 text-sm transition-colors flex items-center gap-1.5 ${isActive
                       ? "text-emerald-700 font-bold"
                       : "text-gray-600 hover:text-gray-900 font-medium"
-                  }`}
+                    }`}
                 >
                   <span>{item.label}</span>
                   {item.count !== undefined && item.count > 0 && (
@@ -84,11 +83,10 @@ export function DesktopHeader() {
             <button
               type="button"
               onClick={() => setIsProfileOpen(!isProfileOpen)}
-              className={`w-10 h-10 rounded-2xl font-black text-sm flex items-center justify-center transition-all ${
-                isProfileOpen
+              className={`w-10 h-10 rounded-2xl font-black text-sm flex items-center justify-center transition-all ${isProfileOpen
                   ? "bg-emerald-600 text-white ring-4 ring-emerald-500/20 shadow-md"
                   : "bg-emerald-100 hover:bg-emerald-200 text-emerald-800 border border-emerald-300"
-              }`}
+                }`}
               aria-label="Patient Profile and Menu"
             >
               RV
