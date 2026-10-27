@@ -1,69 +1,215 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import React, { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { INITIAL_DOCTORS, Doctor } from "@/lib/firebase";
+import { DoctorCard } from "./components/DoctorCard";
+import { ProfileDropdown } from "./components/ProfileDropdown";
+import { 
+  Sparkles, 
+  ShieldCheck, 
+  Search, 
+  Stethoscope, 
+  Activity, 
+  ArrowRight,
+  Clock,
+  Zap,
+  FileText
+} from "lucide-react";
+
+export default function HomePage() {
+  const router = useRouter();
+  const [doctors] = useState<Doctor[]>(INITIAL_DOCTORS);
+  const [selectedSpecialty, setSelectedSpecialty] = useState<string>("All");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isMobileProfileOpen, setIsMobileProfileOpen] = useState(false);
+
+  // Filter doctors by specialty and search query
+  const filteredDoctors = doctors.filter((doc) => {
+    const matchesSpecialty = 
+      selectedSpecialty === "All" || doc.specialty.toLowerCase().includes(selectedSpecialty.toLowerCase());
+    const matchesSearch =
+      doc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      doc.specialty.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      doc.clinic.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesSpecialty && matchesSearch;
+  });
+
+  const specialties = ["All", "General Physician", "Cardiology", "Pediatrics", "Orthopedics"];
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="w-full space-y-6 animate-in fade-in duration-200">
+      {/* Mobile Top Brand Bar (Clean navigation, profile icon only) */}
+      <div className="md:hidden sticky top-0 z-30 bg-white/95 backdrop-blur-md px-3 pt-3 pb-2.5 -mx-3 border-b border-gray-150 flex items-center justify-between">
+        <Link href="/" className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center shadow-xs">
+            <Stethoscope className="w-4 h-4 stroke-[2.5]" />
+          </div>
+          <div>
+            <span className="font-black text-sm text-gray-950 tracking-tight">PRONTO</span>
+            <span className="ml-1 text-[9px] uppercase font-bold bg-emerald-100 text-emerald-800 px-1 py-0.2 rounded">
+              Health
+            </span>
+          </div>
+        </Link>
+
+        {/* Profile Avatar trigger */}
+        <div className="relative">
+          <button 
+            type="button"
+            onClick={() => setIsMobileProfileOpen(!isMobileProfileOpen)}
+            className={`w-8 h-8 rounded-full font-bold text-xs flex items-center justify-center transition-all ${
+              isMobileProfileOpen
+                ? "bg-emerald-600 text-white ring-2 ring-emerald-500/30"
+                : "bg-emerald-100 text-emerald-800 border border-emerald-300"
+            }`}
+            aria-label="Profile and Menu"
           >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
+            RV
+          </button>
+
+          <ProfileDropdown
+            isOpen={isMobileProfileOpen}
+            onClose={() => setIsMobileProfileOpen(false)}
+          />
+        </div>
+      </div>
+
+      {/* Hero Value Proposition Banner (No wallet, no free terms, emphasizes qualification-based triage) */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-800 text-white rounded-3xl p-5 md:p-8 shadow-xl shadow-emerald-950/10 border border-emerald-600/30">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+          <div className="md:col-span-8 space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider bg-white/20 text-white px-3 py-1 rounded-full backdrop-blur-md border border-white/20">
+                <Sparkles className="w-3.5 h-3.5 text-amber-300" /> Ground Onboarded
+              </span>
+              <span className="inline-flex items-center gap-1 text-xs font-semibold bg-emerald-500/30 text-emerald-100 px-3 py-1 rounded-full border border-emerald-400/30">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-300" /> Zero Doctor Tech Friction
+              </span>
+            </div>
+
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight leading-tight">
+              Skip Clinic Queues for Routine Follow-ups
+            </h1>
+
+            <p className="text-xs sm:text-sm text-emerald-100 max-w-2xl leading-relaxed">
+              Our ground team registers you right outside the clinic and archives your physical prescription. On your follow-up date, our internal GP triages your recovery. If an exam is required, we fast-track your physical slot with the clinic.
+            </p>
+
+            {/* Quick Metrics (No Free terms) */}
+            <div className="pt-2 grid grid-cols-3 gap-2 sm:gap-4 max-w-lg">
+              <div className="bg-white/10 backdrop-blur-xs p-2.5 rounded-2xl border border-white/15">
+                <p className="text-base sm:text-xl font-black text-white">0 Mins</p>
+                <p className="text-[10px] sm:text-xs text-emerald-200">Clinic Wait Time</p>
+              </div>
+              <div className="bg-white/10 backdrop-blur-xs p-2.5 rounded-2xl border border-white/15">
+                <p className="text-base sm:text-xl font-black text-white">Fast-Track</p>
+                <p className="text-[10px] sm:text-xs text-emerald-200">Priority Pass</p>
+              </div>
+              <div className="bg-white/10 backdrop-blur-xs p-2.5 rounded-2xl border border-white/15">
+                <p className="text-base sm:text-xl font-black text-white">4.9 ★</p>
+                <p className="text-[10px] sm:text-xs text-emerald-200">Verified Specialists</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Action Card on Desktop */}
+          <div className="hidden md:flex md:col-span-4 flex-col justify-center items-center bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/20 text-center space-y-3">
+            <div className="w-14 h-14 rounded-2xl bg-white text-emerald-700 flex items-center justify-center shadow-lg">
+              <FileText className="w-8 h-8 stroke-[2.2]" />
+            </div>
+            <div>
+              <h3 className="font-bold text-sm text-white">Have a Paper Prescription?</h3>
+              <p className="text-xs text-emerald-100 mt-1">
+                Upload your clinic slip to schedule your digital screening.
+              </p>
+            </div>
+            <Link
+              href="/prescriptions"
+              className="w-full py-2.5 px-4 bg-white text-emerald-800 font-bold text-xs rounded-xl hover:bg-emerald-50 transition-all shadow-md text-center"
+            >
+              Open Prescription Vault →
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Search Bar & Specialty Filter Controls */}
+      <div className="space-y-3">
+        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+          {/* Search Box */}
+          <div className="relative flex-1 max-w-xl">
+            <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search doctor name, specialty, or clinic..."
+              className="w-full pl-9 pr-4 py-2.5 text-xs sm:text-sm bg-white rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-2xs transition-all"
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          {/* Doctors Counter */}
+          <div className="hidden sm:flex items-center gap-2 text-xs text-gray-500 font-medium">
+            <Activity className="w-4 h-4 text-emerald-600" />
+            <span>Showing {filteredDoctors.length} Partnered Specialists</span>
+          </div>
         </div>
-      </main>
+
+        {/* Specialty Filter Chips */}
+        <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
+          {specialties.map((spec) => (
+            <button
+              key={spec}
+              type="button"
+              onClick={() => setSelectedSpecialty(spec)}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+                selectedSpecialty === spec
+                  ? "bg-slate-900 text-white shadow-xs"
+                  : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
+              }`}
+            >
+              {spec}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Doctor Directory Grid */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h2 className="text-xs sm:text-sm font-black uppercase tracking-wider text-gray-800">
+              Partnered Doctors & Specialists ({filteredDoctors.length})
+            </h2>
+            <p className="text-[11px] text-gray-400">Consultation fees set directly by clinic doctor</p>
+          </div>
+          <span className="text-xs text-emerald-700 font-semibold flex items-center gap-1">
+            <ShieldCheck className="w-3.5 h-3.5" />
+            Zero Wait Fast-Track
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
+          {filteredDoctors.map((doc) => (
+            <DoctorCard 
+              key={doc.id} 
+              doctor={doc} 
+              onBookingSuccess={() => router.push("/bookings")} 
+            />
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
