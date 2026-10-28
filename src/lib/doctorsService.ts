@@ -10,7 +10,7 @@ import {
 } from "firebase/firestore";
 import { Doctor } from "./types";
 import { INITIAL_DOCTORS } from "./mockData";
-import { db, isLiveFirebaseConfigured } from "./firebaseConfig";
+import { db, isLiveFirebaseConfigured } from "@/lib/firebaseConfig";
 
 const LOCAL_STORAGE_KEY_DOCTORS = "pronto_doctors_catalog";
 const doctorSubscribers: Array<(doctors: Doctor[]) => void> = [];

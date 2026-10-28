@@ -16,7 +16,7 @@ import {
 } from "firebase/firestore";
 import { Appointment, AppointmentStatus } from "./types";
 import { INITIAL_APPOINTMENTS } from "./mockData";
-import { db, isLiveFirebaseConfigured } from "./firebaseConfig";
+import { db, isLiveFirebaseConfigured } from "@/lib/firebaseConfig";
 
 const LOCAL_STORAGE_KEY_APPOINTMENTS = "pronto_medical_appointments";
 const appointmentSubscribers: Array<(appointments: Appointment[]) => void> = [];

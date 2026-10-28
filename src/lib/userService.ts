@@ -1,7 +1,7 @@
 import { doc, onSnapshot, setDoc, getDoc } from "firebase/firestore";
 import { UserProfile } from "./types";
 import { INITIAL_USER } from "./mockData";
-import { db, isLiveFirebaseConfigured } from "./firebaseConfig";
+import { db, isLiveFirebaseConfigured } from "@/lib/firebaseConfig";
 
 const LOCAL_STORAGE_KEY_USER_PROFILE = "pronto_user_profile";
 const userSubscribers: Array<(user: UserProfile) => void> = [];

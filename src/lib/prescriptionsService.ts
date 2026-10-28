@@ -9,7 +9,7 @@ import {
 } from "firebase/firestore";
 import { PrescriptionRecord } from "./types";
 import { INITIAL_PRESCRIPTIONS } from "./mockData";
-import { db, isLiveFirebaseConfigured } from "./firebaseConfig";
+import { db, isLiveFirebaseConfigured } from "@/lib/firebaseConfig";
 import { uploadSlipToCloudinary } from "./cloudinary";
 
 const LOCAL_STORAGE_KEY_PRESCRIPTIONS = "pronto_medical_prescriptions";
