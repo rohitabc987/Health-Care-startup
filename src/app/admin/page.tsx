@@ -1,18 +1,18 @@
 import { 
-  getTodayOverallSales, 
-  getActiveDoctorsServer, 
+  getCachedTodaySales, 
+  getCachedActiveDoctors, 
   getAppointments 
 } from "@/lib/firebase";
 import { AdminClient } from "./AdminClient";
 
 // Next.js Server Component
+// Micro-caches aggregate metrics and doctor catalog for fast dashboard loads
 export default async function AdminPage() {
   const todayStr = new Date().toISOString().split("T")[0];
 
-  // Parallel server fetches for instant first paint
   const [initialOverallMetrics, initialDoctors, initialAppointments] = await Promise.all([
-    getTodayOverallSales(todayStr),
-    getActiveDoctorsServer(),
+    getCachedTodaySales(todayStr),
+    getCachedActiveDoctors(),
     getAppointments({ dateStr: todayStr, pageSize: 50 }),
   ]);
 

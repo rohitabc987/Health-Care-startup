@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { Doctor, bookAppointment, getStoredUserProfile } from "@/lib/firebase";
+import { revalidatePatientDataAction } from "@/app/actions/cacheActions";
 import { 
   Calendar, 
   Clock, 
@@ -82,6 +83,8 @@ export function BookingModal({ doctor, isOpen, onClose, onSuccess }: BookingModa
       });
 
       setBookingConfirmedId(aptId);
+      // On-demand purge cached patient passes & today's analytics
+      await revalidatePatientDataAction(user.uid);
       setIsSubmitting(false);
       setStep(3); // Confirmation step
     } catch (err) {

@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { uploadPrescriptionPhoto, PrescriptionRecord, INITIAL_DOCTORS } from "@/lib/firebase";
+import { revalidatePatientDataAction } from "@/app/actions/cacheActions";
 import { 
   Camera, 
   Upload, 
@@ -73,6 +74,8 @@ export function PrescriptionUpload({ patientUid, onUploadSuccess }: Prescription
 
       setIsUploading(false);
       setUploadSuccess(true);
+      // On-demand purge cached patient prescriptions & bookings
+      await revalidatePatientDataAction(patientUid);
       onUploadSuccess(record);
 
       setTimeout(() => {

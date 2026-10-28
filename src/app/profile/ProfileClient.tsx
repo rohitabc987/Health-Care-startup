@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { UserProfile, UserAddress } from "@/lib/firebase";
+import { revalidatePatientDataAction } from "@/app/actions/cacheActions";
 import { useAuth } from "@/context/AuthContext";
 import { ProfileDropdown } from "../components/ProfileDropdown";
 import { AddressEditorCard } from "./components/AddressEditorCard";
@@ -33,8 +34,11 @@ export function ProfileClient({ initialUser }: ProfileClientProps) {
     return name.slice(0, 2).toUpperCase();
   };
 
-  const handleUpdateAddress = (address: UserAddress) => {
+  const handleUpdateAddress = async (address: UserAddress) => {
     updateUser({ address });
+    if (activeUser?.uid) {
+      await revalidatePatientDataAction(activeUser.uid);
+    }
   };
 
   return (

@@ -27,6 +27,11 @@ import { AdminBookingsTable } from "./components/AdminBookingsTable";
 import { AdminDoctorCatalog } from "./components/AdminDoctorCatalog";
 import { AddDoctorModal } from "./components/AddDoctorModal";
 
+import { 
+  revalidateDoctorsCatalogAction, 
+  revalidateTodayAnalyticsAction 
+} from "@/app/actions/cacheActions";
+
 interface AdminClientProps {
   initialOverallMetrics: { totalPatients: number; totalRevenue: number };
   initialDoctors: Doctor[];
@@ -108,17 +113,22 @@ export function AdminClient({
   const handleToggleDoctor = async (docId: string, currentStatus?: boolean) => {
     const nextStatus = currentStatus === false ? true : false;
     await toggleDoctorStatus(docId, nextStatus);
+    // Purge Vercel Edge Cache on-demand for doctors catalog
+    await revalidateDoctorsCatalogAction();
     showNotice(`Doctor visibility updated to: ${nextStatus ? "Active on Home Page" : "Hidden from Home Page"}`);
   };
 
   const handleStatusChange = async (aptId: string, newStatus: AppointmentStatus) => {
     await updateAppointmentStatus(aptId, newStatus);
+    await revalidateTodayAnalyticsAction();
     loadMetricsAndAppointments(todayDate, selectedDoctorId);
     showNotice(`Appointment updated to ${newStatus}`);
   };
 
   const handleAddDoctor = async (newDocData: Omit<Doctor, "id">) => {
     await addDoctor(newDocData);
+    // Purge Vercel Edge Cache on-demand for doctors catalog
+    await revalidateDoctorsCatalogAction();
     showNotice("New doctor added successfully and is now live on the Home page!");
   };
 

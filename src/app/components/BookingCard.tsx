@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { Appointment, updateAppointmentStatus } from "@/lib/firebase";
+import { revalidatePatientDataAction } from "@/app/actions/cacheActions";
 import {
   Calendar,
   Clock,
@@ -29,6 +30,7 @@ export function BookingCard({ appointment, onStatusChange }: BookingCardProps) {
     setIsUpdating(true);
     try {
       await updateAppointmentStatus(appointment.id, "Escalated to Physical Visit");
+      await revalidatePatientDataAction(appointment.patientUid);
       if (onStatusChange) onStatusChange();
     } catch (err) {
       console.error(err);
@@ -41,6 +43,7 @@ export function BookingCard({ appointment, onStatusChange }: BookingCardProps) {
     setIsUpdating(true);
     try {
       await updateAppointmentStatus(appointment.id, "Screening Complete");
+      await revalidatePatientDataAction(appointment.patientUid);
       if (onStatusChange) onStatusChange();
     } catch (err) {
       console.error(err);
