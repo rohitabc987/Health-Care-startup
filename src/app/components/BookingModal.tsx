@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Doctor, createAppointment } from "@/lib/firebase";
+import { Doctor, bookAppointment, getStoredUserProfile } from "@/lib/firebase";
 import { 
   Calendar, 
   Clock, 
@@ -58,14 +58,22 @@ export function BookingModal({ doctor, isOpen, onClose, onSuccess }: BookingModa
   const handleConfirmBooking = async () => {
     setIsSubmitting(true);
     try {
-      const aptId = await createAppointment({
-        patientUid: "patient-demo-001",
-        patientName: "Rahul Verma",
-        patientPhone: "+91 98765 43210",
+      const user = getStoredUserProfile();
+      const addrString = user.address
+        ? [user.address.houseNo, user.address.street, user.address.locality, user.address.city, user.address.pincode].filter(Boolean).join(", ")
+        : "";
+
+      const aptId = await bookAppointment({
+        patientUid: user.uid,
+        patientName: user.name,
+        patientPhone: user.phone,
+        patientHealthId: user.healthId || "#PRN-8821-LKO",
+        patientAddress: addrString,
         doctorId: doctor.id,
         doctorName: doctor.name,
         doctorSpecialty: doctor.specialty,
         clinicName: doctor.clinic,
+        bookingDate: new Date().toISOString().split("T")[0],
         followupDate: targetDateInfo.formatted,
         timeWindow: selectedTimeWindow,
         prescriptionUrl: "/images/prescription-demo.jpg",

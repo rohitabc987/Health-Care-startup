@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import { NavigationProvider } from "@/context/NavigationContext";
+import { AppProviders } from "./providers";
 import { BottomNav } from "./components/BottomNav";
 import { DesktopHeader } from "./components/DesktopHeader";
 
@@ -34,7 +34,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-slate-50 text-slate-900 antialiased min-h-screen flex flex-col selection:bg-emerald-100 selection:text-emerald-900">
-        <NavigationProvider>
+        <AppProviders>
           {/* Top Desktop Navigation Header (Visible on Desktop / Laptop) */}
           <DesktopHeader />
 
@@ -45,7 +45,7 @@ export default function RootLayout({
 
           {/* Sticky Mobile Bottom Navigation Bar (Visible on Mobile / Tablet) */}
           <BottomNav />
-        </NavigationProvider>
+        </AppProviders>
       </body>
     </html>
   );

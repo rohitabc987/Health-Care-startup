@@ -3,7 +3,7 @@
 import React, { useEffect, useRef } from "react";
 import Link from "next/link";
 import { useNavigation } from "@/context/NavigationContext";
-import { INITIAL_USER } from "@/lib/firebase";
+import { useAuth } from "@/context/AuthContext";
 import {
   User,
   CalendarCheck,
@@ -13,7 +13,8 @@ import {
   ChevronRight,
   LogOut,
   X,
-  Stethoscope
+  Stethoscope,
+  LogIn
 } from "lucide-react";
 
 interface ProfileDropdownProps {
@@ -24,7 +25,15 @@ interface ProfileDropdownProps {
 
 export function ProfileDropdown({ isOpen, onClose, currentLocation = "Viram Khand 5, Gomti Nagar" }: ProfileDropdownProps) {
   const { activeBookingsCount } = useNavigation();
+  const { user, openLoginModal, logout } = useAuth();
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  const getInitials = (name?: string) => {
+    if (!name) return "PT";
+    const parts = name.trim().split(" ");
+    if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    return name.slice(0, 2).toUpperCase();
+  };
 
   // Close when clicking outside or pressing Escape
   useEffect(() => {
@@ -65,7 +74,7 @@ export function ProfileDropdown({ isOpen, onClose, currentLocation = "Viram Khan
         ref={dropdownRef}
         className="absolute right-0 top-full mt-2 w-80 sm:w-88 bg-white rounded-3xl shadow-2xl border border-gray-200/90 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
       >
-        {/* Header: User Profile Info (Clickable: Profile photo or name directly opens profile) */}
+        {/* Header: User Profile Info */}
         <div className="p-4 bg-gradient-to-br from-emerald-50 via-teal-50/50 to-white border-b border-gray-150">
           <div className="flex items-start justify-between">
             <Link
@@ -75,22 +84,18 @@ export function ProfileDropdown({ isOpen, onClose, currentLocation = "Viram Khan
               title="Click photo or name to open Profile page"
             >
               <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white font-black text-lg flex items-center justify-center shadow-md shadow-emerald-600/20 group-hover/user:scale-105 group-hover/user:ring-2 group-hover/user:ring-emerald-400 transition-all">
-                RV
+                {getInitials(user?.name)}
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
                   <h3 className="font-bold text-gray-900 text-sm leading-tight group-hover/user:text-emerald-700 transition-colors">
-                    {INITIAL_USER.name}
+                    {user?.name || "Rahul Verma"}
                   </h3>
                   <span className="text-[9px] font-bold bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded uppercase">
                     Verified
                   </span>
                 </div>
-                <p className="text-xs text-gray-500 font-mono mt-0.5">{INITIAL_USER.phone}</p>
-                {/* <div className="flex items-center gap-1 text-[10px] text-emerald-700 font-semibold mt-0.5">
-                  <span>Open Profile</span>
-                  <ChevronRight className="w-3 h-3 group-hover/user:translate-x-0.5 transition-transform" />
-                </div> */}
+                <p className="text-xs text-gray-500 font-mono mt-0.5">{user?.phone || "+91 98765 43210"}</p>
               </div>
             </Link>
 
@@ -107,7 +112,7 @@ export function ProfileDropdown({ isOpen, onClose, currentLocation = "Viram Khan
 
         {/* Dropdown Menu Items */}
         <div className="p-2 space-y-1 text-xs">
-          {/* Profile Section at top before My Bookings */}
+          {/* Profile Section */}
           <Link
             href="/profile"
             onClick={onClose}
@@ -118,8 +123,8 @@ export function ProfileDropdown({ isOpen, onClose, currentLocation = "Viram Khan
                 <User className="w-4 h-4" />
               </div>
               <div className="text-left">
-                <p className="font-bold text-gray-900 group-hover:text-emerald-900">View Profile</p>
-                <p className="text-[11px] text-gray-400">Health ID, medical records & account</p>
+                <p className="font-bold text-gray-900 group-hover:text-emerald-900">View Profile &amp; Address</p>
+                <p className="text-[11px] text-gray-400">Health ID, address details &amp; records</p>
               </div>
             </div>
             <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
@@ -185,8 +190,33 @@ export function ProfileDropdown({ isOpen, onClose, currentLocation = "Viram Khan
             <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
           </Link>
 
-          {/* Item 4: Booking & Triage Support */}
+          {/* Item 4: Switch Account / Zero-Captcha Phone Login */}
           <div className="pt-1 border-t border-gray-150">
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                openLoginModal();
+              }}
+              className="w-full p-2.5 rounded-2xl hover:bg-emerald-50 text-emerald-800 transition-colors flex items-center justify-between group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                  <LogIn className="w-4 h-4" />
+                </div>
+                <div className="text-left">
+                  <p className="font-bold text-gray-900">Switch Account / Login</p>
+                  <p className="text-[11px] text-emerald-600">Enter mobile for direct OTP</p>
+                </div>
+              </div>
+              <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">
+                Zero Captcha
+              </span>
+            </button>
+          </div>
+
+          {/* Item 5: Booking & Triage Support */}
+          <div>
             <button
               type="button"
               onClick={() => {
@@ -210,8 +240,6 @@ export function ProfileDropdown({ isOpen, onClose, currentLocation = "Viram Khan
             </button>
           </div>
         </div>
-
-        {/* Footer: View Full Profile & Sign Out Demo */}
       </div>
     </>
   );

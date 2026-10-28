@@ -4,13 +4,22 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useNavigation } from "@/context/NavigationContext";
+import { useAuth } from "@/context/AuthContext";
 import { Stethoscope, HelpCircle } from "lucide-react";
 import { ProfileDropdown } from "./ProfileDropdown";
 
 export function DesktopHeader() {
   const pathname = usePathname();
   const { activeBookingsCount } = useNavigation();
+  const { user } = useAuth();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+  const getInitials = (name?: string) => {
+    if (!name) return "PT";
+    const parts = name.trim().split(" ");
+    if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    return name.slice(0, 2).toUpperCase();
+  };
 
   const navLinks = [
     { label: "Home", href: "/" },
@@ -78,7 +87,7 @@ export function DesktopHeader() {
             </button>
           </nav>
 
-          {/* Right: Profile Icon ONLY (No name box in header, opens popover when clicked) */}
+          {/* Right: Profile Icon ONLY */}
           <div className="relative">
             <button
               type="button"
@@ -89,7 +98,7 @@ export function DesktopHeader() {
                 }`}
               aria-label="Patient Profile and Menu"
             >
-              RV
+              {getInitials(user?.name)}
             </button>
 
             {/* Dropdown Popover (Shows Name, Phone, Bookings, Support, etc.) */}
