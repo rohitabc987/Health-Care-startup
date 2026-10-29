@@ -39,11 +39,12 @@ export async function revalidateTodayAnalyticsAction() {
  * On-Demand Purge: Patient-Specific Passes & Prescriptions
  * Called when a patient or ground staff books a follow-up or uploads a prescription slip.
  */
-export async function revalidatePatientDataAction(patientUid: string) {
+export async function revalidatePatientDataAction(patientUid?: string) {
   try {
-    updateTag(CACHE_TAGS.PATIENT_BOOKINGS(patientUid));
-    updateTag(CACHE_TAGS.PATIENT_PRESCRIPTIONS(patientUid));
-    updateTag(CACHE_TAGS.USER_PROFILE(patientUid));
+    const uid = patientUid || "patient-demo-001";
+    updateTag(CACHE_TAGS.PATIENT_BOOKINGS(uid));
+    updateTag(CACHE_TAGS.PATIENT_PRESCRIPTIONS(uid));
+    updateTag(CACHE_TAGS.USER_PROFILE(uid));
     updateTag(CACHE_TAGS.ANALYTICS_TODAY);
     revalidatePath("/bookings", "page");
     revalidatePath("/prescriptions", "page");

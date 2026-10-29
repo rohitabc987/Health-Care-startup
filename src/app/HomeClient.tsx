@@ -13,7 +13,8 @@ import {
   Search,
   Stethoscope,
   Activity,
-  FileText
+  FileText,
+  LogIn
 } from "lucide-react";
 
 interface HomeClientProps {
@@ -22,7 +23,7 @@ interface HomeClientProps {
 
 export function HomeClient({ initialDoctors }: HomeClientProps) {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [doctors, setDoctors] = useState<Doctor[]>(initialDoctors);
   const [selectedSpecialty, setSelectedSpecialty] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState("");
@@ -73,26 +74,36 @@ export function HomeClient({ initialDoctors }: HomeClientProps) {
           </div>
         </Link>
 
-        {/* Profile Avatar trigger */}
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => setIsMobileProfileOpen(!isMobileProfileOpen)}
-            className={`w-8 h-8 rounded-full font-bold text-xs flex items-center justify-center transition-all ${
-              isMobileProfileOpen
-                ? "bg-emerald-600 text-white ring-2 ring-emerald-500/30"
-                : "bg-emerald-100 text-emerald-800 border border-emerald-300"
-            }`}
-            aria-label="Profile and Menu"
+        {/* Profile Avatar or Login Trigger */}
+        {!isAuthenticated ? (
+          <Link
+            href="/login"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition-all"
           >
-            {getInitials(user?.name)}
-          </button>
+            <LogIn className="w-3.5 h-3.5 stroke-[2.3]" />
+            <span>Login</span>
+          </Link>
+        ) : (
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setIsMobileProfileOpen(!isMobileProfileOpen)}
+              className={`w-8 h-8 rounded-full font-bold text-xs flex items-center justify-center transition-all ${
+                isMobileProfileOpen
+                  ? "bg-emerald-600 text-white ring-2 ring-emerald-500/30"
+                  : "bg-emerald-100 text-emerald-800 border border-emerald-300"
+              }`}
+              aria-label="Profile and Menu"
+            >
+              {getInitials(user?.name)}
+            </button>
 
-          <ProfileDropdown
-            isOpen={isMobileProfileOpen}
-            onClose={() => setIsMobileProfileOpen(false)}
-          />
-        </div>
+            <ProfileDropdown
+              isOpen={isMobileProfileOpen}
+              onClose={() => setIsMobileProfileOpen(false)}
+            />
+          </div>
+        )}
       </div>
 
       {/* Patient-First Action Banner */}

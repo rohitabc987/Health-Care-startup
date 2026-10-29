@@ -6,11 +6,19 @@ interface OtpEntry {
   expiresAt: number;
 }
 
-const otpMap = new Map<string, OtpEntry>();
+const globalForOtp = globalThis as unknown as {
+  otpMap?: Map<string, OtpEntry>;
+  otpCleanInterval?: NodeJS.Timeout;
+};
+
+const otpMap = globalForOtp.otpMap ?? new Map<string, OtpEntry>();
+if (process.env.NODE_ENV !== "production") {
+  globalForOtp.otpMap = otpMap;
+}
 
 // Clean expired OTPs periodically
-if (typeof setInterval !== "undefined") {
-  setInterval(() => {
+if (typeof setInterval !== "undefined" && !globalForOtp.otpCleanInterval) {
+  globalForOtp.otpCleanInterval = setInterval(() => {
     const now = Date.now();
     for (const [phone, entry] of otpMap.entries()) {
       if (entry.expiresAt < now) {

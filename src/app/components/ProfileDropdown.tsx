@@ -74,30 +74,55 @@ export function ProfileDropdown({ isOpen, onClose, currentLocation = "Viram Khan
         ref={dropdownRef}
         className="absolute right-0 top-full mt-2 w-80 sm:w-88 bg-white rounded-3xl shadow-2xl border border-gray-200/90 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
       >
-        {/* Header: User Profile Info */}
+        {/* Header: User Profile Info or Sign In Prompt */}
         <div className="p-4 bg-gradient-to-br from-emerald-50 via-teal-50/50 to-white border-b border-gray-150">
           <div className="flex items-start justify-between">
-            <Link
-              href="/profile"
-              onClick={onClose}
-              className="flex items-center gap-3 flex-1 group/user cursor-pointer pr-2 hover:opacity-95 transition-opacity"
-              title="Click photo or name to open Profile page"
-            >
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white font-black text-lg flex items-center justify-center shadow-md shadow-emerald-600/20 group-hover/user:scale-105 group-hover/user:ring-2 group-hover/user:ring-emerald-400 transition-all">
-                {getInitials(user?.name)}
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <h3 className="font-bold text-gray-900 text-sm leading-tight group-hover/user:text-emerald-700 transition-colors">
-                    {user?.name || "Rahul Verma"}
-                  </h3>
-                  <span className="text-[9px] font-bold bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded uppercase">
-                    Verified
-                  </span>
+            {!user ? (
+              <div className="flex-1 pr-2">
+                <div className="flex items-center gap-2.5 mb-3">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+                    <User className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-900 text-sm leading-tight">Welcome Patient</h3>
+                    <p className="text-[11px] text-gray-500">Sign in for follow-ups &amp; slips</p>
+                  </div>
                 </div>
-                <p className="text-xs text-gray-500 font-mono mt-0.5">{user?.phone || "+91 98765 43210"}</p>
+                <Link
+                  href="/login"
+                  onClick={onClose}
+                  className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition-all active:scale-95"
+                >
+                  <LogIn className="w-3.5 h-3.5 stroke-[2.3]" />
+                  <span>Login with Mobile Number</span>
+                </Link>
               </div>
-            </Link>
+            ) : (
+              <Link
+                href="/profile"
+                onClick={onClose}
+                className="flex items-center gap-3 flex-1 group/user cursor-pointer pr-2 hover:opacity-95 transition-opacity"
+                title="Click photo or name to open Profile page"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white font-black text-lg flex items-center justify-center shadow-md shadow-emerald-600/20 group-hover/user:scale-105 group-hover/user:ring-2 group-hover/user:ring-emerald-400 transition-all">
+                  {getInitials(user?.name)}
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <h3 className="font-bold text-gray-900 text-sm leading-tight group-hover/user:text-emerald-700 transition-colors">
+                      {user?.name || "Patient"}
+                    </h3>
+                    <span className="text-[9px] font-bold bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded uppercase">
+                      Verified
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-500 font-mono mt-0.5">{user?.phone || ""}</p>
+                  {user?.healthId && (
+                    <p className="text-[10px] font-mono text-emerald-700 font-semibold mt-0.5">{user.healthId}</p>
+                  )}
+                </div>
+              </Link>
+            )}
 
             <button
               type="button"
@@ -239,6 +264,30 @@ export function ProfileDropdown({ isOpen, onClose, currentLocation = "Viram Khan
               </span>
             </button>
           </div>
+
+          {/* Item 6: Log Out (Visible only if authenticated) */}
+          {user && (
+            <div className="pt-1 border-t border-gray-150">
+              <button
+                type="button"
+                onClick={() => {
+                  logout();
+                  onClose();
+                }}
+                className="w-full p-2.5 rounded-2xl hover:bg-rose-50 text-rose-700 transition-colors flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-rose-100/70 text-rose-600 flex items-center justify-center">
+                    <LogOut className="w-4 h-4" />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-bold text-gray-900 group-hover:text-rose-900">Log Out</p>
+                    <p className="text-[11px] text-gray-400">Sign out of this device</p>
+                  </div>
+                </div>
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </>

@@ -3,14 +3,15 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { 
   UserProfile, 
-  INITIAL_USER, 
   getStoredUserProfile, 
   saveStoredUserProfile, 
-  subscribeToUserProfile 
+  clearStoredUserProfile,
+  subscribeToUserProfile,
+  updateUserProfile 
 } from "@/lib/firebase";
 
 interface AuthContextType {
-  user: UserProfile;
+  user: UserProfile | null;
   isAuthenticated: boolean;
   isLoginModalOpen: boolean;
   openLoginModal: () => void;
@@ -23,7 +24,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<UserProfile>(INITIAL_USER);
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -32,38 +33,58 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const stored = getStoredUserProfile();
     setUser(stored);
 
-    const unsub = subscribeToUserProfile(stored.uid, (updated) => {
-      setUser(updated);
-    });
+    // Cross-tab synchronization for long-term & concurrent tab sessions
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "pronto_user_profile") {
+        if (e.newValue) {
+          try {
+            setUser(JSON.parse(e.newValue));
+          } catch {
+            setUser(null);
+          }
+        } else {
+          setUser(null);
+        }
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
 
-    return () => unsub();
+    let unsubUser: (() => void) | undefined = undefined;
+    if (stored?.uid) {
+      unsubUser = subscribeToUserProfile(stored.uid, (updated) => {
+        if (updated) {
+          setUser(updated);
+        }
+      });
+    }
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      if (unsubUser) unsubUser();
+    };
   }, []);
 
   const login = (newUser: UserProfile) => {
     saveStoredUserProfile(newUser);
     setUser(newUser);
     setIsLoginModalOpen(false);
+    updateUserProfile(newUser.uid, newUser).catch((err) => {
+      console.warn("Could not sync user profile to Firestore:", err);
+    });
   };
 
   const logout = () => {
-    // Reset to demo profile or empty
-    const demo = {
-      ...INITIAL_USER,
-      uid: "patient-guest-001",
-      name: "Guest Patient",
-      phone: "+91 98765 43210",
-      role: "patient" as const,
-    };
-    saveStoredUserProfile(demo);
-    setUser(demo);
+    clearStoredUserProfile();
+    setUser(null);
   };
 
   const updateUser = (data: Partial<UserProfile>) => {
-    const updated = {
+    if (!user) return;
+    const updated: UserProfile = {
       ...user,
       ...data,
       address: {
-        ...user.address,
+        ...(user.address || {}),
         ...(data.address || {}),
       },
     };
@@ -78,7 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
-        isAuthenticated: isMounted && Boolean(user?.phone),
+        isAuthenticated: isMounted && Boolean(user && user.phone),
         isLoginModalOpen,
         openLoginModal,
         closeLoginModal,

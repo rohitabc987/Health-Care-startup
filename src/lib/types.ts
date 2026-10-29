@@ -13,12 +13,15 @@ export interface UserProfile {
   uid: string;
   name: string;
   phone: string;
+  gender?: "male" | "female" | "other";
+  age?: number;
   role?: 'patient' | 'doctor' | 'admin';
   healthId?: string;
   address?: UserAddress;
   createdAt?: any;
   defaultClinic?: string;
   registeredByGroundTeam?: boolean;
+  isNewUser?: boolean;
 }
 
 export interface Doctor {

@@ -2,15 +2,19 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { 
-  Phone, 
-  ShieldCheck, 
-  ArrowRight, 
-  CheckCircle2, 
-  X, 
+import { updateUserProfile } from "@/lib/firebase";
+import {
+  Phone,
+  ShieldCheck,
+  ArrowRight,
+  CheckCircle2,
+  X,
   RotateCcw,
   Sparkles,
-  Lock
+  Lock,
+  User,
+  Calendar,
+  BadgeCheck
 } from "lucide-react";
 
 interface PhoneLoginModalProps {
@@ -20,13 +24,19 @@ interface PhoneLoginModalProps {
 
 export function PhoneLoginModal({ isOpen, onClose }: PhoneLoginModalProps) {
   const { login } = useAuth();
-  const [step, setStep] = useState<"phone" | "otp">("phone");
+  const [step, setStep] = useState<"phone" | "otp" | "onboarding">("phone");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [countdown, setCountdown] = useState(30);
   const [devOtpHint, setDevOtpHint] = useState<string | null>(null);
+
+  // New patient onboarding state
+  const [verifiedUser, setVerifiedUser] = useState<any>(null);
+  const [fullName, setFullName] = useState("");
+  const [age, setAge] = useState<string>("");
+  const [gender, setGender] = useState<"male" | "female" | "other">("male");
 
   const otpInputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
@@ -145,11 +155,50 @@ export function PhoneLoginModal({ isOpen, onClose }: PhoneLoginModalProps) {
         throw new Error(data.error || "Verification failed");
       }
 
-      // Success
-      login(data.user);
-      onClose();
+      setIsLoading(false);
+
+      if (data.user?.isNewUser) {
+        setVerifiedUser(data.user);
+        setStep("onboarding");
+      } else {
+        login(data.user);
+        onClose();
+      }
     } catch (err: any) {
       setErrorMsg(err.message || "Invalid OTP code");
+      setIsLoading(false);
+    }
+  };
+
+  const handleCompleteOnboarding = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!fullName.trim()) {
+      setErrorMsg("Please enter your full name for prescriptions");
+      return;
+    }
+    const ageNum = parseInt(age, 10);
+    if (!age || isNaN(ageNum) || ageNum < 1 || ageNum > 120) {
+      setErrorMsg("Please enter a valid age (1-120)");
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMsg("");
+
+    try {
+      const finalUser = {
+        ...verifiedUser,
+        name: fullName.trim(),
+        age: ageNum,
+        gender,
+        isNewUser: false,
+      };
+
+      await updateUserProfile(finalUser.uid, finalUser);
+      login(finalUser);
+      onClose();
+    } catch (err: any) {
+      setErrorMsg(err.message || "Could not save profile. Please retry.");
       setIsLoading(false);
     }
   };
@@ -166,104 +215,97 @@ export function PhoneLoginModal({ isOpen, onClose }: PhoneLoginModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs p-0 sm:p-4 animate-in fade-in duration-200">
-      <div 
-        className="w-full max-w-md bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden border border-gray-150 flex flex-col"
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs p-0 sm:p-4 animate-in fade-in duration-200">
+      <div
+        className="w-full max-w-md bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden border border-gray-150 flex flex-col sm:py-5"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-emerald-50 to-teal-50/50">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shadow-sm shadow-emerald-600/30">
-              <Lock className="w-5 h-5 stroke-[2.2]" />
-            </div>
-            <div>
-              <h3 className="font-bold text-gray-900 text-sm sm:text-base leading-tight">
-                {step === "phone" ? "Zero-Captcha Mobile Login" : "Enter Verification Code"}
-              </h3>
-              <p className="text-[11px] text-emerald-700 font-medium">
-                {step === "phone" ? "Direct SMS OTP • Zero check boxes or captchas" : `Sent to +91 ${phone}`}
-              </p>
-            </div>
+        <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+          <div className="w-8" />
+          <div className="text-center">
+            <h3 className="font-bold text-gray-900 text-sm sm:text-base leading-tight">
+              {step === "phone" ? "Enter your mobile number" : step === "otp" ? "Verify with OTP" : "Complete Your Profile"}
+            </h3>
+            <p className="text-[11px] text-gray-500 font-medium mt-0.5">
+              {step === "phone" ? "We will send a 6-digit OTP to verify" : step === "otp" ? `Code sent to +91 ${phone}` : "Basic details for doctor prescriptions"}
+            </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-white/80 hover:bg-white text-gray-500 hover:text-gray-900 flex items-center justify-center transition-colors shadow-2xs"
+            className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-900 flex items-center justify-center transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Body */}
-        <div className="p-5 sm:p-6 space-y-4">
+        <div className="p-4 sm:p-5 space-y-4">
           {errorMsg && (
-            <div className="p-3 bg-rose-50 border border-rose-200 rounded-2xl text-xs text-rose-800 font-medium animate-in fade-in">
+            <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 font-medium text-center animate-in fade-in">
               {errorMsg}
             </div>
           )}
 
-          {step === "phone" ? (
+          {step === "phone" && (
             <form onSubmit={handleSendOtp} className="space-y-4">
               <div>
                 <label className="text-xs font-bold text-gray-700 block mb-1.5">
-                  Enter 10-Digit Mobile Number
+                  Mobile Number
                 </label>
                 <div className="relative flex items-center">
-                  <div className="absolute left-3 flex items-center gap-1.5 text-xs font-bold text-gray-700 bg-gray-100 px-2 py-1 rounded-lg border border-gray-200">
+                  <div className="absolute left-3 flex items-center gap-1 text-xs font-bold text-gray-800 bg-gray-100 px-2 py-1 rounded-lg border border-gray-200">
                     <span>🇮🇳</span>
                     <span>+91</span>
                   </div>
                   <input
                     type="tel"
+                    inputMode="numeric"
                     value={phone}
                     onChange={handlePhoneChange}
                     placeholder="98765 43210"
                     autoFocus
-                    className="w-full pl-22 pr-4 py-3 bg-white text-sm font-semibold tracking-wider text-gray-900 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-2xs"
+                    className="w-full pl-20 pr-3.5 py-2.5 bg-white text-sm font-semibold tracking-wider text-gray-900 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-2xs"
                   />
                 </div>
               </div>
 
-              {/* Dev Whitelist Shortcut */}
-              <div className="flex items-center justify-between p-2.5 bg-emerald-50/70 rounded-xl border border-emerald-100 text-[11px]">
-                <div className="flex items-center gap-1.5 text-emerald-900">
-                  <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>Dev Test Bypass:</span>
-                </div>
+              <div className="space-y-2 pt-1">
+                <button
+                  type="submit"
+                  disabled={isLoading || phone.length < 10}
+                  className="w-full py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold rounded-xl shadow-md shadow-emerald-600/20 text-xs sm:text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                >
+                  {isLoading ? (
+                    <span className="flex items-center gap-2">
+                      <span className="w-3.5 h-3.5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                      Sending Code...
+                    </span>
+                  ) : (
+                    <>
+                      <span>Continue</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </>
+                  )}
+                </button>
+
                 <button
                   type="button"
-                  onClick={fillTestNumber}
-                  className="font-bold text-emerald-700 hover:text-emerald-900 underline"
+                  onClick={onClose}
+                  className="w-full py-2 text-gray-600 hover:text-gray-900 font-semibold rounded-xl text-xs flex items-center justify-center transition-all text-center"
                 >
-                  Fill +91 98765 43210
+                  Skip for now
                 </button>
               </div>
 
-              <button
-                type="submit"
-                disabled={isLoading || phone.length < 10}
-                className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-semibold rounded-2xl shadow-md shadow-emerald-600/20 text-xs sm:text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50"
-              >
-                {isLoading ? (
-                  <span className="flex items-center gap-2">
-                    <span className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                    Sending SMS Code...
-                  </span>
-                ) : (
-                  <>
-                    <span>Send Login Code</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </button>
-
-              <div className="flex items-center justify-center gap-1.5 text-[11px] text-gray-400 text-center">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Zero visual captchas • Instant SMS login</span>
-              </div>
+              <p className="text-[10px] text-gray-400 text-center leading-relaxed">
+                By continuing, you agree to our Terms &amp; Privacy Policy.
+              </p>
             </form>
-          ) : (
+          )}
+
+          {step === "otp" && (
             <div className="space-y-4">
               <div>
                 <div className="flex items-center justify-between mb-2">
@@ -303,39 +345,34 @@ export function PhoneLoginModal({ isOpen, onClose }: PhoneLoginModalProps) {
                 </div>
               </div>
 
-              {/* Dev 1-Tap Autofill */}
-              <div className="flex items-center justify-between p-2.5 bg-amber-50 rounded-xl border border-amber-200/80 text-[11px]">
-                <div className="flex items-center gap-1.5 text-amber-900">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                  <span>Dev OTP: <strong className="font-mono">{devOtpHint || "123456"}</strong></span>
-                </div>
+              <div className="space-y-2 pt-1">
                 <button
                   type="button"
-                  onClick={fillTestOtp}
-                  className="font-bold text-amber-800 hover:text-amber-950 underline"
+                  onClick={() => verifyCode()}
+                  disabled={isLoading || otp.some((d) => d === "")}
+                  className="w-full py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold rounded-xl shadow-md shadow-emerald-600/20 text-xs sm:text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50"
                 >
-                  1-Tap Auto Fill &amp; Login
+                  {isLoading ? (
+                    <span className="flex items-center gap-2">
+                      <span className="w-3.5 h-3.5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                      Verifying...
+                    </span>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>Verify &amp; Continue</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="w-full py-2 bg-gray-100 hover:bg-gray-200 active:scale-[0.99] text-gray-600 hover:text-gray-900 font-semibold rounded-xl text-xs flex items-center justify-center transition-all text-center"
+                >
+                  Skip for now
                 </button>
               </div>
-
-              <button
-                type="button"
-                onClick={() => verifyCode()}
-                disabled={isLoading || otp.some((d) => d === "")}
-                className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-semibold rounded-2xl shadow-md shadow-emerald-600/20 text-xs sm:text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50"
-              >
-                {isLoading ? (
-                  <span className="flex items-center gap-2">
-                    <span className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                    Verifying...
-                  </span>
-                ) : (
-                  <>
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>Verify &amp; Continue</span>
-                  </>
-                )}
-              </button>
 
               <div className="text-center pt-1">
                 {countdown > 0 ? (
@@ -354,6 +391,107 @@ export function PhoneLoginModal({ isOpen, onClose }: PhoneLoginModalProps) {
                 )}
               </div>
             </div>
+          )}
+
+          {step === "onboarding" && (
+            <form onSubmit={handleCompleteOnboarding} className="space-y-3.5">
+              <div className="p-2.5 bg-emerald-50/70 border border-emerald-100 rounded-xl flex items-center gap-2 text-xs text-emerald-900">
+                <BadgeCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Verified! Please enter your name and age for prescriptions.</span>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-gray-700 block mb-1">
+                  Full Name <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                    <User className="w-4 h-4" />
+                  </div>
+                  <input
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="e.g. Rahul Verma"
+                    autoFocus
+                    required
+                    className="w-full pl-9 pr-3 py-2.5 bg-white text-sm font-semibold text-gray-900 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-2xs"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2.5">
+                <div>
+                  <label className="text-xs font-bold text-gray-700 block mb-1">
+                    Age <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                      <Calendar className="w-4 h-4" />
+                    </div>
+                    <input
+                      type="number"
+                      min="1"
+                      max="120"
+                      value={age}
+                      onChange={(e) => setAge(e.target.value)}
+                      placeholder="e.g. 28"
+                      required
+                      className="w-full pl-9 pr-2 py-2.5 bg-white text-sm font-semibold text-gray-900 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-2xs"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-gray-700 block mb-1">
+                    Gender <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="grid grid-cols-3 gap-1">
+                    {(["male", "female", "other"] as const).map((g) => (
+                      <button
+                        key={g}
+                        type="button"
+                        onClick={() => setGender(g)}
+                        className={`py-2 text-[10px] font-bold rounded-xl border capitalize transition-all ${gender === g
+                          ? "bg-emerald-600 text-white border-emerald-600"
+                          : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
+                          }`}
+                      >
+                        {g === "male" ? "M" : g === "female" ? "F" : "O"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2 pt-1">
+                <button
+                  type="submit"
+                  disabled={isLoading || !fullName.trim() || !age}
+                  className="w-full py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold rounded-xl shadow-md shadow-emerald-600/20 text-xs sm:text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                >
+                  {isLoading ? (
+                    <span className="flex items-center gap-2">
+                      <span className="w-3.5 h-3.5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                      Saving Profile...
+                    </span>
+                  ) : (
+                    <>
+                      <span>Finish &amp; Continue</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="w-full py-2 bg-gray-100 hover:bg-gray-200 active:scale-[0.99] text-gray-600 hover:text-gray-900 font-semibold rounded-xl text-xs flex items-center justify-center transition-all text-center"
+                >
+                  Skip for now
+                </button>
+              </div>
+            </form>
           )}
         </div>
       </div>

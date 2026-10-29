@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { 
   getCachedTodaySales, 
   getCachedActiveDoctors, 
@@ -5,9 +6,12 @@ import {
 } from "@/lib/firebase";
 import { AdminClient } from "./AdminClient";
 
+export const instant = false;
+
 // Next.js Server Component
 // Micro-caches aggregate metrics and doctor catalog for fast dashboard loads
 export default async function AdminPage() {
+  await connection();
   const todayStr = new Date().toISOString().split("T")[0];
 
   const [initialOverallMetrics, initialDoctors, initialAppointments] = await Promise.all([

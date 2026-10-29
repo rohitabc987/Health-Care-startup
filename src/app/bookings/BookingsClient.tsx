@@ -9,7 +9,8 @@ import { ProfileDropdown } from "../components/ProfileDropdown";
 import { 
   Stethoscope, 
   CheckCircle, 
-  CalendarCheck 
+  CalendarCheck,
+  LogIn
 } from "lucide-react";
 
 interface BookingsClientProps {
@@ -17,13 +18,17 @@ interface BookingsClientProps {
 }
 
 export function BookingsClient({ initialAppointments }: BookingsClientProps) {
-  const { user } = useAuth();
-  const [appointments, setAppointments] = useState<Appointment[]>(initialAppointments);
+  const { user, isAuthenticated, openLoginModal } = useAuth();
+  const [appointments, setAppointments] = useState<Appointment[]>(user ? initialAppointments : []);
   const [bookingsFilter, setBookingsFilter] = useState<"upcoming" | "previous">("upcoming");
   const [isMobileProfileOpen, setIsMobileProfileOpen] = useState(false);
 
   useEffect(() => {
-    const unsub = subscribeToAppointments(user?.uid || "patient-demo-001", (data) => {
+    if (!user?.uid) {
+      setAppointments([]);
+      return;
+    }
+    const unsub = subscribeToAppointments(user.uid, (data) => {
       setAppointments(data);
     });
     return () => unsub();
@@ -59,68 +64,136 @@ export function BookingsClient({ initialAppointments }: BookingsClientProps) {
           </div>
         </Link>
 
-        {/* Profile Avatar trigger */}
-        <div className="relative">
-          <button 
-            type="button"
-            onClick={() => setIsMobileProfileOpen(!isMobileProfileOpen)}
-            className={`w-8 h-8 rounded-full font-bold text-xs flex items-center justify-center transition-all ${
-              isMobileProfileOpen
-                ? "bg-emerald-600 text-white ring-2 ring-emerald-500/30"
-                : "bg-emerald-100 text-emerald-800 border border-emerald-300"
-            }`}
-            aria-label="Profile and Menu"
+        {/* Profile Avatar or Login Trigger */}
+        {!isAuthenticated ? (
+          <Link
+            href="/login?redirect=/bookings"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition-all"
           >
-            {getInitials(user?.name)}
-          </button>
+            <LogIn className="w-3.5 h-3.5 stroke-[2.3]" />
+            <span>Login</span>
+          </Link>
+        ) : (
+          <div className="relative">
+            <button 
+              type="button"
+              onClick={() => setIsMobileProfileOpen(!isMobileProfileOpen)}
+              className={`w-8 h-8 rounded-full font-bold text-xs flex items-center justify-center transition-all ${
+                isMobileProfileOpen
+                  ? "bg-emerald-600 text-white ring-2 ring-emerald-500/30"
+                  : "bg-emerald-100 text-emerald-800 border border-emerald-300"
+              }`}
+              aria-label="Profile and Menu"
+            >
+              {getInitials(user?.name)}
+            </button>
 
-          <ProfileDropdown
-            isOpen={isMobileProfileOpen}
-            onClose={() => setIsMobileProfileOpen(false)}
-          />
-        </div>
-      </div>
-
-      {/* Bookings Header Card */}
-      <div className="bg-white p-4 sm:p-6 rounded-3xl border border-gray-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-black text-gray-900">My Follow-ups</h1>
-            <span className="text-xs font-bold bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full">
-              Live Passes
-            </span>
+            <ProfileDropdown
+              isOpen={isMobileProfileOpen}
+              onClose={() => setIsMobileProfileOpen(false)}
+            />
           </div>
-          <p className="text-xs sm:text-sm text-gray-500 mt-1">
-            Track your upcoming doctor follow-ups and zero-queue clinic passes.
-          </p>
-        </div>
-
-        {/* Upcoming vs Previous Tabs */}
-        <div className="p-1 bg-gray-100 rounded-2xl flex gap-1 self-start sm:self-auto">
-          <button
-            type="button"
-            onClick={() => setBookingsFilter("upcoming")}
-            className={`py-2 px-5 text-xs font-bold rounded-xl transition-all ${
-              bookingsFilter === "upcoming"
-                ? "bg-slate-900 text-white shadow-xs"
-                : "text-gray-500 hover:text-gray-900"
-            }`}
-          >
-            Upcoming ({upcomingAppointments.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setBookingsFilter("previous")}
-            className={`py-2 px-5 text-xs font-bold rounded-xl transition-all ${
-              bookingsFilter === "previous"
-                ? "bg-slate-900 text-white shadow-xs"
-                : "text-gray-500 hover:text-gray-900"
-            }`}
-          >
-            Past Follow-ups ({previousAppointments.length})
-          </button>
-        </div>
+        )}
       </div>
+
+      {!isAuthenticated ? (
+        /* Unauthenticated Centered Hero Card */
+        <div className="bg-white rounded-3xl border border-gray-150 p-6 sm:p-12 text-center max-w-xl mx-auto shadow-sm space-y-6 my-4 animate-in fade-in zoom-in-95">
+          <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center mx-auto shadow-lg shadow-emerald-600/20">
+            <CalendarCheck className="w-8 h-8 stroke-[2.2]" />
+          </div>
+
+          <div>
+            <span className="text-[11px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full">
+              Appointments
+            </span>
+            <h2 className="text-xl sm:text-2xl font-black text-gray-900 mt-2">
+              Sign In to View Your Follow-ups
+            </h2>
+            <p className="text-xs sm:text-sm text-gray-500 mt-1 max-w-md mx-auto">
+              Your zero-queue clinic passes, doctor consultations, and appointment slips are securely linked to your mobile account.
+            </p>
+          </div>
+
+          {/* Quick Value Props */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-left pt-2">
+            <div className="p-3 bg-emerald-50/60 rounded-2xl border border-emerald-100">
+              <span className="text-base block mb-1">⚡</span>
+              <p className="text-xs font-bold text-gray-900">Zero-Queue Pass</p>
+              <p className="text-[11px] text-gray-500">Fast clinic check-in slip</p>
+            </div>
+            <div className="p-3 bg-teal-50/60 rounded-2xl border border-teal-100">
+              <span className="text-base block mb-1">📅</span>
+              <p className="text-xs font-bold text-gray-900">Live Booking Feed</p>
+              <p className="text-[11px] text-gray-500">Track doctor visit status</p>
+            </div>
+            <div className="p-3 bg-amber-50/60 rounded-2xl border border-amber-100">
+              <span className="text-base block mb-1">🔒</span>
+              <p className="text-xs font-bold text-gray-900">Private Records</p>
+              <p className="text-[11px] text-gray-500">Protected patient medical vault</p>
+            </div>
+          </div>
+
+          <div className="pt-2 space-y-2.5">
+            <Link
+              href="/login?redirect=/bookings"
+              className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-semibold rounded-2xl shadow-md shadow-emerald-600/20 text-xs sm:text-sm flex items-center justify-center gap-2 transition-all"
+            >
+              <LogIn className="w-4 h-4 stroke-[2.3]" />
+              <span>Login with Mobile Number</span>
+            </Link>
+
+            <button
+              type="button"
+              onClick={openLoginModal}
+              className="w-full py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-700 font-semibold rounded-2xl text-xs transition-colors"
+            >
+              Open Quick Login Modal
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Bookings Header Card */}
+          <div className="bg-white p-4 sm:p-6 rounded-3xl border border-gray-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl sm:text-2xl font-black text-gray-900">My Follow-ups</h1>
+                <span className="text-xs font-bold bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full">
+                  Live Passes
+                </span>
+              </div>
+              <p className="text-xs sm:text-sm text-gray-500 mt-1">
+                Track your upcoming doctor follow-ups and zero-queue clinic passes.
+              </p>
+            </div>
+
+            {/* Upcoming vs Previous Tabs */}
+            <div className="p-1 bg-gray-100 rounded-2xl flex gap-1 self-start sm:self-auto">
+              <button
+                type="button"
+                onClick={() => setBookingsFilter("upcoming")}
+                className={`py-2 px-5 text-xs font-bold rounded-xl transition-all ${
+                  bookingsFilter === "upcoming"
+                    ? "bg-slate-900 text-white shadow-xs"
+                    : "text-gray-500 hover:text-gray-900"
+                }`}
+              >
+                Upcoming ({upcomingAppointments.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setBookingsFilter("previous")}
+                className={`py-2 px-5 text-xs font-bold rounded-xl transition-all ${
+                  bookingsFilter === "previous"
+                    ? "bg-slate-900 text-white shadow-xs"
+                    : "text-gray-500 hover:text-gray-900"
+                }`}
+              >
+                Past Follow-ups ({previousAppointments.length})
+              </button>
+            </div>
+          </div>
 
       {/* Feed or Empty State */}
       {bookingsFilter === "upcoming" ? (
@@ -166,6 +239,8 @@ export function BookingsClient({ initialAppointments }: BookingsClientProps) {
             Completed follow-up consultations will be archived here in your health record.
           </p>
         </div>
+      )}
+        </>
       )}
     </div>
   );

@@ -3,16 +3,18 @@
 import React, { useState } from "react";
 import { Doctor, bookAppointment, getStoredUserProfile } from "@/lib/firebase";
 import { revalidatePatientDataAction } from "@/app/actions/cacheActions";
-import { 
-  Calendar, 
-  Clock, 
-  CheckCircle2, 
-  X, 
-  ShieldCheck, 
-  Sparkles, 
+import { useAuth } from "@/context/AuthContext";
+import {
+  Calendar,
+  Clock,
+  CheckCircle2,
+  X,
+  ShieldCheck,
+  Sparkles,
   ArrowRight,
   PhoneCall,
-  AlertCircle
+  AlertCircle,
+  LogIn
 } from "lucide-react";
 
 interface BookingModalProps {
@@ -23,12 +25,21 @@ interface BookingModalProps {
 }
 
 export function BookingModal({ doctor, isOpen, onClose, onSuccess }: BookingModalProps) {
+  const { user: authUser, openLoginModal } = useAuth();
   const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [selectedDayOffset, setSelectedDayOffset] = useState<number>(7);
-  const [selectedTimeWindow, setSelectedTimeWindow] = useState<string>("Evening (5:00 PM - 7:00 PM)");
+  const [selectedDayOffset, setSelectedDayOffset] = useState<number | null>(7);
+  const [isCustomDate, setIsCustomDate] = useState(false);
+  const [customDate, setCustomDate] = useState<string>("");
+
+  const [selectedTimeWindow, setSelectedTimeWindow] = useState<string>("Evening Window (5:00 PM - 7:00 PM)");
+  const [isCustomTime, setIsCustomTime] = useState(false);
+  const [customTime, setCustomTime] = useState<string>("18:00");
   const [patientNotes, setPatientNotes] = useState<string>("Review medication & blood pressure progress");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingConfirmedId, setBookingConfirmedId] = useState<string | null>(null);
+
+  const dateInputRef = React.useRef<HTMLInputElement>(null);
+  const timeInputRef = React.useRef<HTMLInputElement>(null);
 
   if (!isOpen || !doctor) return null;
 
@@ -42,26 +53,51 @@ export function BookingModal({ doctor, isOpen, onClose, onSuccess }: BookingModa
     };
   };
 
-  const targetDateInfo = calculateTargetDate(selectedDayOffset);
+  const formatCustomDate = (dateStr: string) => {
+    if (!dateStr) return "";
+    const [y, m, d] = dateStr.split("-").map(Number);
+    const dateObj = new Date(y, m - 1, d);
+    return dateObj.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+  };
+
+  const formatTime12h = (time24: string) => {
+    if (!time24) return "10:00 AM";
+    const [h, m] = time24.split(":");
+    const hour = parseInt(h, 10);
+    const ampm = hour >= 12 ? "PM" : "AM";
+    const hour12 = hour % 12 || 12;
+    return `${hour12}:${m} ${ampm}`;
+  };
+
+  const targetDateInfo = isCustomDate && customDate
+    ? { formatted: formatCustomDate(customDate), iso: customDate }
+    : calculateTargetDate(selectedDayOffset ?? 7);
+
+  const finalTimeWindow = isCustomTime && customTime
+    ? `Custom Time (${formatTime12h(customTime)})`
+    : selectedTimeWindow;
 
   const timeWindows = [
     { id: "morning", label: "Morning Window", hours: "9:00 AM - 11:30 AM", icon: "🌅" },
-    { id: "afternoon", label: "Afternoon Window", hours: "1:30 PM - 3:30 PM", icon: "☀️" },
     { id: "evening", label: "Evening Window", hours: "5:00 PM - 7:00 PM", icon: "🌙", recommended: true },
   ];
 
   const dateOptions = [
-    { days: 5, label: "5 Days Out", desc: calculateTargetDate(5).formatted, recommended: false },
     { days: 7, label: "7 Days (Recommended)", desc: calculateTargetDate(7).formatted, recommended: true },
     { days: 10, label: "10 Days Out", desc: calculateTargetDate(10).formatted, recommended: false },
   ];
 
   const handleConfirmBooking = async () => {
+    const user = authUser || getStoredUserProfile();
+    if (!user) {
+      openLoginModal();
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      const user = getStoredUserProfile();
       const addrString = user.address
-        ? [user.address.houseNo, user.address.street, user.address.locality, user.address.city, user.address.pincode].filter(Boolean).join(", ")
+        ? [user.address.locality, user.address.state].filter(Boolean).join(", ")
         : "";
 
       const aptId = await bookAppointment({
@@ -76,7 +112,7 @@ export function BookingModal({ doctor, isOpen, onClose, onSuccess }: BookingModa
         clinicName: doctor.clinic,
         bookingDate: new Date().toISOString().split("T")[0],
         followupDate: targetDateInfo.formatted,
-        timeWindow: selectedTimeWindow,
+        timeWindow: finalTimeWindow,
         prescriptionUrl: "/images/prescription-demo.jpg",
         consultationFee: doctor.consultationFee,
         notes: patientNotes,
@@ -102,7 +138,7 @@ export function BookingModal({ doctor, isOpen, onClose, onSuccess }: BookingModa
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs p-0 sm:p-4 animate-in fade-in duration-200">
-      <div 
+      <div
         className="w-full max-w-lg bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden border border-gray-100 flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
@@ -131,10 +167,10 @@ export function BookingModal({ doctor, isOpen, onClose, onSuccess }: BookingModa
           <div className="flex items-center gap-3.5 bg-gray-50 p-3 rounded-2xl border border-gray-150">
             {/* Doctor Avatar */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img 
-              src={doctor.image} 
-              alt={doctor.name} 
-              className="w-13 h-13 rounded-2xl object-cover border border-emerald-500/20 shadow-xs" 
+            <img
+              src={doctor.image}
+              alt={doctor.name}
+              className="w-13 h-13 rounded-2xl object-cover border border-emerald-500/20 shadow-xs"
             />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
@@ -163,29 +199,90 @@ export function BookingModal({ doctor, isOpen, onClose, onSuccess }: BookingModa
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                {dateOptions.map((opt) => (
-                  <button
-                    key={opt.days}
-                    type="button"
-                    onClick={() => setSelectedDayOffset(opt.days)}
-                    className={`p-3 rounded-2xl text-left border transition-all flex flex-col justify-between ${
-                      selectedDayOffset === opt.days
-                        ? "border-emerald-600 bg-emerald-50/70 text-emerald-950 ring-2 ring-emerald-600/20 shadow-xs"
-                        : "border-gray-200 bg-white hover:border-emerald-300 text-gray-800"
+              {/* 7 Days & 10 Days in Horizontal Row + Custom Date below */}
+              <div className="space-y-2.5">
+                <div className="grid grid-cols-2 gap-2.5">
+                  {dateOptions.map((opt) => (
+                    <button
+                      key={opt.days}
+                      type="button"
+                      onClick={() => {
+                        setSelectedDayOffset(opt.days);
+                        setIsCustomDate(false);
+                      }}
+                      className={`p-3 rounded-2xl text-left border transition-all flex flex-col justify-between ${!isCustomDate && selectedDayOffset === opt.days
+                          ? "border-emerald-600 bg-emerald-50/70 text-emerald-950 ring-2 ring-emerald-600/20 shadow-xs"
+                          : "border-gray-200 bg-white hover:border-emerald-300 text-gray-800"
+                        }`}
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <span className="text-xs font-bold">{opt.label}</span>
+                        {opt.recommended && (
+                          <span className="text-[9px] bg-emerald-600 text-white font-bold px-1.5 py-0.5 rounded-full uppercase">
+                            Best
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-sm font-semibold mt-2 text-gray-900">{opt.desc}</span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Custom Date Chooser */}
+                <div
+                  onClick={() => {
+                    setIsCustomDate(true);
+                    setSelectedDayOffset(null);
+                    if (!customDate) {
+                      const d = new Date();
+                      d.setDate(d.getDate() + 3);
+                      setCustomDate(d.toISOString().split("T")[0]);
+                    }
+                    try {
+                      dateInputRef.current?.showPicker?.();
+                    } catch {
+                      dateInputRef.current?.focus();
+                    }
+                  }}
+                  className={`p-3 rounded-2xl border transition-all flex items-center justify-between cursor-pointer ${isCustomDate
+                      ? "border-emerald-600 bg-emerald-50/70 text-emerald-950 ring-2 ring-emerald-600/20 shadow-xs"
+                      : "border-gray-200 bg-white hover:border-emerald-300 text-gray-800"
                     }`}
-                  >
-                    <div className="flex items-center justify-between w-full">
-                      <span className="text-xs font-bold">{opt.label}</span>
-                      {opt.recommended && (
-                        <span className="text-[9px] bg-emerald-600 text-white font-bold px-1.5 py-0.5 rounded-full uppercase">
-                          Best
-                        </span>
-                      )}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${isCustomDate ? "bg-emerald-600 text-white" : "bg-gray-100 text-gray-600"
+                      }`}>
+                      <Calendar className="w-4 h-4" />
                     </div>
-                    <span className="text-sm font-semibold mt-2 text-gray-900">{opt.desc}</span>
-                  </button>
-                ))}
+                    <div>
+                      <span className="text-xs font-bold text-gray-900 block leading-tight">Pick Custom Date</span>
+                      <span className="text-[11px] text-gray-500 block mt-0.5">
+                        {isCustomDate && customDate ? formatCustomDate(customDate) : "Select any specific date"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <input
+                    ref={dateInputRef}
+                    type="date"
+                    min={new Date().toISOString().split("T")[0]}
+                    value={customDate}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsCustomDate(true);
+                      setSelectedDayOffset(null);
+                      try {
+                        (e.target as HTMLInputElement).showPicker?.();
+                      } catch { }
+                    }}
+                    onChange={(e) => {
+                      setCustomDate(e.target.value);
+                      setIsCustomDate(true);
+                      setSelectedDayOffset(null);
+                    }}
+                    className="text-xs font-semibold text-gray-800 bg-white border border-gray-200 rounded-xl px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer shadow-2xs"
+                  />
+                </div>
               </div>
 
               {/* Time Window Selection */}
@@ -194,51 +291,102 @@ export function BookingModal({ doctor, isOpen, onClose, onSuccess }: BookingModa
                   <Clock className="w-3.5 h-3.5 text-emerald-600" />
                   Choose Consultation Window
                 </label>
-                <div className="space-y-2">
-                  {timeWindows.map((tw) => (
-                    <button
-                      key={tw.id}
-                      type="button"
-                      onClick={() => setSelectedTimeWindow(`${tw.label} (${tw.hours})`)}
-                      className={`w-full p-3 rounded-2xl border transition-all flex items-center justify-between text-left ${
-                        selectedTimeWindow.includes(tw.label)
-                          ? "border-emerald-600 bg-emerald-50/70 text-emerald-950 ring-2 ring-emerald-600/20"
-                          : "border-gray-200 bg-white hover:border-emerald-200 text-gray-800"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="text-lg">{tw.icon}</span>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-gray-900">{tw.label}</span>
-                            {tw.recommended && (
-                              <span className="text-[10px] text-emerald-700 bg-emerald-100/70 font-semibold px-2 py-0.5 rounded-full">
-                                Popular
-                              </span>
-                            )}
-                          </div>
-                          <span className="text-xs text-gray-500">{tw.hours}</span>
+
+                <div className="space-y-2.5">
+                  {/* Morning & Evening in Horizontal Row */}
+                  <div className="grid grid-cols-2 gap-2.5">
+                    {timeWindows.map((tw) => (
+                      <button
+                        key={tw.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedTimeWindow(`${tw.label} (${tw.hours})`);
+                          setIsCustomTime(false);
+                        }}
+                        className={`p-3 rounded-2xl border transition-all flex flex-col justify-between text-left ${!isCustomTime && selectedTimeWindow.includes(tw.label)
+                            ? "border-emerald-600 bg-emerald-50/70 text-emerald-950 ring-2 ring-emerald-600/20 shadow-xs"
+                            : "border-gray-200 bg-white hover:border-emerald-200 text-gray-800"
+                          }`}
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <span className="text-lg">{tw.icon}</span>
+                          {tw.recommended && (
+                            <span className="text-[9px] text-emerald-700 bg-emerald-100 font-bold px-1.5 py-0.5 rounded-full uppercase">
+                              Popular
+                            </span>
+                          )}
                         </div>
+                        <div className="mt-2">
+                          <span className="text-xs font-bold text-gray-900 block leading-tight">{tw.label}</span>
+                          <span className="text-[11px] text-gray-500 block mt-0.5">{tw.hours}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Custom Time Slot Chooser below */}
+                  <div
+                    onClick={() => {
+                      setIsCustomTime(true);
+                      if (!customTime) {
+                        setCustomTime("18:00");
+                      }
+                      setSelectedTimeWindow(`Custom Time (${formatTime12h(customTime || "18:00")})`);
+                      try {
+                        timeInputRef.current?.showPicker?.();
+                      } catch {
+                        timeInputRef.current?.focus();
+                      }
+                    }}
+                    className={`p-3 rounded-2xl border transition-all flex items-center justify-between cursor-pointer ${isCustomTime
+                        ? "border-emerald-600 bg-emerald-50/70 text-emerald-950 ring-2 ring-emerald-600/20 shadow-xs"
+                        : "border-gray-200 bg-white hover:border-emerald-200 text-gray-800"
+                      }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${isCustomTime ? "bg-emerald-600 text-white" : "bg-gray-100 text-gray-600"
+                        }`}>
+                        <Clock className="w-4 h-4" />
                       </div>
-                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${
-                        selectedTimeWindow.includes(tw.label)
-                          ? "border-emerald-600 bg-emerald-600 text-white"
-                          : "border-gray-300"
-                      }`}>
-                        {selectedTimeWindow.includes(tw.label) && <CheckCircle2 className="w-3.5 h-3.5" />}
+                      <div>
+                        <span className="text-xs font-bold text-gray-900 block leading-tight">Pick Custom Time</span>
+                        <span className="text-[11px] text-gray-500 block mt-0.5">
+                          {isCustomTime && customTime ? `Preferred at ${formatTime12h(customTime)}` : "Select specific time"}
+                        </span>
                       </div>
-                    </button>
-                  ))}
+                    </div>
+
+                    <input
+                      ref={timeInputRef}
+                      type="time"
+                      value={customTime}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsCustomTime(true);
+                        setSelectedTimeWindow(`Custom Time (${formatTime12h(customTime)})`);
+                        try {
+                          (e.target as HTMLInputElement).showPicker?.();
+                        } catch { }
+                      }}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setCustomTime(val);
+                        setIsCustomTime(true);
+                        setSelectedTimeWindow(`Custom Time (${formatTime12h(val)})`);
+                      }}
+                      className="text-xs font-semibold text-gray-800 bg-white border border-gray-200 rounded-xl px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer shadow-2xs"
+                    />
+                  </div>
                 </div>
               </div>
 
               {/* Value Proposition Micro-Banner */}
-              <div className="p-3 bg-amber-50 rounded-2xl border border-amber-200/80 flex items-start gap-2.5">
+              {/* <div className="p-3 bg-amber-50 rounded-2xl border border-amber-200/80 flex items-start gap-2.5">
                 <Sparkles className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                 <p className="text-[11px] text-amber-900 leading-snug">
                   <span className="font-bold">Seamless Doctor-Patient Care:</span> Consult your doctor online or visit the clinic with zero queue wait. All your medical history and prescriptions are accessible to the doctor during consultation!
                 </p>
-              </div>
+              </div> */}
 
               {/* Next Button */}
               <button
@@ -270,7 +418,7 @@ export function BookingModal({ doctor, isOpen, onClose, onSuccess }: BookingModa
                 </div>
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-gray-500">Time Window:</span>
-                  <span className="font-bold text-gray-900">{selectedTimeWindow}</span>
+                  <span className="font-bold text-gray-900">{finalTimeWindow}</span>
                 </div>
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-gray-500">Consulting Doctor:</span>
@@ -327,6 +475,11 @@ export function BookingModal({ doctor, isOpen, onClose, onSuccess }: BookingModa
                       <span className="w-3 h-3 rounded-full border-2 border-white border-t-transparent animate-spin" />
                       Saving to Firebase...
                     </span>
+                  ) : !authUser ? (
+                    <>
+                      <LogIn className="w-4 h-4" />
+                      Verify Mobile to Confirm
+                    </>
                   ) : (
                     <>
                       <CheckCircle2 className="w-4 h-4" />

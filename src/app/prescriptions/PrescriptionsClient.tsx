@@ -17,7 +17,8 @@ import {
   FileText, 
   Calendar, 
   X,
-  Eye
+  Eye,
+  LogIn
 } from "lucide-react";
 
 interface PrescriptionsClientProps {
@@ -25,18 +26,22 @@ interface PrescriptionsClientProps {
 }
 
 export function PrescriptionsClient({ initialPrescriptions }: PrescriptionsClientProps) {
-  const { user } = useAuth();
-  const [prescriptions, setPrescriptions] = useState<PrescriptionRecord[]>(initialPrescriptions);
+  const { user, isAuthenticated, openLoginModal } = useAuth();
+  const [prescriptions, setPrescriptions] = useState<PrescriptionRecord[]>(user ? initialPrescriptions : []);
   const [previewPrescription, setPreviewPrescription] = useState<PrescriptionRecord | null>(null);
   const [isMobileProfileOpen, setIsMobileProfileOpen] = useState(false);
   const [bookingDoctor, setBookingDoctor] = useState<Doctor | null>(null);
 
   useEffect(() => {
-    const unsub = subscribeToPrescriptions(user?.uid || "patient-demo-001", (data) => {
-      setPrescriptions(data.length > 0 ? data : initialPrescriptions);
+    if (!user?.uid) {
+      setPrescriptions([]);
+      return;
+    }
+    const unsub = subscribeToPrescriptions(user.uid, (data) => {
+      setPrescriptions(data);
     });
     return () => unsub();
-  }, [user?.uid, initialPrescriptions]);
+  }, [user?.uid]);
 
   const getInitials = (name?: string) => {
     if (!name) return "PT";
@@ -68,30 +73,98 @@ export function PrescriptionsClient({ initialPrescriptions }: PrescriptionsClien
           </div>
         </Link>
 
-        {/* Profile Avatar trigger */}
-        <div className="relative">
-          <button 
-            type="button"
-            onClick={() => setIsMobileProfileOpen(!isMobileProfileOpen)}
-            className={`w-8 h-8 rounded-full font-bold text-xs flex items-center justify-center transition-all ${
-              isMobileProfileOpen
-                ? "bg-emerald-600 text-white ring-2 ring-emerald-500/30"
-                : "bg-emerald-100 text-emerald-800 border border-emerald-300"
-            }`}
-            aria-label="Profile and Menu"
+        {/* Profile Avatar or Login Trigger */}
+        {!isAuthenticated ? (
+          <Link
+            href="/login?redirect=/prescriptions"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition-all"
           >
-            {getInitials(user?.name)}
-          </button>
+            <LogIn className="w-3.5 h-3.5 stroke-[2.3]" />
+            <span>Login</span>
+          </Link>
+        ) : (
+          <div className="relative">
+            <button 
+              type="button"
+              onClick={() => setIsMobileProfileOpen(!isMobileProfileOpen)}
+              className={`w-8 h-8 rounded-full font-bold text-xs flex items-center justify-center transition-all ${
+                isMobileProfileOpen
+                  ? "bg-emerald-600 text-white ring-2 ring-emerald-500/30"
+                  : "bg-emerald-100 text-emerald-800 border border-emerald-300"
+              }`}
+              aria-label="Profile and Menu"
+            >
+              {getInitials(user?.name)}
+            </button>
 
-          <ProfileDropdown
-            isOpen={isMobileProfileOpen}
-            onClose={() => setIsMobileProfileOpen(false)}
-          />
-        </div>
+            <ProfileDropdown
+              isOpen={isMobileProfileOpen}
+              onClose={() => setIsMobileProfileOpen(false)}
+            />
+          </div>
+        )}
       </div>
 
-      {/* Clean Page Header */}
-      <div className="bg-white p-4 sm:p-5 rounded-3xl border border-gray-150 shadow-xs flex items-center justify-between">
+      {!isAuthenticated ? (
+        /* Unauthenticated Centered Hero Card */
+        <div className="bg-white rounded-3xl border border-gray-150 p-6 sm:p-12 text-center max-w-xl mx-auto shadow-sm space-y-6 my-4 animate-in fade-in zoom-in-95">
+          <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center mx-auto shadow-lg shadow-emerald-600/20">
+            <FileText className="w-8 h-8 stroke-[2.2]" />
+          </div>
+
+          <div>
+            <span className="text-[11px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full">
+              Medical Vault
+            </span>
+            <h2 className="text-xl sm:text-2xl font-black text-gray-900 mt-2">
+              Sign In to View Your Prescriptions
+            </h2>
+            <p className="text-xs sm:text-sm text-gray-500 mt-1 max-w-md mx-auto">
+              Your paper prescriptions, diagnostic lab reports, and clinic consultation slips are securely stored in your personal vault.
+            </p>
+          </div>
+
+          {/* Quick Value Props */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-left pt-2">
+            <div className="p-3 bg-emerald-50/60 rounded-2xl border border-emerald-100">
+              <span className="text-base block mb-1">📸</span>
+              <p className="text-xs font-bold text-gray-900">1-Tap Upload</p>
+              <p className="text-[11px] text-gray-500">Snap and save clinic slips</p>
+            </div>
+            <div className="p-3 bg-teal-50/60 rounded-2xl border border-teal-100">
+              <span className="text-base block mb-1">🔒</span>
+              <p className="text-xs font-bold text-gray-900">Encrypted Vault</p>
+              <p className="text-[11px] text-gray-500">Private to your account</p>
+            </div>
+            <div className="p-3 bg-amber-50/60 rounded-2xl border border-amber-100">
+              <span className="text-base block mb-1">🩺</span>
+              <p className="text-xs font-bold text-gray-900">Doctor Access</p>
+              <p className="text-[11px] text-gray-500">Available at next visit</p>
+            </div>
+          </div>
+
+          <div className="pt-2 space-y-2.5">
+            <Link
+              href="/login?redirect=/prescriptions"
+              className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-semibold rounded-2xl shadow-md shadow-emerald-600/20 text-xs sm:text-sm flex items-center justify-center gap-2 transition-all"
+            >
+              <LogIn className="w-4 h-4 stroke-[2.3]" />
+              <span>Login with Mobile Number</span>
+            </Link>
+
+            <button
+              type="button"
+              onClick={openLoginModal}
+              className="w-full py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-700 font-semibold rounded-2xl text-xs transition-colors"
+            >
+              Open Quick Login Modal
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Clean Page Header */}
+          <div className="bg-white p-4 sm:p-5 rounded-3xl border border-gray-150 shadow-xs flex items-center justify-between">
         <div>
           <h1 className="text-lg sm:text-xl font-black text-gray-900">My Prescriptions</h1>
           <p className="text-xs text-gray-400 mt-0.5">
@@ -282,6 +355,8 @@ export function PrescriptionsClient({ initialPrescriptions }: PrescriptionsClien
             </div>
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   );

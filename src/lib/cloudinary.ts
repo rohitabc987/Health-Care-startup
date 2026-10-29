@@ -80,8 +80,8 @@ export async function uploadSlipToCloudinary(
   file: File,
   patientUid: string
 ): Promise<CloudinaryUploadResult> {
-  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-  const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_PRESET || "pronto_prescriptions";
+  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME?.trim().replace(/['"]/g, "");
+  const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_PRESET?.trim().replace(/['"]/g, "") || "pronto_prescriptions";
 
   // First compress locally on canvas to save mobile data bandwidth
   let fileToUpload: Blob | File = file;

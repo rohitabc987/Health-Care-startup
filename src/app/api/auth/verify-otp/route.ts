@@ -40,6 +40,7 @@ export async function POST(req: Request) {
       healthId,
       defaultClinic: "Apollo Clinic, Gomti Nagar",
       registeredByGroundTeam: true,
+      isNewUser: !isDefaultDemoUser,
       address: isDefaultDemoUser ? {
         houseNo: "Plot 42",
         street: "Viram Khand 5",

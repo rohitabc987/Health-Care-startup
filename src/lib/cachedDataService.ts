@@ -72,7 +72,7 @@ export async function getCachedPrescriptions(patientUid = "patient-demo-001"): P
  * 5. Cached User Profile & Address
  * Strategy: User-Scoped Tag + 10-Minute TTL
  */
-export async function getCachedUserProfile(uid = "patient-demo-001"): Promise<UserProfile> {
+export async function getCachedUserProfile(uid = "patient-demo-001"): Promise<UserProfile | null> {
   return unstable_cache(
     async () => getUserProfileServer(uid),
     [`patient-profile-${uid}`],

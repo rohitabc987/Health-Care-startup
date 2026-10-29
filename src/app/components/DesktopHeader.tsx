@@ -5,13 +5,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useNavigation } from "@/context/NavigationContext";
 import { useAuth } from "@/context/AuthContext";
-import { Stethoscope, HelpCircle } from "lucide-react";
+import { Stethoscope, HelpCircle, LogIn, User } from "lucide-react";
 import { ProfileDropdown } from "./ProfileDropdown";
 
 export function DesktopHeader() {
   const pathname = usePathname();
   const { activeBookingsCount } = useNavigation();
-  const { user } = useAuth();
+  const { user, isAuthenticated, openLoginModal } = useAuth();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   const getInitials = (name?: string) => {
@@ -87,25 +87,37 @@ export function DesktopHeader() {
             </button>
           </nav>
 
-          {/* Right: Profile Icon ONLY */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setIsProfileOpen(!isProfileOpen)}
-              className={`w-10 h-10 rounded-2xl font-black text-sm flex items-center justify-center transition-all ${isProfileOpen
-                  ? "bg-emerald-600 text-white ring-4 ring-emerald-500/20 shadow-md"
-                  : "bg-emerald-100 hover:bg-emerald-200 text-emerald-800 border border-emerald-300"
-                }`}
-              aria-label="Patient Profile and Menu"
-            >
-              {getInitials(user?.name)}
-            </button>
+          {/* Right: Profile or Login */}
+          <div className="relative flex items-center gap-3">
+            {!isAuthenticated ? (
+              <Link
+                href="/login"
+                className="px-4 py-2 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-emerald-600/20 flex items-center gap-2 transition-all active:scale-95"
+              >
+                <LogIn className="w-4 h-4 stroke-[2.3]" />
+                <span>Login</span>
+              </Link>
+            ) : (
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className={`w-10 h-10 rounded-2xl font-black text-sm flex items-center justify-center transition-all ${isProfileOpen
+                      ? "bg-emerald-600 text-white ring-4 ring-emerald-500/20 shadow-md"
+                      : "bg-emerald-100 hover:bg-emerald-200 text-emerald-800 border border-emerald-300"
+                    }`}
+                  aria-label="Patient Profile and Menu"
+                >
+                  {getInitials(user?.name)}
+                </button>
 
-            {/* Dropdown Popover (Shows Name, Phone, Bookings, Support, etc.) */}
-            <ProfileDropdown
-              isOpen={isProfileOpen}
-              onClose={() => setIsProfileOpen(false)}
-            />
+                {/* Dropdown Popover */}
+                <ProfileDropdown
+                  isOpen={isProfileOpen}
+                  onClose={() => setIsProfileOpen(false)}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>

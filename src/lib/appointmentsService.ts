@@ -75,6 +75,11 @@ export function subscribeToAppointments(
   patientUid: string,
   callback: (appointments: Appointment[]) => void
 ): () => void {
+  // Always subscribe to local updates so mutations instantly reflect in UI
+  appointmentSubscribers.push(callback);
+
+  let unsubscribeFirestore: (() => void) | undefined = undefined;
+
   if (isLiveFirebaseConfigured && db) {
     try {
       const q = query(
@@ -83,14 +88,18 @@ export function subscribeToAppointments(
         orderBy("createdAt", "desc")
       );
 
-      const unsubscribe = onSnapshot(
+      unsubscribeFirestore = onSnapshot(
         q,
         (snapshot) => {
           const list: Appointment[] = [];
           snapshot.forEach((docSnap) => {
             list.push({ id: docSnap.id, ...(docSnap.data() as Omit<Appointment, "id">) });
           });
-          callback(list);
+          if (list.length > 0) {
+            callback(list);
+          } else {
+            callback(getStoredAppointments().filter((a) => a.patientUid === patientUid));
+          }
         },
         (error) => {
           console.warn("Firestore onSnapshot error, fallback to local store:", error);
@@ -98,16 +107,18 @@ export function subscribeToAppointments(
           callback(localData);
         }
       );
-      return unsubscribe;
     } catch (err) {
       console.warn("Error subscribing to Firestore, using fallback:", err);
     }
   }
 
-  appointmentSubscribers.push(callback);
+  // Initial emit with local/mock data
   callback(getStoredAppointments().filter((a) => a.patientUid === patientUid));
 
   return () => {
+    if (unsubscribeFirestore) {
+      unsubscribeFirestore();
+    }
     const index = appointmentSubscribers.indexOf(callback);
     if (index > -1) {
       appointmentSubscribers.splice(index, 1);
@@ -134,22 +145,24 @@ export async function bookAppointment(
     queueBypassCode: data.queueBypassCode || `PRONTO-FAST-${Math.floor(1000 + Math.random() * 9000)}`,
   };
 
+  let appointmentId = newAppointment.id;
+
   if (isLiveFirebaseConfigured && db) {
     try {
       const docRef = await addDoc(collection(db, "appointments"), {
         ...newAppointment,
         createdAt: serverTimestamp(),
       });
-      return docRef.id;
+      appointmentId = docRef.id;
     } catch (err) {
       console.warn("Error adding to Firestore, saving to local store:", err);
     }
   }
 
   const current = getStoredAppointments();
-  const updated = [newAppointment, ...current];
+  const updated = [{ ...newAppointment, id: appointmentId }, ...current];
   saveStoredAppointments(updated);
-  return newAppointment.id;
+  return appointmentId;
 }
 
 export const createAppointment = bookAppointment;
@@ -171,10 +184,13 @@ export async function getTodayOverallSales(dateStr?: string): Promise<{ totalPat
         totalPatients: count(),
         totalRevenue: sum("consultationFee"),
       });
-      return {
-        totalPatients: snapshot.data().totalPatients || 0,
-        totalRevenue: snapshot.data().totalRevenue || 0,
-      };
+      const data = snapshot.data();
+      if ((data.totalPatients || 0) > 0) {
+        return {
+          totalPatients: data.totalPatients || 0,
+          totalRevenue: data.totalRevenue || 0,
+        };
+      }
     } catch (err) {
       console.warn("getAggregateFromServer failed, falling back to local calculation:", err);
     }
@@ -208,10 +224,13 @@ export async function getDoctorDailySales(
         doctorPatients: count(),
         doctorRevenue: sum("consultationFee"),
       });
-      return {
-        doctorPatients: snapshot.data().doctorPatients || 0,
-        doctorRevenue: snapshot.data().doctorRevenue || 0,
-      };
+      const data = snapshot.data();
+      if ((data.doctorPatients || 0) > 0) {
+        return {
+          doctorPatients: data.doctorPatients || 0,
+          doctorRevenue: data.doctorRevenue || 0,
+        };
+      }
     } catch (err) {
       console.warn("getDoctorDailySales aggregate failed, falling back to local calculation:", err);
     }
@@ -259,7 +278,7 @@ export async function getAppointments(params?: {
       const snap = await getDocs(queryRef);
       const list: Appointment[] = [];
       snap.forEach((d) => list.push({ id: d.id, ...(d.data() as Omit<Appointment, "id">) }));
-      return list;
+      if (list.length > 0) return list;
     } catch (err) {
       console.warn("getAppointments Firestore failed, using local store:", err);
     }
