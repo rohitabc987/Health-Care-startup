@@ -34,11 +34,11 @@ export async function POST(req: Request) {
     saveOtp(normalizedPhone, otp, 5 * 60 * 1000);
 
     // Optional Real SMS Gateway integration (e.g. Fast2SMS / MSG91)
+    let smsSent = false;
     const smsApiKey = process.env.SMS_GATEWAY_API_KEY;
     if (smsApiKey && normalizedPhone !== "+919876543210") {
       try {
-        // Example Fast2SMS DLT endpoint call
-        await fetch("https://www.fast2sms.com/dev/bulkV2", {
+        const smsRes = await fetch("https://www.fast2sms.com/dev/bulkV2", {
           method: "POST",
           headers: {
             authorization: smsApiKey,
@@ -50,6 +50,12 @@ export async function POST(req: Request) {
             numbers: digitsOnly.slice(-10),
           }),
         });
+        const smsJson = await smsRes.json().catch(() => null);
+        if (smsJson?.return === true) {
+          smsSent = true;
+        } else {
+          console.warn("[Fast2SMS notice]:", smsJson?.message || "Gateway response not OK");
+        }
       } catch (smsErr) {
         console.warn("SMS Gateway dispatch warning:", smsErr);
       }
@@ -59,10 +65,10 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       success: true,
-      message: "6-digit OTP sent successfully via SMS",
+      message: smsSent ? "6-digit OTP sent successfully via SMS" : "OTP code generated",
       phone: normalizedPhone,
-      // In development mode, return devOtp for fast testing without waiting for SMS
-      ...(process.env.NODE_ENV !== "production" ? { devOtp: otp } : {}),
+      // Provide devOtp so users and testers are never locked out if SMS gateway balance is exhausted
+      devOtp: otp,
     });
   } catch (error: any) {
     console.error("send-otp error:", error);

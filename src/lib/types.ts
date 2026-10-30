@@ -57,6 +57,7 @@ export interface Appointment {
   doctorId: string;
   doctorName: string;
   doctorSpecialty?: string;
+  doctorImage?: string;
   clinicName?: string;
   bookingDate: string; // ISO "YYYY-MM-DD" e.g. "2026-10-28" for date-scoped aggregate queries
   followupDate: string; // ISO date or formatted (e.g., "Nov 02, 2026")

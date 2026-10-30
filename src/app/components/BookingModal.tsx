@@ -90,7 +90,7 @@ export function BookingModal({ doctor, isOpen, onClose, onSuccess }: BookingModa
   const handleConfirmBooking = async () => {
     const user = authUser || getStoredUserProfile();
     if (!user) {
-      openLoginModal();
+      openLoginModal({ isBookingFlow: true, allowSkip: false });
       return;
     }
 
@@ -109,6 +109,7 @@ export function BookingModal({ doctor, isOpen, onClose, onSuccess }: BookingModa
         doctorId: doctor.id,
         doctorName: doctor.name,
         doctorSpecialty: doctor.specialty,
+        doctorImage: doctor.image,
         clinicName: doctor.clinic,
         bookingDate: new Date().toISOString().split("T")[0],
         followupDate: targetDateInfo.formatted,
@@ -150,7 +151,7 @@ export function BookingModal({ doctor, isOpen, onClose, onSuccess }: BookingModa
             </div>
             <div>
               <h3 className="font-semibold text-gray-900 text-base leading-tight">Book Doctor Follow-up</h3>
-              <p className="text-xs text-emerald-700 font-medium">Zero-Queue Clinic Follow-up • {doctor.clinic}</p>
+              <p className="text-xs text-emerald-700 font-medium">{doctor.clinic}</p>
             </div>
           </div>
           <button
@@ -162,7 +163,7 @@ export function BookingModal({ doctor, isOpen, onClose, onSuccess }: BookingModa
         </div>
 
         {/* Modal Body */}
-        <div className="p-5 overflow-y-auto space-y-5">
+        <div className="px-3 py-6 md:p-5 overflow-y-auto space-y-5">
           {/* Doctor Brief Banner */}
           <div className="flex items-center gap-3.5 bg-gray-50 p-3 rounded-2xl border border-gray-150">
             {/* Doctor Avatar */}
@@ -211,8 +212,8 @@ export function BookingModal({ doctor, isOpen, onClose, onSuccess }: BookingModa
                         setIsCustomDate(false);
                       }}
                       className={`p-3 rounded-2xl text-left border transition-all flex flex-col justify-between ${!isCustomDate && selectedDayOffset === opt.days
-                          ? "border-emerald-600 bg-emerald-50/70 text-emerald-950 ring-2 ring-emerald-600/20 shadow-xs"
-                          : "border-gray-200 bg-white hover:border-emerald-300 text-gray-800"
+                        ? "border-emerald-600 bg-emerald-50/70 text-emerald-950 ring-2 ring-emerald-600/20 shadow-xs"
+                        : "border-gray-200 bg-white hover:border-emerald-300 text-gray-800"
                         }`}
                     >
                       <div className="flex items-center justify-between w-full">
@@ -245,8 +246,8 @@ export function BookingModal({ doctor, isOpen, onClose, onSuccess }: BookingModa
                     }
                   }}
                   className={`p-3 rounded-2xl border transition-all flex items-center justify-between cursor-pointer ${isCustomDate
-                      ? "border-emerald-600 bg-emerald-50/70 text-emerald-950 ring-2 ring-emerald-600/20 shadow-xs"
-                      : "border-gray-200 bg-white hover:border-emerald-300 text-gray-800"
+                    ? "border-emerald-600 bg-emerald-50/70 text-emerald-950 ring-2 ring-emerald-600/20 shadow-xs"
+                    : "border-gray-200 bg-white hover:border-emerald-300 text-gray-800"
                     }`}
                 >
                   <div className="flex items-center gap-2.5">
@@ -304,8 +305,8 @@ export function BookingModal({ doctor, isOpen, onClose, onSuccess }: BookingModa
                           setIsCustomTime(false);
                         }}
                         className={`p-3 rounded-2xl border transition-all flex flex-col justify-between text-left ${!isCustomTime && selectedTimeWindow.includes(tw.label)
-                            ? "border-emerald-600 bg-emerald-50/70 text-emerald-950 ring-2 ring-emerald-600/20 shadow-xs"
-                            : "border-gray-200 bg-white hover:border-emerald-200 text-gray-800"
+                          ? "border-emerald-600 bg-emerald-50/70 text-emerald-950 ring-2 ring-emerald-600/20 shadow-xs"
+                          : "border-gray-200 bg-white hover:border-emerald-200 text-gray-800"
                           }`}
                       >
                         <div className="flex items-center justify-between w-full">
@@ -339,8 +340,8 @@ export function BookingModal({ doctor, isOpen, onClose, onSuccess }: BookingModa
                       }
                     }}
                     className={`p-3 rounded-2xl border transition-all flex items-center justify-between cursor-pointer ${isCustomTime
-                        ? "border-emerald-600 bg-emerald-50/70 text-emerald-950 ring-2 ring-emerald-600/20 shadow-xs"
-                        : "border-gray-200 bg-white hover:border-emerald-200 text-gray-800"
+                      ? "border-emerald-600 bg-emerald-50/70 text-emerald-950 ring-2 ring-emerald-600/20 shadow-xs"
+                      : "border-gray-200 bg-white hover:border-emerald-200 text-gray-800"
                       }`}
                   >
                     <div className="flex items-center gap-2.5">

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import React, { Suspense } from "react";
 import "./globals.css";
 import { AppProviders } from "./providers";
 import { BottomNav } from "./components/BottomNav";
@@ -36,7 +37,9 @@ export default function RootLayout({
       <body className="bg-slate-50 text-slate-900 antialiased min-h-screen flex flex-col selection:bg-emerald-100 selection:text-emerald-900">
         <AppProviders>
           {/* Top Desktop Navigation Header (Visible on Desktop / Laptop) */}
-          <DesktopHeader />
+          <Suspense fallback={null}>
+            <DesktopHeader />
+          </Suspense>
 
           {/* Responsive Application Container */}
           <main className="flex-1 w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-0 md:pt-4 pb-24 md:pb-12">
@@ -44,7 +47,9 @@ export default function RootLayout({
           </main>
 
           {/* Sticky Mobile Bottom Navigation Bar (Visible on Mobile / Tablet) */}
-          <BottomNav />
+          <Suspense fallback={null}>
+            <BottomNav />
+          </Suspense>
         </AppProviders>
       </body>
     </html>

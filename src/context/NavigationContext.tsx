@@ -1,7 +1,8 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { Appointment, subscribeToAppointments, INITIAL_USER } from "@/lib/firebase";
+import { Appointment, subscribeToAppointments } from "@/lib/firebase";
+import { useAuth } from "./AuthContext";
 
 export type TabType = "home" | "bookings" | "records";
 
@@ -16,19 +17,27 @@ interface NavigationContextType {
 const NavigationContext = createContext<NavigationContextType | undefined>(undefined);
 
 export function NavigationProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>("home");
   const [appointments, setAppointments] = useState<Appointment[]>([]);
 
   useEffect(() => {
-    const unsubscribe = subscribeToAppointments(INITIAL_USER.uid, (data) => {
+    if (!user?.uid) {
+      setAppointments([]);
+      return;
+    }
+
+    const unsubscribe = subscribeToAppointments(user.uid, (data) => {
       setAppointments(data);
     });
     return () => unsubscribe();
-  }, []);
+  }, [user?.uid]);
 
-  const activeBookingsCount = appointments.filter(
-    (a) => a.status === "Pending Screening" || a.status === "Escalated to Physical Visit"
-  ).length;
+  const activeBookingsCount = user?.uid
+    ? appointments.filter(
+        (a) => a.status === "Pending Screening" || a.status === "Escalated to Physical Visit"
+      ).length
+    : 0;
 
   const refreshAppointments = () => {
     // triggers subscriber notification

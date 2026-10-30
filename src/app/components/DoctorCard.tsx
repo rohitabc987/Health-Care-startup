@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { Doctor } from "@/lib/firebase";
 import { Plus, Star, MapPin, ShieldCheck, Stethoscope } from "lucide-react";
 import { BookingModal } from "./BookingModal";
@@ -46,13 +47,15 @@ export function DoctorCard({ doctor, onBookingSuccess }: DoctorCardProps) {
 
         {/* Center Doctor Image Presentation */}
         <div className="relative w-full aspect-4/3 rounded-xl overflow-hidden bg-gradient-to-b from-gray-50 to-gray-100 my-1 flex items-center justify-center">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={doctor.image}
-            alt={doctor.name}
-            className="w-full h-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
-            loading="lazy"
-          />
+          <Link href={`/doctor/${doctor.id}`} className="w-full h-full block">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={doctor.image}
+              alt={doctor.name}
+              className="w-full h-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
+              loading="lazy"
+            />
+          </Link>
 
           {/* Pronto-style Floating Green '+' Action Button */}
           <button
@@ -68,9 +71,11 @@ export function DoctorCard({ doctor, onBookingSuccess }: DoctorCardProps) {
         {/* Doctor Information Block */}
         <div className="mt-2.5 flex-1 flex flex-col justify-between">
           <div>
-            <h3 className="font-bold text-gray-900 text-sm leading-snug truncate group-hover:text-emerald-700 transition-colors">
-              {doctor.name}
-            </h3>
+            <Link href={`/doctor/${doctor.id}`}>
+              <h3 className="font-bold text-gray-900 text-sm leading-snug truncate group-hover:text-emerald-700 transition-colors">
+                {doctor.name}
+              </h3>
+            </Link>
 
             <p className="text-[11px] text-gray-500 font-medium truncate mt-0.5 flex items-center gap-1">
               <Stethoscope className="w-3 h-3 text-emerald-600 shrink-0" />

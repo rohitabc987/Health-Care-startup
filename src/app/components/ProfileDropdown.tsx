@@ -13,6 +13,7 @@ import {
   ChevronRight,
   LogOut,
   X,
+  Check,
   Stethoscope,
   LogIn
 } from "lucide-react";
@@ -112,8 +113,11 @@ export function ProfileDropdown({ isOpen, onClose, currentLocation = "Viram Khan
                     <h3 className="font-bold text-gray-900 text-sm leading-tight group-hover/user:text-emerald-700 transition-colors">
                       {user?.name || "Patient"}
                     </h3>
-                    <span className="text-[9px] font-bold bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded uppercase">
-                      Verified
+                    <span
+                      className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-emerald-500 text-white shrink-0 shadow-2xs"
+                      title="Verified"
+                    >
+                      <Check className="w-2.5 h-2.5 stroke-[3]" />
                     </span>
                   </div>
                   <p className="text-xs text-gray-500 font-mono mt-0.5">{user?.phone || ""}</p>
@@ -148,7 +152,7 @@ export function ProfileDropdown({ isOpen, onClose, currentLocation = "Viram Khan
                 <User className="w-4 h-4" />
               </div>
               <div className="text-left">
-                <p className="font-bold text-gray-900 group-hover:text-emerald-900">View Profile &amp; Address</p>
+                <p className="font-bold text-gray-900 group-hover:text-emerald-900">My Profile</p>
                 <p className="text-[11px] text-gray-400">Health ID, address details &amp; records</p>
               </div>
             </div>
@@ -172,7 +176,7 @@ export function ProfileDropdown({ isOpen, onClose, currentLocation = "Viram Khan
             </div>
             {activeBookingsCount > 0 ? (
               <span className="bg-emerald-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full">
-                {activeBookingsCount} Active
+                {activeBookingsCount}
               </span>
             ) : (
               <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
@@ -190,12 +194,19 @@ export function ProfileDropdown({ isOpen, onClose, currentLocation = "Viram Khan
                 <FileText className="w-4 h-4" />
               </div>
               <div className="text-left">
-                <p className="font-bold text-gray-900 group-hover:text-emerald-900">Prescription Vault</p>
+                <p className="font-bold text-gray-900 group-hover:text-emerald-900">My Prescription</p>
                 <p className="text-[11px] text-gray-400">View & snapshot paper slips</p>
               </div>
             </div>
             <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
           </Link>
+
+
+
+          {/* Item 4: Switch Account / Zero-Captcha Phone Login */}
+          <div className="pt-1 border-t border-gray-150">
+
+          </div>
 
           {/* Item 3: Find Doctors */}
           <Link
@@ -214,31 +225,6 @@ export function ProfileDropdown({ isOpen, onClose, currentLocation = "Viram Khan
             </div>
             <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
           </Link>
-
-          {/* Item 4: Switch Account / Zero-Captcha Phone Login */}
-          <div className="pt-1 border-t border-gray-150">
-            <button
-              type="button"
-              onClick={() => {
-                onClose();
-                openLoginModal();
-              }}
-              className="w-full p-2.5 rounded-2xl hover:bg-emerald-50 text-emerald-800 transition-colors flex items-center justify-between group"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
-                  <LogIn className="w-4 h-4" />
-                </div>
-                <div className="text-left">
-                  <p className="font-bold text-gray-900">Switch Account / Login</p>
-                  <p className="text-[11px] text-emerald-600">Enter mobile for direct OTP</p>
-                </div>
-              </div>
-              <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">
-                Zero Captcha
-              </span>
-            </button>
-          </div>
 
           {/* Item 5: Booking & Triage Support */}
           <div>

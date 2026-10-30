@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { normalizePhoneNumber, verifyOtpCode } from "@/lib/otpStore";
+import { getUserProfileServer } from "@/lib/userService";
 
 export async function POST(req: Request) {
   try {
@@ -28,28 +29,43 @@ export async function POST(req: Request) {
     const uid = `user-ph-${digitsOnly}`;
     const healthId = `#PRN-${digitsOnly.slice(-4)}-LKO`;
 
-    // Demo default name based on number or default
-    const isDefaultDemoUser = normalizedPhone === "+919876543210";
-    const name = isDefaultDemoUser ? "Rahul Verma" : `Patient (+91 ${digitsOnly.slice(0, 5)} ${digitsOnly.slice(5)})`;
+    // Check if user already exists in Firestore database
+    const existingUser = await getUserProfileServer(uid);
 
-    const userProfile = {
-      uid,
-      phone: normalizedPhone,
-      name,
-      role: "patient" as const,
-      healthId,
-      defaultClinic: "Apollo Clinic, Gomti Nagar",
-      registeredByGroundTeam: true,
-      isNewUser: !isDefaultDemoUser,
-      address: isDefaultDemoUser ? {
-        houseNo: "Plot 42",
-        street: "Viram Khand 5",
-        locality: "Gomti Nagar",
-        city: "Lucknow",
-        state: "Uttar Pradesh",
-        pincode: "226010",
-      } : undefined,
-    };
+    let userProfile;
+
+    if (existingUser && existingUser.name && !existingUser.isNewUser && !existingUser.name.startsWith("Patient (+91")) {
+      // Existing profile detected - directly log in
+      userProfile = {
+        ...existingUser,
+        phone: normalizedPhone,
+        isNewUser: false,
+      };
+    } else {
+      const isDefaultDemoUser = normalizedPhone === "+919876543210";
+      const name = isDefaultDemoUser ? "Rahul Verma" : (existingUser?.name || `Patient (+91 ${digitsOnly.slice(0, 5)} ${digitsOnly.slice(5)})`);
+
+      userProfile = {
+        uid,
+        phone: normalizedPhone,
+        name,
+        age: existingUser?.age || (isDefaultDemoUser ? 28 : undefined),
+        gender: existingUser?.gender || (isDefaultDemoUser ? "male" : undefined),
+        role: "patient" as const,
+        healthId: existingUser?.healthId || healthId,
+        defaultClinic: existingUser?.defaultClinic || "Apollo Clinic, Gomti Nagar",
+        registeredByGroundTeam: true,
+        isNewUser: isDefaultDemoUser ? false : (existingUser?.isNewUser ?? true),
+        address: existingUser?.address || (isDefaultDemoUser ? {
+          houseNo: "Plot 42",
+          street: "Viram Khand 5",
+          locality: "Gomti Nagar",
+          city: "Lucknow",
+          state: "Uttar Pradesh",
+          pincode: "226010",
+        } : undefined),
+      };
+    }
 
     return NextResponse.json({
       success: true,

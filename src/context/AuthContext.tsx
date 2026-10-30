@@ -10,11 +10,17 @@ import {
   updateUserProfile 
 } from "@/lib/firebase";
 
+export interface LoginModalOptions {
+  allowSkip?: boolean;
+  isBookingFlow?: boolean;
+}
+
 interface AuthContextType {
   user: UserProfile | null;
   isAuthenticated: boolean;
   isLoginModalOpen: boolean;
-  openLoginModal: () => void;
+  loginModalOptions?: LoginModalOptions;
+  openLoginModal: (options?: LoginModalOptions | any) => void;
   closeLoginModal: () => void;
   login: (newUser: UserProfile) => void;
   logout: () => void;
@@ -26,6 +32,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [loginModalOptions, setLoginModalOptions] = useState<LoginModalOptions | undefined>(undefined);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -92,8 +99,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(updated);
   };
 
-  const openLoginModal = () => setIsLoginModalOpen(true);
-  const closeLoginModal = () => setIsLoginModalOpen(false);
+  const openLoginModal = (options?: LoginModalOptions | any) => {
+    if (options && typeof options === "object" && ("nativeEvent" in options || "preventDefault" in options)) {
+      setLoginModalOptions(undefined);
+    } else {
+      setLoginModalOptions(options);
+    }
+    setIsLoginModalOpen(true);
+  };
+
+  const closeLoginModal = () => {
+    setIsLoginModalOpen(false);
+    setLoginModalOptions(undefined);
+  };
 
   return (
     <AuthContext.Provider
@@ -101,6 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user,
         isAuthenticated: isMounted && Boolean(user && user.phone),
         isLoginModalOpen,
+        loginModalOptions,
         openLoginModal,
         closeLoginModal,
         login,

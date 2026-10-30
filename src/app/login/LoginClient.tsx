@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { updateUserProfile } from "@/lib/firebase";
+import { updateUserProfile, getStoredUserProfile } from "@/lib/firebase";
 import {
   Stethoscope,
   ArrowRight,
@@ -28,6 +28,7 @@ export function LoginClient() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [countdown, setCountdown] = useState(30);
+  const [devOtpHint, setDevOtpHint] = useState<string | null>(null);
 
   // Partial user data from verification
   const [verifiedUser, setVerifiedUser] = useState<any>(null);
@@ -81,6 +82,10 @@ export function LoginClient() {
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error || "Failed to send OTP");
+      }
+
+      if (data.devOtp) {
+        setDevOtpHint(data.devOtp);
       }
 
       setStep("otp");
@@ -156,8 +161,25 @@ export function LoginClient() {
 
       setIsLoading(false);
 
-      // Check if user is new or needs onboarding details
-      if (data.user?.isNewUser) {
+      // Check if user already completed profile in localStorage or server
+      const stored = getStoredUserProfile();
+      const isAlreadyConfigured =
+        (stored &&
+          (stored.uid === data.user?.uid || stored.phone === data.user?.phone) &&
+          stored.name &&
+          !stored.isNewUser &&
+          !stored.name.startsWith("Patient (+91")) ||
+        (data.user && !data.user.isNewUser && data.user.name && !data.user.name.startsWith("Patient (+91"));
+
+      if (isAlreadyConfigured) {
+        const finalUser = {
+          ...data.user,
+          ...(stored && (stored.uid === data.user?.uid || stored.phone === data.user?.phone) ? stored : {}),
+          isNewUser: false,
+        };
+        login(finalUser);
+        router.push(redirectUrl);
+      } else if (data.user?.isNewUser) {
         setVerifiedUser(data.user);
         setStep("onboarding");
       } else {
@@ -168,6 +190,14 @@ export function LoginClient() {
     } catch (err: any) {
       setErrorMsg(err.message || "Invalid OTP code. Please retry.");
       setIsLoading(false);
+    }
+  };
+
+  const fillTestOtp = () => {
+    if (devOtpHint && devOtpHint.length === 6) {
+      const digits = devOtpHint.split("");
+      setOtp(digits);
+      verifyCode(devOtpHint);
     }
   };
 
@@ -204,6 +234,8 @@ export function LoginClient() {
     }
   };
 
+  const isBookingRedirect = redirectUrl.includes("booking");
+
   return (
     <div className="w-full space-y-4 animate-in fade-in duration-200">
       {/* Mobile Top Brand Bar (Navbar) */}
@@ -220,12 +252,14 @@ export function LoginClient() {
           </div>
         </Link>
 
-        <Link
-          href={redirectUrl || "/"}
-          className="text-xs font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-xl transition-colors"
-        >
-          Skip
-        </Link>
+        {!isBookingRedirect && (
+          <Link
+            href={redirectUrl || "/"}
+            className="text-xs font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-xl transition-colors"
+          >
+            Skip
+          </Link>
+        )}
       </div>
 
       {/* Centered Login Card Container */}
@@ -326,12 +360,14 @@ export function LoginClient() {
                   )}
                 </button>
 
-                <Link
-                  href={redirectUrl || "/"}
-                  className="w-full py-2 text-gray-600  font-semibold rounded-xl text-xs flex items-center justify-center transition-all text-center"
-                >
-                  Skip for now
-                </Link>
+                {!isBookingRedirect && (
+                  <Link
+                    href={redirectUrl || "/"}
+                    className="w-full py-2 text-gray-600 font-semibold rounded-xl text-xs flex items-center justify-center transition-all text-center"
+                  >
+                    Skip for now
+                  </Link>
+                )}
               </div>
 
               <p className="text-[10px] text-gray-400 text-center leading-relaxed pt-1">
@@ -369,6 +405,21 @@ export function LoginClient() {
                     />
                   ))}
                 </div>
+
+                {devOtpHint && (
+                  <div className="mt-2.5 p-2 bg-emerald-50 border border-emerald-200/80 rounded-xl flex items-center justify-between text-xs animate-in fade-in">
+                    <span className="text-[11px] text-emerald-800 font-medium">
+                      Verification code: <strong className="font-mono">{devOtpHint}</strong>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={fillTestOtp}
+                      className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-[11px] shadow-2xs transition-colors"
+                    >
+                      1-Tap Fill
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Buttons: Sleeker Verify + Skip */}
@@ -392,12 +443,14 @@ export function LoginClient() {
                   )}
                 </button>
 
-                <Link
-                  href={redirectUrl || "/"}
-                  className="w-full py-2 bg-gray-100 hover:bg-gray-200 active:scale-[0.99] text-gray-600 hover:text-gray-900 font-semibold rounded-xl text-xs flex items-center justify-center transition-all text-center"
-                >
-                  Skip for now
-                </Link>
+                {!isBookingRedirect && (
+                  <Link
+                    href={redirectUrl || "/"}
+                    className="w-full py-2 bg-gray-100 hover:bg-gray-200 active:scale-[0.99] text-gray-600 hover:text-gray-900 font-semibold rounded-xl text-xs flex items-center justify-center transition-all text-center"
+                  >
+                    Skip for now
+                  </Link>
+                )}
               </div>
 
               <div className="text-center pt-1">
@@ -477,21 +530,15 @@ export function LoginClient() {
                   <label className="text-xs font-bold text-gray-700 block mb-1">
                     Gender <span className="text-rose-500">*</span>
                   </label>
-                  <div className="grid grid-cols-3 gap-1">
-                    {(["male", "female", "other"] as const).map((g) => (
-                      <button
-                        key={g}
-                        type="button"
-                        onClick={() => setGender(g)}
-                        className={`py-2 text-[10px] font-bold rounded-lg border capitalize transition-all ${gender === g
-                          ? "bg-emerald-600 text-white border-emerald-600 shadow-xs"
-                          : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
-                          }`}
-                      >
-                        {g === "male" ? "M" : g === "female" ? "F" : "O"}
-                      </button>
-                    ))}
-                  </div>
+                  <select
+                    value={gender}
+                    onChange={(e) => setGender(e.target.value as "male" | "female" | "other")}
+                    className="w-full px-3 py-2.5 bg-gray-50/50 hover:bg-white focus:bg-white text-xs sm:text-sm font-semibold text-gray-900 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-2xs"
+                  >
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                  </select>
                 </div>
               </div>
 

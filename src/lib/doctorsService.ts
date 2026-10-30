@@ -5,7 +5,8 @@ import {
   doc, 
   updateDoc, 
   setDoc, 
-  getDocs, 
+  getDocs,
+  getDoc,
   where 
 } from "firebase/firestore";
 import { Doctor } from "./types";
@@ -58,6 +59,20 @@ export async function getActiveDoctorsServer(): Promise<Doctor[]> {
     }
   }
   return INITIAL_DOCTORS.filter((d) => d.isActive !== false);
+}
+
+export async function getDoctorByIdServer(doctorId: string): Promise<Doctor | null> {
+  if (isLiveFirebaseConfigured && db) {
+    try {
+      const snap = await getDoc(doc(db, "doctors", doctorId));
+      if (snap.exists()) {
+        return { id: snap.id, ...snap.data() } as Doctor;
+      }
+    } catch (err) {
+      console.warn("getDoctorByIdServer error, fallback:", err);
+    }
+  }
+  return INITIAL_DOCTORS.find((d) => d.id === doctorId) || null;
 }
 
 /**

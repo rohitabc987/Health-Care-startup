@@ -1,30 +1,38 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { Appointment, updateAppointmentStatus } from "@/lib/firebase";
+import { INITIAL_DOCTORS } from "@/lib/mockData";
 import { revalidatePatientDataAction } from "@/app/actions/cacheActions";
+import { useAuth } from "@/context/AuthContext";
 import {
-  Calendar,
-  Clock,
   MapPin,
-  PhoneCall,
-  AlertCircle,
   CheckCircle2,
   Zap,
-  FileText,
-  ChevronRight,
-  ShieldAlert,
-  ArrowUpRight
+  ChevronRight
 } from "lucide-react";
 
 export interface BookingCardProps {
   appointment: Appointment;
   onStatusChange?: () => void;
+  showDoctorTools?: boolean;
 }
 
-export function BookingCard({ appointment, onStatusChange }: BookingCardProps) {
+export function BookingCard({ appointment, onStatusChange, showDoctorTools }: BookingCardProps) {
+  const { user } = useAuth();
   const [isUpdating, setIsUpdating] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+
+  // Doctor consultation & ops tools should ONLY be visible to admin or assigned doctor (NOT patient)
+  const isAdmin = user?.role === "admin";
+  const isAssignedDoctor =
+    user?.role === "doctor" &&
+    (user.uid === appointment.doctorId ||
+      user.name?.trim().toLowerCase() === appointment.doctorName?.trim().toLowerCase());
+
+  const canAccessDoctorTools =
+    showDoctorTools !== undefined ? showDoctorTools : (isAdmin || isAssignedDoctor);
 
   const handleEscalate = async () => {
     setIsUpdating(true);
@@ -59,7 +67,7 @@ export function BookingCard({ appointment, onStatusChange }: BookingCardProps) {
         return (
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200/80 shadow-2xs">
             <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-            <span>Pending Screening</span>
+            <span>Pending</span>
           </div>
         );
       case "Escalated to Physical Visit":
@@ -79,58 +87,110 @@ export function BookingCard({ appointment, onStatusChange }: BookingCardProps) {
     }
   };
 
+  // Resolve doctor image and profile link
+  const matchedDoctor = INITIAL_DOCTORS.find(
+    (d) => d.id === appointment.doctorId || d.name.toLowerCase() === appointment.doctorName?.toLowerCase()
+  );
+  const doctorImage = appointment.doctorImage || matchedDoctor?.image || "/images/doctor-1.jpg";
+  const doctorProfileUrl = `/doctor/${appointment.doctorId || matchedDoctor?.id || "doc-1"}`;
+
   return (
-    <div className="bg-white rounded-2xl border border-gray-150 p-4 shadow-sm hover:shadow-md transition-all duration-200 space-y-3.5">
-      {/* Top Meta Row */}
+    <div className="bg-white rounded-3xl border border-gray-150 p-4 sm:p-5 shadow-xs hover:border-emerald-300 transition-all duration-200 space-y-3.5">
+      {/* 1. Header: Booking ID & Health ID on Left, Status Badge on Right */}
       <div className="flex items-start justify-between gap-2">
         <div>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
-            Booking ID: #{appointment.id.replace("apt-", "")}
+          <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block">
+            BOOKING ID:
           </span>
-          <h3 className="text-base font-bold text-gray-900 mt-0.5">
-            {appointment.doctorName}
-          </h3>
-          <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
-            <MapPin className="w-3 h-3 text-emerald-600 shrink-0" />
-            <span className="truncate">{appointment.clinicName || "Local Partner Clinic"}</span>
-          </p>
-          {appointment.consultationFee && (
-            <span className="inline-block mt-1 text-[10px] font-bold text-gray-700 bg-gray-100 px-1.5 py-0.2 rounded">
-              Follow-up Fee: ₹{appointment.consultationFee}
-            </span>
+          <span className="text-xs font-mono font-bold text-gray-900 block">
+            #{appointment.id.replace("apt-", "")}
+          </span>
+          {(appointment.patientHealthId || user?.healthId) && (
+            <div className="flex items-center gap-1 mt-0.5">
+              <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400">
+                Health ID:
+              </span>
+              <span className="text-[10px] font-mono font-bold text-emerald-700">
+                {appointment.patientHealthId || user?.healthId}
+              </span>
+            </div>
           )}
         </div>
-
-        {/* Workflow Status Chip */}
-        <div>{renderStatusBadge()}</div>
+        <div className="shrink-0">{renderStatusBadge()}</div>
       </div>
 
-      {/* Date & Time Window Box */}
-      <div className="bg-gray-50 p-3 rounded-xl border border-gray-150 grid grid-cols-2 gap-2 text-xs">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-            <Calendar className="w-4 h-4" />
-          </div>
-          <div>
-            <p className="text-[10px] text-gray-400 font-medium">Follow-up Date</p>
-            <p className="font-bold text-gray-800">{appointment.followupDate}</p>
-          </div>
+      {/* 2. Below that: Doctor Profile (Photo on Left, Name & Location on Right) */}
+      <div className="flex items-center gap-3.5 min-w-0 pt-0.5">
+        <Link
+          href={doctorProfileUrl}
+          className="shrink-0 group/doc block"
+          title={`View profile of ${appointment.doctorName}`}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={doctorImage}
+            alt={appointment.doctorName}
+            className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl object-cover object-top border border-gray-150 shadow-2xs group-hover/doc:ring-2 group-hover/doc:ring-emerald-500 group-hover/doc:scale-105 transition-all"
+          />
+        </Link>
+
+        <div className="min-w-0 flex-1">
+          <Link
+            href={doctorProfileUrl}
+            className="block group/name"
+            title={`View profile of ${appointment.doctorName}`}
+          >
+            <h3 className="text-base font-bold text-gray-900 group-hover/name:text-emerald-700 transition-colors truncate">
+              {appointment.doctorName}
+            </h3>
+          </Link>
+          <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+            <MapPin className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+            <span className="truncate">{appointment.clinicName || "Local Partner Clinic"}</span>
+          </p>
+        </div>
+      </div>
+
+      {/* 3. Structured Details Section (Like Profile Card) */}
+      <div className="pt-3 border-t border-gray-100 space-y-2.5 text-xs">
+        <div className="flex items-center justify-between">
+          <span className="text-gray-500 font-medium">Date:</span>
+          <span className="font-bold text-gray-900">{appointment.followupDate}</span>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-            <Clock className="w-4 h-4" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-[10px] text-gray-400 font-medium">Follow-up Window</p>
-            <p className="font-bold text-gray-800 truncate">{appointment.timeWindow}</p>
-          </div>
+        <div className="flex items-center justify-between">
+          <span className="text-gray-500 font-medium">Time:</span>
+          <span className="font-bold text-gray-900">{appointment.timeWindow}</span>
         </div>
+
+        <div className="flex items-center justify-between">
+          <span className="text-gray-500 font-medium">Consultation Fee:</span>
+          <span className="font-bold text-emerald-700">
+            {appointment.consultationFee ? `₹${appointment.consultationFee}` : "Free Follow-up"}
+          </span>
+        </div>
+
+        {/* Notes: If short (<= 25 chars) show inline, if more it goes to next line */}
+        {(!appointment.notes || appointment.notes.length <= 25) ? (
+          <div className="flex items-center justify-between">
+            <span className="text-gray-500 font-medium">Notes:</span>
+            <span className="font-semibold text-gray-800 text-right">
+              {appointment.notes || "Routine follow-up"}
+            </span>
+          </div>
+        ) : (
+          <div className="space-y-1 pt-0.5">
+            <span className="text-gray-500 font-medium block">Notes:</span>
+            <p className="font-semibold text-gray-800 break-words leading-relaxed pl-0.5 text-xs">
+              {appointment.notes}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Fast-Track Physical Bypass Alert if Escalated */}
       {appointment.status === "Escalated to Physical Visit" && (
-        <div className="bg-indigo-50/90 border border-indigo-200/90 p-3 rounded-xl space-y-1.5 animate-in fade-in duration-200">
+        <div className="bg-indigo-50/90 border border-indigo-200/90 p-3 rounded-2xl space-y-1.5 animate-in fade-in duration-200">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-950">
               <Zap className="w-4 h-4 text-indigo-600 fill-indigo-600" />
@@ -141,86 +201,69 @@ export function BookingCard({ appointment, onStatusChange }: BookingCardProps) {
             </span>
           </div>
           <p className="text-[11px] text-indigo-900 leading-snug">
-            Our ops team has scheduled your physical slot with the receptionist at{" "}
-            <span className="font-semibold">{appointment.clinicName}</span>. Show this pass at the desk to walk right in.
+            Show this pass at <span className="font-semibold">{appointment.clinicName}</span> to walk right in without waiting.
           </p>
         </div>
       )}
 
-      {/* "What's Next" Informative Guidance Banner */}
-      {appointment.status === "Pending Screening" && (
-        <div className="bg-emerald-50/70 border border-emerald-100 p-3 rounded-xl flex items-start gap-2.5">
-          <PhoneCall className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-          <div className="text-[11px] text-emerald-950 leading-relaxed">
-            <span className="font-bold">What happens next:</span> Your doctor will consult with you online during your selected window on{" "}
-            <span className="font-semibold">{appointment.followupDate}</span>. Have your physical prescription handy!
-          </div>
-        </div>
-      )}
+      {/* 4. Doctor Consultation & Ops Controls - ONLY shown to Admin or Assigned Doctor */}
+      {canAccessDoctorTools && (
+        <div className="pt-2 border-t border-gray-100 flex flex-wrap items-center justify-between gap-2">
+          <button
+            type="button"
+            onClick={() => setShowDetails(!showDetails)}
+            className="text-xs text-gray-500 hover:text-gray-900 font-medium flex items-center gap-1 transition-colors"
+          >
+            <span>{showDetails ? "Hide Doctor Tools" : "Doctor Consultation & Ops Tools"}</span>
+            <ChevronRight className={`w-3.5 h-3.5 transition-transform ${showDetails ? "rotate-90" : ""}`} />
+          </button>
 
-      {/* Doctor Notes / Reason */}
-      {appointment.notes && (
-        <p className="text-[11px] text-gray-500 italic px-1">
-          Consultation Notes / Reason: &quot;{appointment.notes}&quot;
-        </p>
-      )}
+          {showDetails && (
+            <div className="w-full mt-2 pt-2 border-t border-dashed border-gray-200 flex flex-col sm:flex-row gap-2">
+              {appointment.status === "Pending Screening" && (
+                <>
+                  <button
+                    type="button"
+                    disabled={isUpdating}
+                    onClick={handleEscalate}
+                    className="flex-1 py-2 px-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition-all"
+                  >
+                    <Zap className="w-3.5 h-3.5" />
+                    <span>Doctor: Escalate to Clinic</span>
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isUpdating}
+                    onClick={handleResolve}
+                    className="flex-1 py-2 px-3 bg-emerald-700 hover:bg-emerald-800 text-white font-medium text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition-all"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Doctor: Complete Online Consult</span>
+                  </button>
+                </>
+              )}
 
-      {/* Interactive Simulation / Triage Ops Controls */}
-      <div className="pt-2 border-t border-gray-100 flex flex-wrap items-center justify-between gap-2">
-        <button
-          type="button"
-          onClick={() => setShowDetails(!showDetails)}
-          className="text-xs text-gray-500 hover:text-gray-900 font-medium flex items-center gap-1 transition-colors"
-        >
-          <span>{showDetails ? "Hide Doctor Tools" : "Doctor Consultation & Ops Tools"}</span>
-          <ChevronRight className={`w-3.5 h-3.5 transition-transform ${showDetails ? "rotate-90" : ""}`} />
-        </button>
-
-        {showDetails && (
-          <div className="w-full mt-2 pt-2 border-t border-dashed border-gray-200 flex flex-col sm:flex-row gap-2">
-            {appointment.status === "Pending Screening" && (
-              <>
-                <button
-                  type="button"
-                  disabled={isUpdating}
-                  onClick={handleEscalate}
-                  className="flex-1 py-2 px-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition-all"
-                >
-                  <Zap className="w-3.5 h-3.5" />
-                  <span>Doctor: Escalate to Clinic</span>
-                </button>
+              {appointment.status === "Escalated to Physical Visit" && (
                 <button
                   type="button"
                   disabled={isUpdating}
                   onClick={handleResolve}
-                  className="flex-1 py-2 px-3 bg-emerald-700 hover:bg-emerald-800 text-white font-medium text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition-all"
+                  className="w-full py-2 px-3 bg-emerald-700 hover:bg-emerald-800 text-white font-medium text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition-all"
                 >
                   <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>Doctor: Complete Online Consult</span>
+                  <span>Mark Clinic Visit Done</span>
                 </button>
-              </>
-            )}
+              )}
 
-            {appointment.status === "Escalated to Physical Visit" && (
-              <button
-                type="button"
-                disabled={isUpdating}
-                onClick={handleResolve}
-                className="w-full py-2 px-3 bg-emerald-700 hover:bg-emerald-800 text-white font-medium text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition-all"
-              >
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>Mark Clinic Visit Done</span>
-              </button>
-            )}
-
-            {appointment.status === "Screening Complete" && (
-              <p className="text-[11px] text-gray-400 py-1">
-                ✓ Consultation & care concluded successfully. Prescription & records updated.
-              </p>
-            )}
-          </div>
-        )}
-      </div>
+              {appointment.status === "Screening Complete" && (
+                <p className="text-[11px] text-gray-400 py-1">
+                  ✓ Consultation & care concluded successfully. Prescription & records updated.
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

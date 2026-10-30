@@ -52,7 +52,7 @@ export function BottomNav() {
                 </div>
 
                 {/* Follow-ups Notification Badge */}
-                {item.count !== undefined && item.count > 0 && (
+                {isAuthenticated && item.count !== undefined && item.count > 0 && (
                   <span className="absolute -top-1 -right-1.5 bg-emerald-600 text-white text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center ring-2 ring-white shadow-xs">
                     {item.count}
                   </span>
