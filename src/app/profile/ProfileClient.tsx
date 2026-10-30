@@ -18,11 +18,13 @@ import {
 
 interface ProfileClientProps {
   initialUser: UserProfile | null;
+  serverUid?: string;
 }
 
-export function ProfileClient({ initialUser }: ProfileClientProps) {
+export function ProfileClient({ initialUser, serverUid }: ProfileClientProps) {
   const { user, updateUser, openLoginModal } = useAuth();
   const activeUser = user || initialUser;
+  const isUserAuthenticated = Boolean(serverUid || activeUser?.uid);
 
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [editName, setEditName] = useState(activeUser?.name || "");
@@ -85,46 +87,54 @@ export function ProfileClient({ initialUser }: ProfileClientProps) {
 
       {!activeUser ? (
         /* Unauthenticated Centered Hero Card */
-        <div className="bg-white rounded-3xl border border-gray-150 p-6 sm:p-12 text-center max-w-xl mx-auto shadow-sm space-y-6 my-4 animate-in fade-in zoom-in-95">
-          <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center mx-auto shadow-lg shadow-emerald-600/20">
-            <LogIn className="w-8 h-8 stroke-[2.2]" />
+        <div className="bg-white rounded-3xl border border-gray-150 p-5 sm:p-8 text-center max-w-md mx-auto shadow-sm space-y-4 sm:space-y-5 my-2 sm:my-4 animate-in fade-in zoom-in-95">
+          <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center mx-auto shadow-md shadow-emerald-600/20">
+            <LogIn className="w-7 h-7 stroke-[2.2]" />
           </div>
 
           <div>
-            <span className="text-[11px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full">
+            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full">
               Patient Portal
             </span>
-            <h2 className="text-xl sm:text-2xl font-black text-gray-900 mt-2">
+            <h2 className="text-lg sm:text-xl font-black text-gray-900 mt-1.5 leading-snug">
               Sign In to Your Health Profile
             </h2>
-            <p className="text-xs sm:text-sm text-gray-500 mt-1 max-w-md mx-auto">
-              Track zero-queue clinic follow-up passes, securely view digital paper prescriptions, and manage consultation history.
+            <p className="text-xs text-gray-500 mt-1 max-w-sm mx-auto leading-relaxed">
+              Track zero-queue clinic passes, securely view prescriptions, and manage follow-ups.
             </p>
           </div>
 
-          {/* Quick Value Props */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-left pt-2">
-            <div className="p-3 bg-emerald-50/60 rounded-2xl border border-emerald-100">
-              <span className="text-base block mb-1">⚡</span>
-              <p className="text-xs font-bold text-gray-900">Zero-Queue Pass</p>
-              <p className="text-[11px] text-gray-500">Walk past clinic waiting rooms</p>
+          {/* Quick Value Props: 2 in row, 3rd centered, with centered content */}
+          <div className="space-y-2 sm:space-y-2.5 pt-1">
+            {/* Top Row: 2 Cards */}
+            <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
+              <div className="p-2.5 sm:p-3 bg-emerald-50/70 rounded-2xl border border-emerald-100 flex flex-col items-center text-center">
+                <span className="text-lg block mb-1">⚡</span>
+                <p className="text-xs font-bold text-gray-900 leading-tight">Zero-Queue Pass</p>
+                <p className="text-[10px] sm:text-[11px] text-gray-500 mt-0.5 leading-tight">Walk past queues</p>
+              </div>
+
+              <div className="p-2.5 sm:p-3 bg-teal-50/70 rounded-2xl border border-teal-100 flex flex-col items-center text-center">
+                <span className="text-lg block mb-1">📋</span>
+                <p className="text-xs font-bold text-gray-900 leading-tight">Digital Vault</p>
+                <p className="text-[10px] sm:text-[11px] text-gray-500 mt-0.5 leading-tight">Slips saved safely</p>
+              </div>
             </div>
-            <div className="p-3 bg-teal-50/60 rounded-2xl border border-teal-100">
-              <span className="text-base block mb-1">📋</span>
-              <p className="text-xs font-bold text-gray-900">Digital Vault</p>
-              <p className="text-[11px] text-gray-500">All doctor slips safely archived</p>
-            </div>
-            <div className="p-3 bg-amber-50/60 rounded-2xl border border-amber-100">
-              <span className="text-base block mb-1">🔒</span>
-              <p className="text-xs font-bold text-gray-900">Zero Captcha</p>
-              <p className="text-[11px] text-gray-500">Direct 1-tap mobile verification</p>
+
+            {/* Bottom Row: 3rd Card Centered with identical width */}
+            <div className="flex justify-center">
+              <div className="w-[calc(50%-4px)] sm:w-[calc(50%-5px)] p-2.5 sm:p-3 bg-amber-50/70 rounded-2xl border border-amber-100 flex flex-col items-center text-center">
+                <span className="text-lg block mb-1">🔒</span>
+                <p className="text-xs font-bold text-gray-900 leading-tight">Zero Captcha</p>
+                <p className="text-[10px] sm:text-[11px] text-gray-500 mt-0.5 leading-tight">1-tap verification</p>
+              </div>
             </div>
           </div>
 
-          <div className="pt-2 space-y-2.5">
+          <div className="pt-1 space-y-2">
             <Link
               href="/login?redirect=/profile"
-              className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-semibold rounded-2xl shadow-md shadow-emerald-600/20 text-xs sm:text-sm flex items-center justify-center gap-2 transition-all"
+              className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-semibold rounded-2xl shadow-md shadow-emerald-600/20 text-xs sm:text-sm flex items-center justify-center gap-2 transition-all"
             >
               <LogIn className="w-4 h-4 stroke-[2.3]" />
               <span>Login with Mobile Number</span>
@@ -133,7 +143,7 @@ export function ProfileClient({ initialUser }: ProfileClientProps) {
             <button
               type="button"
               onClick={openLoginModal}
-              className="w-full py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-700 font-semibold rounded-2xl text-xs transition-colors"
+              className="w-full py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 font-semibold rounded-2xl text-xs transition-colors"
             >
               Open Quick Login Modal
             </button>

@@ -22,34 +22,34 @@ export const CACHE_TAGS = {
 
 export const CACHE_TTL = {
   /**
-   * Doctor Catalog TTL: 24 Hours (86,400s)
+   * Doctor Catalog TTL: 7 Days (604,800s)
    * Served globally from Vercel Edge CDN with 0 database reads.
    * Purged immediately on-demand when Admin toggles or adds a doctor.
    */
-  DOCTORS_CATALOG_SECONDS: 86400,
+  DOCTORS_CATALOG_SECONDS: 604800,
 
   /**
-   * Today's Analytics TTL: 60 Seconds
+   * Today's Analytics TTL: 1 Hour (3,600s)
    * Micro-cached so high admin traffic doesn't repeatedly query aggregates.
    * Purged immediately on-demand whenever a new appointment is booked.
    */
-  ANALYTICS_TODAY_SECONDS: 60,
+  ANALYTICS_TODAY_SECONDS: 3600,
 
   /**
-   * Patient Bookings TTL: 5 Minutes (300s)
+   * Patient Bookings TTL: 1 Day (86,400s)
    * Purged immediately on-demand when a follow-up is booked or status changed.
    */
-  PATIENT_BOOKINGS_SECONDS: 300,
+  PATIENT_BOOKINGS_SECONDS: 86400,
 
   /**
-   * Patient Prescriptions TTL: 10 Minutes (600s)
+   * Patient Prescriptions TTL: 1 Day (86,400s)
    * Purged immediately on-demand when a new paper slip is uploaded.
    */
-  PATIENT_PRESCRIPTIONS_SECONDS: 600,
+  PATIENT_PRESCRIPTIONS_SECONDS: 86400,
 
   /**
-   * Patient Profile & Address TTL: 10 Minutes (600s)
+   * Patient Profile & Address TTL: 1 Day (86,400s)
    * Purged immediately on-demand when address or name is edited.
    */
-  USER_PROFILE_SECONDS: 600,
+  USER_PROFILE_SECONDS: 86400,
 } as const;

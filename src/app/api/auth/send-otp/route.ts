@@ -33,15 +33,50 @@ export async function POST(req: Request) {
     // Save with 5-minute TTL
     saveOtp(normalizedPhone, otp, 5 * 60 * 1000);
 
-    // Optional Real SMS Gateway integration (e.g. Fast2SMS / MSG91)
-    let smsSent = false;
+    let dispatchSent = false;
+    let dispatchChannel: "whatsapp" | "sms" | "dev" = "dev";
     const smsApiKey = process.env.SMS_GATEWAY_API_KEY;
-    if (smsApiKey && normalizedPhone !== "+919876543210") {
+    const whatsappPhoneId = process.env.FAST2SMS_WHATSAPP_PHONE_NUMBER_ID;
+    const whatsappMessageId = process.env.FAST2SMS_WHATSAPP_MESSAGE_ID;
+    const isTestNumber = normalizedPhone === "+919876543210" || normalizedPhone === "+919999999999";
+
+    // 1. Try Fast2SMS Official WhatsApp Business API (No DLT Required)
+    if (smsApiKey && whatsappPhoneId && whatsappMessageId && !isTestNumber) {
+      try {
+        const queryParams = new URLSearchParams({
+          message_id: whatsappMessageId.trim(),
+          phone_number_id: whatsappPhoneId.trim(),
+          numbers: digitsOnly.slice(-10),
+          variables_values: otp,
+        });
+
+        const waRes = await fetch(`https://www.fast2sms.com/dev/whatsapp?${queryParams.toString()}`, {
+          method: "GET",
+          headers: {
+            authorization: smsApiKey.trim(),
+          },
+        });
+
+        const waJson = await waRes.json().catch(() => null);
+        if (waJson?.return === true || waJson?.status_code === 200) {
+          dispatchSent = true;
+          dispatchChannel = "whatsapp";
+          console.log(`[Fast2SMS WhatsApp] OTP successfully dispatched to ${normalizedPhone}`);
+        } else {
+          console.warn("[Fast2SMS WhatsApp warning]:", waJson?.message || "WhatsApp gateway returned error", waJson);
+        }
+      } catch (waErr) {
+        console.warn("Fast2SMS WhatsApp dispatch exception:", waErr);
+      }
+    }
+
+    // 2. Fallback to Traditional SMS Gateway if WhatsApp not configured or failed
+    if (!dispatchSent && smsApiKey && !isTestNumber) {
       try {
         const smsRes = await fetch("https://www.fast2sms.com/dev/bulkV2", {
           method: "POST",
           headers: {
-            authorization: smsApiKey,
+            authorization: smsApiKey.trim(),
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
@@ -52,25 +87,33 @@ export async function POST(req: Request) {
         });
         const smsJson = await smsRes.json().catch(() => null);
         if (smsJson?.return === true) {
-          smsSent = true;
+          dispatchSent = true;
+          dispatchChannel = "sms";
         } else {
-          console.warn("[Fast2SMS notice]:", smsJson?.message || "Gateway response not OK");
+          console.warn("[Fast2SMS SMS notice]:", smsJson?.message || "Gateway response not OK");
         }
       } catch (smsErr) {
         console.warn("SMS Gateway dispatch warning:", smsErr);
       }
     }
 
-    console.log(`[Zero-Captcha Auth] OTP for ${normalizedPhone}: ${otp}`);
+    console.log(`[Zero-Captcha Auth] OTP for ${normalizedPhone}: ${otp} (channel: ${dispatchChannel})`);
+
+    const message = dispatchSent
+      ? dispatchChannel === "whatsapp"
+        ? "6-digit verification code sent to your WhatsApp"
+        : "6-digit OTP sent successfully via SMS"
+      : "Verification code generated";
 
     return NextResponse.json({
       success: true,
-      message: smsSent ? "6-digit OTP sent successfully via SMS" : "OTP code generated",
+      channel: dispatchChannel,
+      message,
       phone: normalizedPhone,
-      // Provide devOtp so users and testers are never locked out if SMS gateway balance is exhausted
+      // Provide devOtp so users and clinic staff are never locked out during setup
       devOtp: otp,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("send-otp error:", error);
     return NextResponse.json(
       { error: "Failed to dispatch OTP. Please check phone number and try again." },

@@ -250,10 +250,10 @@ export function PhoneLoginModal({
           <div className="w-8" />
           <div className="text-center">
             <h3 className="font-bold text-gray-900 text-sm sm:text-base leading-tight">
-              {step === "phone" ? "Enter your mobile number" : step === "otp" ? "Verify with OTP" : "Complete Your Profile"}
+              {step === "phone" ? "Enter your mobile number" : step === "otp" ? "Verify with WhatsApp OTP" : "Complete Your Profile"}
             </h3>
             <p className="text-[11px] text-gray-500 font-medium mt-0.5">
-              {step === "phone" ? "We will send a 6-digit OTP to verify" : step === "otp" ? `Code sent to +91 ${phone}` : "Basic details for doctor prescriptions"}
+              {step === "phone" ? "We will send a 6-digit verification code to your WhatsApp" : step === "otp" ? `Code sent via WhatsApp to +91 ${phone}` : "Basic details for doctor prescriptions"}
             </p>
           </div>
           <button
@@ -276,8 +276,11 @@ export function PhoneLoginModal({
           {step === "phone" && (
             <form onSubmit={handleSendOtp} className="space-y-4">
               <div>
-                <label className="text-xs font-bold text-gray-700 block mb-1.5">
-                  Mobile Number
+                <label className="text-xs font-bold text-gray-700 block mb-1.5 flex items-center justify-between">
+                  <span>Mobile Number (WhatsApp)</span>
+                  <span className="text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                    WhatsApp OTP
+                  </span>
                 </label>
                 <div className="relative flex items-center">
                   <div className="absolute left-3 flex items-center gap-1 text-xs font-bold text-gray-800 bg-gray-100 px-2 py-1 rounded-lg border border-gray-200">

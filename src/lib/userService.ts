@@ -4,6 +4,7 @@ import { INITIAL_USER } from "./mockData";
 import { db, isLiveFirebaseConfigured } from "@/lib/firebaseConfig";
 
 const LOCAL_STORAGE_KEY_USER_PROFILE = "pronto_user_profile";
+const COOKIE_KEY_USER_UID = "pronto_uid";
 const userSubscribers: Array<(user: UserProfile) => void> = [];
 
 export function getStoredUserProfile(): UserProfile | null {
@@ -14,7 +15,15 @@ export function getStoredUserProfile(): UserProfile | null {
       return null;
     }
     const parsed = JSON.parse(raw);
-    return parsed && parsed.uid ? parsed : null;
+    const user = parsed && parsed.uid ? parsed : null;
+    // Auto-sync cookie if missing in browser
+    if (user?.uid && typeof document !== "undefined") {
+      const hasCookie = document.cookie.split(";").some((c) => c.trim().startsWith(`${COOKIE_KEY_USER_UID}=`));
+      if (!hasCookie) {
+        document.cookie = `${COOKIE_KEY_USER_UID}=${encodeURIComponent(user.uid)}; path=/; max-age=2592000; SameSite=Lax`;
+      }
+    }
+    return user;
   } catch {
     return null;
   }
@@ -24,6 +33,7 @@ export function clearStoredUserProfile(): void {
   if (typeof window !== "undefined") {
     try {
       localStorage.removeItem(LOCAL_STORAGE_KEY_USER_PROFILE);
+      document.cookie = `${COOKIE_KEY_USER_UID}=; path=/; max-age=0; SameSite=Lax`;
     } catch (e) {
       console.error(e);
     }
@@ -35,6 +45,9 @@ export function saveStoredUserProfile(user: UserProfile) {
   if (typeof window !== "undefined") {
     try {
       localStorage.setItem(LOCAL_STORAGE_KEY_USER_PROFILE, JSON.stringify(user));
+      if (user?.uid) {
+        document.cookie = `${COOKIE_KEY_USER_UID}=${encodeURIComponent(user.uid)}; path=/; max-age=2592000; SameSite=Lax`;
+      }
     } catch (e) {
       console.error(e);
     }

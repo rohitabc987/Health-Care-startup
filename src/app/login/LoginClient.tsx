@@ -258,14 +258,14 @@ export function LoginClient() {
           <div className="mb-5 text-center">
             <h1 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">
               {step === "phone" && "Enter your mobile number"}
-              {step === "otp" && "Verify with OTP"}
+              {step === "otp" && "Verify with WhatsApp OTP"}
               {step === "onboarding" && "What's your name?"}
             </h1>
             <p className="text-xs sm:text-sm text-gray-500 mt-1.5 max-w-xs mx-auto">
-              {step === "phone" && "We will send a 6-digit OTP to verify your account"}
+              {step === "phone" && "We will send a 6-digit verification code directly to your WhatsApp"}
               {step === "otp" && (
                 <span>
-                  Code sent to <strong className="text-gray-800 font-semibold">+91 {phone}</strong> •{" "}
+                  Code sent via WhatsApp to <strong className="text-gray-800 font-semibold">+91 {phone}</strong> •{" "}
                   <button
                     type="button"
                     onClick={() => {
@@ -294,8 +294,11 @@ export function LoginClient() {
           {step === "phone" && (
             <form onSubmit={handleSendOtp} className="space-y-4">
               <div>
-                <label className="text-xs font-bold text-gray-700 block mb-1.5">
-                  Mobile Number
+                <label className="text-xs font-bold text-gray-700 block mb-1.5 flex items-center justify-between">
+                  <span>Mobile Number (WhatsApp)</span>
+                  <span className="text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                    WhatsApp OTP
+                  </span>
                 </label>
                 <div className="relative flex items-center">
                   <div className="absolute left-3 flex items-center gap-1 text-xs font-bold text-gray-800 bg-gray-100 px-2 py-1 rounded-lg border border-gray-200">

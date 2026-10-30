@@ -67,12 +67,22 @@ export async function POST(req: Request) {
       };
     }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       message: "Phone verified successfully",
       user: userProfile,
     });
-  } catch (error: any) {
+
+    response.cookies.set({
+      name: "pronto_uid",
+      value: uid,
+      path: "/",
+      maxAge: 30 * 24 * 60 * 60, // 30 days
+      sameSite: "lax",
+    });
+
+    return response;
+  } catch (error: unknown) {
     console.error("verify-otp error:", error);
     return NextResponse.json(
       { error: "Verification failed. Please try again." },

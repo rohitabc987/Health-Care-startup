@@ -42,7 +42,8 @@ export async function getCachedTodaySales(dateStr: string): Promise<{ totalPatie
  * 3. Cached Patient Appointments & Follow-up Passes
  * Strategy: User-Scoped Tag + 5-Minute TTL
  */
-export async function getCachedAppointments(patientUid = "patient-demo-001"): Promise<Appointment[]> {
+export async function getCachedAppointments(patientUid?: string): Promise<Appointment[]> {
+  if (!patientUid) return [];
   return unstable_cache(
     async () => getAppointmentsServer(patientUid),
     [`patient-appointments-${patientUid}`],
@@ -57,7 +58,8 @@ export async function getCachedAppointments(patientUid = "patient-demo-001"): Pr
  * 4. Cached Patient Prescriptions Vault
  * Strategy: User-Scoped Tag + 10-Minute TTL
  */
-export async function getCachedPrescriptions(patientUid = "patient-demo-001"): Promise<PrescriptionRecord[]> {
+export async function getCachedPrescriptions(patientUid?: string): Promise<PrescriptionRecord[]> {
+  if (!patientUid) return [];
   return unstable_cache(
     async () => getPrescriptionsServer(patientUid),
     [`patient-prescriptions-${patientUid}`],
@@ -72,7 +74,8 @@ export async function getCachedPrescriptions(patientUid = "patient-demo-001"): P
  * 5. Cached User Profile & Address
  * Strategy: User-Scoped Tag + 10-Minute TTL
  */
-export async function getCachedUserProfile(uid = "patient-demo-001"): Promise<UserProfile | null> {
+export async function getCachedUserProfile(uid?: string): Promise<UserProfile | null> {
+  if (!uid) return null;
   return unstable_cache(
     async () => getUserProfileServer(uid),
     [`patient-profile-${uid}`],
