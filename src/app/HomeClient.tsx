@@ -4,17 +4,14 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Doctor, subscribeToDoctors } from "@/lib/firebase";
-import { useAuth } from "@/context/AuthContext";
 import { DoctorCard } from "./components/DoctorCard";
-import { ProfileDropdown } from "./components/ProfileDropdown";
 import {
   Sparkles,
   ShieldCheck,
   Search,
   Stethoscope,
   Activity,
-  FileText,
-  LogIn
+  FileText
 } from "lucide-react";
 
 interface HomeClientProps {
@@ -23,11 +20,9 @@ interface HomeClientProps {
 
 export function HomeClient({ initialDoctors }: HomeClientProps) {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuth();
   const [doctors, setDoctors] = useState<Doctor[]>(initialDoctors);
   const [selectedSpecialty, setSelectedSpecialty] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState("");
-  const [isMobileProfileOpen, setIsMobileProfileOpen] = useState(false);
 
   // Real-time synchronization with Admin Catalog updates
   useEffect(() => {
@@ -37,13 +32,6 @@ export function HomeClient({ initialDoctors }: HomeClientProps) {
     });
     return () => unsub();
   }, []);
-
-  const getInitials = (name?: string) => {
-    if (!name) return "PT";
-    const parts = name.trim().split(" ");
-    if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
-    return name.slice(0, 2).toUpperCase();
-  };
 
   // Filter doctors by specialty and search query
   const filteredDoctors = doctors.filter((doc) => {
@@ -60,51 +48,6 @@ export function HomeClient({ initialDoctors }: HomeClientProps) {
 
   return (
     <div className="w-full space-y-6 animate-in fade-in duration-200">
-      {/* Mobile Top Brand Bar */}
-      <div className="md:hidden sticky top-0 z-30 bg-white/95 backdrop-blur-md px-3 pt-3 pb-2.5 -mx-3 border-b border-gray-150 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center shadow-xs">
-            <Stethoscope className="w-4 h-4 stroke-[2.5]" />
-          </div>
-          <div>
-            <span className="font-black text-sm text-gray-950 tracking-tight">PRONTO</span>
-            <span className="ml-1 text-[9px] uppercase font-bold bg-emerald-100 text-emerald-800 px-1 py-0.2 rounded">
-              Health
-            </span>
-          </div>
-        </Link>
-
-        {/* Profile Avatar or Login Trigger */}
-        {!isAuthenticated ? (
-          <Link
-            href="/login"
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition-all"
-          >
-            <LogIn className="w-3.5 h-3.5 stroke-[2.3]" />
-            <span>Login</span>
-          </Link>
-        ) : (
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setIsMobileProfileOpen(!isMobileProfileOpen)}
-              className={`w-8 h-8 rounded-full font-bold text-xs flex items-center justify-center transition-all ${
-                isMobileProfileOpen
-                  ? "bg-emerald-600 text-white ring-2 ring-emerald-500/30"
-                  : "bg-emerald-100 text-emerald-800 border border-emerald-300"
-              }`}
-              aria-label="Profile and Menu"
-            >
-              {getInitials(user?.name)}
-            </button>
-
-            <ProfileDropdown
-              isOpen={isMobileProfileOpen}
-              onClose={() => setIsMobileProfileOpen(false)}
-            />
-          </div>
-        )}
-      </div>
 
       {/* Patient-First Action Banner */}
       <div className="relative overflow-hidden bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-800 text-white rounded-3xl p-4 py-6 sm:p-6 shadow-lg shadow-emerald-950/10 border border-emerald-600/30">

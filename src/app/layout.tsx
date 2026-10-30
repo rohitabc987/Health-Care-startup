@@ -4,6 +4,7 @@ import "./globals.css";
 import { AppProviders } from "./providers";
 import { BottomNav } from "./components/BottomNav";
 import { DesktopHeader } from "./components/DesktopHeader";
+import { MobileHeader } from "./components/MobileHeader";
 
 export const metadata: Metadata = {
   title: "Pronto Health | Complete Doctor & Patient Healthcare Platform",
@@ -41,8 +42,13 @@ export default function RootLayout({
             <DesktopHeader />
           </Suspense>
 
+          {/* Top Mobile Navigation Header (Visible on Mobile / Tablet) */}
+          <Suspense fallback={null}>
+            <MobileHeader />
+          </Suspense>
+
           {/* Responsive Application Container */}
-          <main className="flex-1 w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-0 md:pt-4 pb-24 md:pb-12">
+          <main className="flex-1 w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-3 md:pt-4 pb-24 md:pb-12">
             {children}
           </main>
 

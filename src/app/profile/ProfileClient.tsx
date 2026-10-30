@@ -5,15 +5,12 @@ import Link from "next/link";
 import { UserProfile, UserAddress } from "@/lib/firebase";
 import { revalidatePatientDataAction } from "@/app/actions/cacheActions";
 import { useAuth } from "@/context/AuthContext";
-import { ProfileDropdown } from "../components/ProfileDropdown";
 import {
-  Stethoscope,
   CheckCircle2,
   FileText,
   CalendarCheck,
   ArrowRight,
   LogIn,
-  MapPin,
   Edit3,
   Check,
   X
@@ -25,7 +22,6 @@ interface ProfileClientProps {
 
 export function ProfileClient({ initialUser }: ProfileClientProps) {
   const { user, updateUser, openLoginModal } = useAuth();
-  const [isMobileProfileOpen, setIsMobileProfileOpen] = useState(false);
   const activeUser = user || initialUser;
 
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -86,50 +82,6 @@ export function ProfileClient({ initialUser }: ProfileClientProps) {
 
   return (
     <div className="w-full space-y-4 sm:space-y-5 animate-in fade-in duration-200">
-      {/* Mobile Top Brand Bar */}
-      <div className="md:hidden sticky top-0 z-30 bg-white/95 backdrop-blur-md px-3 pt-3 pb-2.5 -mx-3 border-b border-gray-150 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center shadow-xs">
-            <Stethoscope className="w-4 h-4 stroke-[2.5]" />
-          </div>
-          <div>
-            <span className="font-black text-sm text-gray-950 tracking-tight">PRONTO</span>
-            <span className="ml-1 text-[9px] uppercase font-bold bg-emerald-100 text-emerald-800 px-1 py-0.2 rounded">
-              Health
-            </span>
-          </div>
-        </Link>
-
-        {/* Profile Avatar or Login Trigger */}
-        {!activeUser ? (
-          <Link
-            href="/login?redirect=/profile"
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition-all"
-          >
-            <LogIn className="w-3.5 h-3.5 stroke-[2.3]" />
-            <span>Login</span>
-          </Link>
-        ) : (
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setIsMobileProfileOpen(!isMobileProfileOpen)}
-              className={`w-8 h-8 rounded-full font-bold text-xs flex items-center justify-center transition-all ${isMobileProfileOpen
-                ? "bg-emerald-600 text-white ring-2 ring-emerald-500/30"
-                : "bg-emerald-100 text-emerald-800 border border-emerald-300"
-                }`}
-              aria-label="Profile and Menu"
-            >
-              {getInitials(activeUser?.name)}
-            </button>
-
-            <ProfileDropdown
-              isOpen={isMobileProfileOpen}
-              onClose={() => setIsMobileProfileOpen(false)}
-            />
-          </div>
-        )}
-      </div>
 
       {!activeUser ? (
         /* Unauthenticated Centered Hero Card */

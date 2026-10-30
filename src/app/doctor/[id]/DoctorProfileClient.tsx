@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Doctor } from "@/lib/firebase";
 import { BookingModal } from "@/app/components/BookingModal";
@@ -10,12 +9,10 @@ import {
   Star,
   MapPin,
   Stethoscope,
-  Clock,
   Award,
   ShieldCheck,
   Calendar,
-  CheckCircle2,
-  ChevronRight
+  CheckCircle2
 } from "lucide-react";
 
 interface DoctorProfileClientProps {
@@ -26,30 +23,26 @@ export function DoctorProfileClient({ doctor }: DoctorProfileClientProps) {
   const router = useRouter();
   const [isBookingOpen, setIsBookingOpen] = useState(false);
 
+  const handleBack = () => {
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back();
+    } else {
+      router.push("/");
+    }
+  };
+
   return (
     <div className="w-full max-w-2xl mx-auto space-y-4 sm:space-y-5 animate-in fade-in duration-200 pb-10">
-      {/* Top Header Navigation */}
-      <div className="flex items-center justify-between pb-1">
+      {/* Desktop Back Navigation */}
+      <div className="hidden md:flex items-center justify-between pb-1">
         <button
           type="button"
-          onClick={() => router.back()}
-          className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-gray-600 hover:text-gray-900 bg-white px-3 py-2 rounded-2xl border border-gray-200 shadow-2xs hover:border-emerald-300 transition-all"
+          onClick={handleBack}
+          className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-gray-600 hover:text-gray-900 bg-white px-3 py-2 rounded-2xl border border-gray-200 shadow-2xs hover:border-emerald-300 transition-all cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back</span>
         </button>
-
-        <Link href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center shadow-xs">
-            <Stethoscope className="w-4 h-4 stroke-[2.5]" />
-          </div>
-          <div>
-            <span className="font-black text-sm text-gray-950 tracking-tight">PRONTO</span>
-            <span className="ml-1 text-[9px] uppercase font-bold bg-emerald-100 text-emerald-800 px-1 py-0.2 rounded">
-              Health
-            </span>
-          </div>
-        </Link>
       </div>
 
       {/* Main Doctor Hero Card */}

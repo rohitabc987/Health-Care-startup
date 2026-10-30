@@ -10,10 +10,8 @@ import {
 } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { PrescriptionUpload } from "../components/PrescriptionUpload";
-import { ProfileDropdown } from "../components/ProfileDropdown";
 import { BookingModal } from "../components/BookingModal";
 import { 
-  Stethoscope, 
   FileText, 
   Calendar, 
   X,
@@ -29,7 +27,6 @@ export function PrescriptionsClient({ initialPrescriptions }: PrescriptionsClien
   const { user, isAuthenticated, openLoginModal } = useAuth();
   const [prescriptions, setPrescriptions] = useState<PrescriptionRecord[]>(user ? initialPrescriptions : []);
   const [previewPrescription, setPreviewPrescription] = useState<PrescriptionRecord | null>(null);
-  const [isMobileProfileOpen, setIsMobileProfileOpen] = useState(false);
   const [bookingDoctor, setBookingDoctor] = useState<Doctor | null>(null);
 
   useEffect(() => {
@@ -43,13 +40,6 @@ export function PrescriptionsClient({ initialPrescriptions }: PrescriptionsClien
     return () => unsub();
   }, [user?.uid]);
 
-  const getInitials = (name?: string) => {
-    if (!name) return "PT";
-    const parts = name.trim().split(" ");
-    if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
-    return name.slice(0, 2).toUpperCase();
-  };
-
   const handleBookFollowup = (docName: string) => {
     const matched = INITIAL_DOCTORS.find(
       (d) => d.name.toLowerCase() === docName.toLowerCase()
@@ -59,51 +49,6 @@ export function PrescriptionsClient({ initialPrescriptions }: PrescriptionsClien
 
   return (
     <div className="w-full space-y-5 animate-in fade-in duration-200">
-      {/* Mobile Top Brand Bar */}
-      <div className="md:hidden sticky top-0 z-30 bg-white/95 backdrop-blur-md px-3 pt-3 pb-2.5 -mx-3 border-b border-gray-150 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center shadow-xs">
-            <Stethoscope className="w-4 h-4 stroke-[2.5]" />
-          </div>
-          <div>
-            <span className="font-black text-sm text-gray-950 tracking-tight">PRONTO</span>
-            <span className="ml-1 text-[9px] uppercase font-bold bg-emerald-100 text-emerald-800 px-1 py-0.2 rounded">
-              Health
-            </span>
-          </div>
-        </Link>
-
-        {/* Profile Avatar or Login Trigger */}
-        {!isAuthenticated ? (
-          <Link
-            href="/login?redirect=/prescriptions"
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition-all"
-          >
-            <LogIn className="w-3.5 h-3.5 stroke-[2.3]" />
-            <span>Login</span>
-          </Link>
-        ) : (
-          <div className="relative">
-            <button 
-              type="button"
-              onClick={() => setIsMobileProfileOpen(!isMobileProfileOpen)}
-              className={`w-8 h-8 rounded-full font-bold text-xs flex items-center justify-center transition-all ${
-                isMobileProfileOpen
-                  ? "bg-emerald-600 text-white ring-2 ring-emerald-500/30"
-                  : "bg-emerald-100 text-emerald-800 border border-emerald-300"
-              }`}
-              aria-label="Profile and Menu"
-            >
-              {getInitials(user?.name)}
-            </button>
-
-            <ProfileDropdown
-              isOpen={isMobileProfileOpen}
-              onClose={() => setIsMobileProfileOpen(false)}
-            />
-          </div>
-        )}
-      </div>
 
       {!isAuthenticated ? (
         /* Unauthenticated Centered Hero Card */

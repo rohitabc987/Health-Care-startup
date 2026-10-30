@@ -6,9 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { updateUserProfile, getStoredUserProfile } from "@/lib/firebase";
 import {
-  Stethoscope,
   ArrowRight,
-  ArrowLeft,
   CheckCircle2,
   RotateCcw,
   User,
@@ -238,30 +236,6 @@ export function LoginClient() {
 
   return (
     <div className="w-full space-y-4 animate-in fade-in duration-200">
-      {/* Mobile Top Brand Bar (Navbar) */}
-      <div className="md:hidden sticky top-0 z-30 bg-white/95 backdrop-blur-md px-3 pt-3 pb-2.5 -mx-3 border-b border-gray-150 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center shadow-xs">
-            <Stethoscope className="w-4 h-4 stroke-[2.5]" />
-          </div>
-          <div>
-            <span className="font-black text-sm text-gray-950 tracking-tight">PRONTO</span>
-            <span className="ml-1 text-[9px] uppercase font-bold bg-emerald-100 text-emerald-800 px-1 py-0.2 rounded">
-              Health
-            </span>
-          </div>
-        </Link>
-
-        {!isBookingRedirect && (
-          <Link
-            href={redirectUrl || "/"}
-            className="text-xs font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-xl transition-colors"
-          >
-            Skip
-          </Link>
-        )}
-      </div>
-
       {/* Centered Login Card Container */}
       <div className="w-full min-h-[calc(100vh-170px)] flex flex-col justify-center items-center py-2 sm:py-6 px-0 sm:px-4">
         <div className="w-full max-w-sm bg-white rounded-3xl sm:border sm:border-gray-150 sm:shadow-lg overflow-hidden p-4 py-8 md:p-10 md:px-12">

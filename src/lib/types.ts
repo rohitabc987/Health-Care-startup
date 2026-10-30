@@ -18,6 +18,7 @@ export interface UserProfile {
   role?: 'patient' | 'doctor' | 'admin';
   healthId?: string;
   address?: UserAddress;
+  avatar?: string;
   createdAt?: any;
   defaultClinic?: string;
   registeredByGroundTeam?: boolean;
