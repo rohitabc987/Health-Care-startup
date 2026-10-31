@@ -9,6 +9,7 @@ interface AdminBookingsTableProps {
   isLoading: boolean;
   todayDate: string;
   selectedDoctorId: string;
+  canClearDoctorFilter?: boolean;
   onClearDoctorFilter: () => void;
   onStatusChange: (aptId: string, status: AppointmentStatus) => void;
 }
@@ -18,6 +19,7 @@ export function AdminBookingsTable({
   isLoading,
   todayDate,
   selectedDoctorId,
+  canClearDoctorFilter = true,
   onClearDoctorFilter,
   onStatusChange,
 }: AdminBookingsTableProps) {
@@ -33,11 +35,11 @@ export function AdminBookingsTable({
           </p>
         </div>
 
-        {selectedDoctorId !== "all" && (
+        {canClearDoctorFilter && selectedDoctorId !== "all" && (
           <button
             type="button"
             onClick={onClearDoctorFilter}
-            className="text-xs text-emerald-700 hover:underline font-bold"
+            className="text-xs text-emerald-700 hover:underline font-bold cursor-pointer"
           >
             Clear Doctor Filter
           </button>

@@ -24,11 +24,12 @@ export function BookingCard({ appointment, onStatusChange, showDoctorTools }: Bo
   const [isUpdating, setIsUpdating] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
 
-  // Doctor consultation & ops tools should ONLY be visible to admin or assigned doctor (NOT patient)
-  const isAdmin = user?.role === "admin";
+  // Doctor consultation & ops tools should ONLY be visible to super_admin/staff or assigned doctor (NOT patient)
+  const isAdmin = user?.role === "super_admin" || user?.role === "staff";
   const isAssignedDoctor =
     user?.role === "doctor" &&
-    (user.uid === appointment.doctorId ||
+    (user.doctorId === appointment.doctorId ||
+      user.uid === appointment.doctorId ||
       user.name?.trim().toLowerCase() === appointment.doctorName?.trim().toLowerCase());
 
   const canAccessDoctorTools =

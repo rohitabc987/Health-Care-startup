@@ -5,6 +5,8 @@ import { db, isLiveFirebaseConfigured } from "@/lib/firebaseConfig";
 
 const LOCAL_STORAGE_KEY_USER_PROFILE = "pronto_user_profile";
 const COOKIE_KEY_USER_UID = "pronto_uid";
+const COOKIE_KEY_USER_ROLE = "pronto_role";
+const COOKIE_KEY_DOCTOR_ID = "pronto_doctor_id";
 const userSubscribers: Array<(user: UserProfile) => void> = [];
 
 export function getStoredUserProfile(): UserProfile | null {
@@ -16,11 +18,16 @@ export function getStoredUserProfile(): UserProfile | null {
     }
     const parsed = JSON.parse(raw);
     const user = parsed && parsed.uid ? parsed : null;
-    // Auto-sync cookie if missing in browser
+    // Auto-sync cookies if missing in browser
     if (user?.uid && typeof document !== "undefined") {
       const hasCookie = document.cookie.split(";").some((c) => c.trim().startsWith(`${COOKIE_KEY_USER_UID}=`));
       if (!hasCookie) {
-        document.cookie = `${COOKIE_KEY_USER_UID}=${encodeURIComponent(user.uid)}; path=/; max-age=2592000; SameSite=Lax`;
+        const maxAge = 2592000;
+        document.cookie = `${COOKIE_KEY_USER_UID}=${encodeURIComponent(user.uid)}; path=/; max-age=${maxAge}; SameSite=Lax`;
+        document.cookie = `${COOKIE_KEY_USER_ROLE}=${encodeURIComponent(user.role || "patient")}; path=/; max-age=${maxAge}; SameSite=Lax`;
+        if (user.doctorId) {
+          document.cookie = `${COOKIE_KEY_DOCTOR_ID}=${encodeURIComponent(user.doctorId)}; path=/; max-age=${maxAge}; SameSite=Lax`;
+        }
       }
     }
     return user;
@@ -34,6 +41,8 @@ export function clearStoredUserProfile(): void {
     try {
       localStorage.removeItem(LOCAL_STORAGE_KEY_USER_PROFILE);
       document.cookie = `${COOKIE_KEY_USER_UID}=; path=/; max-age=0; SameSite=Lax`;
+      document.cookie = `${COOKIE_KEY_USER_ROLE}=; path=/; max-age=0; SameSite=Lax`;
+      document.cookie = `${COOKIE_KEY_DOCTOR_ID}=; path=/; max-age=0; SameSite=Lax`;
     } catch (e) {
       console.error(e);
     }
@@ -46,7 +55,12 @@ export function saveStoredUserProfile(user: UserProfile) {
     try {
       localStorage.setItem(LOCAL_STORAGE_KEY_USER_PROFILE, JSON.stringify(user));
       if (user?.uid) {
-        document.cookie = `${COOKIE_KEY_USER_UID}=${encodeURIComponent(user.uid)}; path=/; max-age=2592000; SameSite=Lax`;
+        const maxAge = 2592000;
+        document.cookie = `${COOKIE_KEY_USER_UID}=${encodeURIComponent(user.uid)}; path=/; max-age=${maxAge}; SameSite=Lax`;
+        document.cookie = `${COOKIE_KEY_USER_ROLE}=${encodeURIComponent(user.role || "patient")}; path=/; max-age=${maxAge}; SameSite=Lax`;
+        if (user.doctorId) {
+          document.cookie = `${COOKIE_KEY_DOCTOR_ID}=${encodeURIComponent(user.doctorId)}; path=/; max-age=${maxAge}; SameSite=Lax`;
+        }
       }
     } catch (e) {
       console.error(e);

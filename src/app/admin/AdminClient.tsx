@@ -20,7 +20,8 @@ import {
   Filter, 
   CheckCircle2, 
   RefreshCw, 
-  Calendar 
+  Calendar,
+  LogOut
 } from "lucide-react";
 import { AdminKpiCards } from "./components/AdminKpiCards";
 import { AdminBookingsTable } from "./components/AdminBookingsTable";
@@ -31,23 +32,39 @@ import {
   revalidateDoctorsCatalogAction, 
   revalidateTodayAnalyticsAction 
 } from "@/app/actions/cacheActions";
+import { useAuth } from "@/context/AuthContext";
+import { UserRole } from "@/lib/types";
 
 interface AdminClientProps {
   initialOverallMetrics: { totalPatients: number; totalRevenue: number };
   initialDoctors: Doctor[];
   initialAppointments: Appointment[];
+  userRole?: UserRole;
+  currentDoctorId?: string;
 }
 
 export function AdminClient({
   initialOverallMetrics,
   initialDoctors,
   initialAppointments,
+  userRole = "super_admin",
+  currentDoctorId,
 }: AdminClientProps) {
+  const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<"sales" | "doctors">("sales");
   const [todayDate, setTodayDate] = useState<string>("");
 
+  const isDoctor = userRole === "doctor";
+
+  const handleLogout = () => {
+    logout();
+    window.location.href = "/";
+  };
+
   const [overallMetrics, setOverallMetrics] = useState(initialOverallMetrics);
-  const [selectedDoctorId, setSelectedDoctorId] = useState<string>("all");
+  const [selectedDoctorId, setSelectedDoctorId] = useState<string>(
+    isDoctor && currentDoctorId ? currentDoctorId : "all"
+  );
   const [doctorMetrics, setDoctorMetrics] = useState<{ doctorPatients: number; doctorRevenue: number } | null>(null);
 
   const [appointments, setAppointments] = useState<Appointment[]>(initialAppointments);
@@ -71,19 +88,29 @@ export function AdminClient({
 
   const loadMetricsAndAppointments = async (dateStr?: string, docId?: string) => {
     const targetDate = dateStr || todayDate || new Date().toISOString().split("T")[0];
-    const targetDoctor = docId !== undefined ? docId : selectedDoctorId;
+    const targetDoctor = isDoctor && currentDoctorId ? currentDoctorId : (docId !== undefined ? docId : selectedDoctorId);
 
     setIsLoadingAppointments(true);
 
     try {
-      const overall = await getTodayOverallSales(targetDate);
-      setOverallMetrics(overall);
-
-      if (targetDoctor !== "all") {
-        const docSales = await getDoctorDailySales(targetDoctor, targetDate);
+      if (isDoctor && currentDoctorId) {
+        // Doctor only loads their own sales - zero hospital-wide read billing
+        const docSales = await getDoctorDailySales(currentDoctorId, targetDate);
         setDoctorMetrics(docSales);
+        setOverallMetrics({
+          totalPatients: docSales.doctorPatients,
+          totalRevenue: docSales.doctorRevenue,
+        });
       } else {
-        setDoctorMetrics(null);
+        const overall = await getTodayOverallSales(targetDate);
+        setOverallMetrics(overall);
+
+        if (targetDoctor !== "all") {
+          const docSales = await getDoctorDailySales(targetDoctor, targetDate);
+          setDoctorMetrics(docSales);
+        } else {
+          setDoctorMetrics(null);
+        }
       }
 
       const list = await getAppointments({
@@ -132,6 +159,8 @@ export function AdminClient({
     showNotice("New doctor added successfully and is now live on the Home page!");
   };
 
+  const currentDoctorObj = isDoctor && currentDoctorId ? doctorsList.find((d) => d.id === currentDoctorId) : null;
+
   return (
     <div className="w-full space-y-5 animate-in fade-in duration-200">
       {/* Top Admin Header */}
@@ -139,44 +168,79 @@ export function AdminClient({
         <div>
           <div className="flex items-center gap-2">
             <span className="p-1.5 rounded-xl bg-emerald-500 text-slate-950">
-              <ShieldCheck className="w-5 h-5 stroke-[2.5]" />
+              {isDoctor ? (
+                <Stethoscope className="w-5 h-5 stroke-[2.5]" />
+              ) : (
+                <ShieldCheck className="w-5 h-5 stroke-[2.5]" />
+              )}
             </span>
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight">Pronto Admin Operations Desk</h1>
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight">
+              {isDoctor
+                ? `Doctor Consultation Desk${currentDoctorObj?.name ? ` • ${currentDoctorObj.name}` : ""}`
+                : "Pronto Super Admin Operations Desk"}
+            </h1>
             <span className="text-[10px] uppercase font-bold tracking-wider bg-emerald-400/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-400/30">
-              Live Cloud Aggregation
+              {isDoctor ? "Doctor Portal" : "Live Cloud Aggregation"}
             </span>
           </div>
           <p className="text-xs sm:text-sm text-slate-400 mt-1">
-            Real-time daily booking metrics, doctor directory management &amp; zero-queue clinic control.
+            {isDoctor
+              ? "Today's live clinic patient queue, appointment statuses & consultation earnings."
+              : "Real-time daily booking metrics, doctor directory management & zero-queue clinic control."}
           </p>
         </div>
 
-        {/* Navigation Tabs */}
-        <div className="flex items-center gap-1.5 p-1 bg-slate-800 rounded-2xl self-start sm:self-auto border border-slate-700">
-          <button
-            type="button"
-            onClick={() => setActiveTab("sales")}
-            className={`py-2 px-4 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 ${
-              activeTab === "sales"
-                ? "bg-emerald-500 text-slate-950 shadow-md"
-                : "text-slate-300 hover:text-white"
-            }`}
-          >
-            <BarChart3 className="w-4 h-4" />
-            <span>Today&apos;s Sales &amp; Bookings</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("doctors")}
-            className={`py-2 px-4 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 ${
-              activeTab === "doctors"
-                ? "bg-emerald-500 text-slate-950 shadow-md"
-                : "text-slate-300 hover:text-white"
-            }`}
-          >
-            <Stethoscope className="w-4 h-4" />
-            <span>Doctor Catalog ({doctorsList.length})</span>
-          </button>
+        {/* Right Section: Tabs & Logout */}
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+          {/* Navigation Tabs (Only visible to Super Admin / Staff) */}
+          {!isDoctor && (
+            <div className="flex items-center gap-1.5 p-1 bg-slate-800 rounded-2xl border border-slate-700">
+              <button
+                type="button"
+                onClick={() => setActiveTab("sales")}
+                className={`py-2 px-3.5 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer ${
+                  activeTab === "sales"
+                    ? "bg-emerald-500 text-slate-950 shadow-md"
+                    : "text-slate-300 hover:text-white"
+                }`}
+              >
+                <BarChart3 className="w-4 h-4" />
+                <span>Today&apos;s Bookings</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("doctors")}
+                className={`py-2 px-3.5 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer ${
+                  activeTab === "doctors"
+                    ? "bg-emerald-500 text-slate-950 shadow-md"
+                    : "text-slate-300 hover:text-white"
+                }`}
+              >
+                <Stethoscope className="w-4 h-4" />
+                <span>Doctors ({doctorsList.length})</span>
+              </button>
+            </div>
+          )}
+
+          {/* Account Profile Badge & Sign Out */}
+          <div className="flex items-center gap-2 pl-1">
+            <div className="hidden md:flex items-center gap-1.5 text-[11px] font-mono text-slate-300 bg-slate-800 px-2.5 py-1.5 rounded-xl border border-slate-700">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>{user?.name || user?.phone || (isDoctor ? "Doctor" : "Admin")}</span>
+              <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-slate-700 text-slate-300 font-sans font-bold">
+                {isDoctor ? "Doctor" : "Super Admin"}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="py-2 px-3 bg-red-500/15 hover:bg-red-500/25 active:scale-95 text-red-300 hover:text-red-200 border border-red-500/30 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+              title="Sign Out of Admin Desk"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Sign Out</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -203,29 +267,36 @@ export function AdminClient({
                 />
               </div>
 
-              {/* Filter By Doctor Dropdown */}
-              <div className="flex items-center gap-2 text-xs font-bold text-gray-700">
-                <Filter className="w-4 h-4 text-emerald-600" />
-                <span>Doctor Filter:</span>
-                <select
-                  value={selectedDoctorId}
-                  onChange={(e) => setSelectedDoctorId(e.target.value)}
-                  className="px-3 py-1.5 rounded-xl border border-gray-200 text-xs font-semibold bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                >
-                  <option value="all">All Doctors (Overall)</option>
-                  {doctorsList.map((d) => (
-                    <option key={d.id} value={d.id}>
-                      {d.name} ({d.specialty.split("&")[0]})
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {/* Filter By Doctor: Dropdown for Super Admin, Locked Badge for Doctor */}
+              {isDoctor ? (
+                <div className="flex items-center gap-2 text-xs font-bold bg-emerald-50 text-emerald-800 px-3 py-1.5 rounded-xl border border-emerald-200">
+                  <Stethoscope className="w-4 h-4 text-emerald-600" />
+                  <span>Clinic: {currentDoctorObj?.name || user?.name || "My Appointments"}</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-xs font-bold text-gray-700">
+                  <Filter className="w-4 h-4 text-emerald-600" />
+                  <span>Doctor Filter:</span>
+                  <select
+                    value={selectedDoctorId}
+                    onChange={(e) => setSelectedDoctorId(e.target.value)}
+                    className="px-3 py-1.5 rounded-xl border border-gray-200 text-xs font-semibold bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  >
+                    <option value="all">All Doctors (Overall)</option>
+                    {doctorsList.map((d) => (
+                      <option key={d.id} value={d.id}>
+                        {d.name} ({d.specialty.split("&")[0]})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
 
             <button
               type="button"
               onClick={() => loadMetricsAndAppointments(todayDate, selectedDoctorId)}
-              className="py-1.5 px-3 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold flex items-center gap-1.5 transition-colors self-start sm:self-auto"
+              className="py-1.5 px-3 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold flex items-center gap-1.5 transition-colors self-start sm:self-auto cursor-pointer"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               <span>Refresh Live Data</span>
@@ -245,6 +316,7 @@ export function AdminClient({
             isLoading={isLoadingAppointments}
             todayDate={todayDate}
             selectedDoctorId={selectedDoctorId}
+            canClearDoctorFilter={!isDoctor}
             onClearDoctorFilter={() => setSelectedDoctorId("all")}
             onStatusChange={handleStatusChange}
           />

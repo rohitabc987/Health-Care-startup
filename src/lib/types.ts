@@ -9,13 +9,17 @@ export interface UserAddress {
   pincode?: string;
 }
 
+export type UserRole = 'patient' | 'doctor' | 'staff' | 'super_admin';
+
 export interface UserProfile {
   uid: string;
   name: string;
   phone: string;
   gender?: "male" | "female" | "other";
   age?: number;
-  role?: 'patient' | 'doctor' | 'admin';
+  role?: UserRole;
+  doctorId?: string;
+  clinicId?: string;
   healthId?: string;
   address?: UserAddress;
   avatar?: string;
@@ -32,6 +36,7 @@ export interface Doctor {
   specialtyCategory?: string;
   clinic: string;
   clinicId?: string;
+  phone?: string;
   rating: number;
   reviews: number;
   image: string;

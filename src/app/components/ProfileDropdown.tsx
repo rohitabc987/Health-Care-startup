@@ -251,7 +251,73 @@ export function ProfileDropdown({ isOpen, onClose, currentLocation = "Viram Khan
             </button>
           </div>
 
-          {/* Item 6: Log Out (Visible only if authenticated) */}
+          {/* Role-Based Operations Desk Link */}
+          {user?.role === "super_admin" ? (
+            <div>
+              <Link
+                href="/admin"
+                onClick={onClose}
+                className="w-full p-2.5 rounded-2xl bg-amber-500/10 hover:bg-amber-500/15 text-amber-900 border border-amber-500/20 transition-colors flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-bold">
+                    <ShieldCheck className="w-4 h-4" />
+                  </div>
+                  <div className="text-left">
+                    <div className="flex items-center gap-1.5">
+                      <p className="font-bold text-gray-900 group-hover:text-amber-950">Super Admin Desk</p>
+                      <span className="text-[9px] uppercase font-black bg-amber-500/20 text-amber-800 px-1.5 py-0.2 rounded-sm">Master</span>
+                    </div>
+                    <p className="text-[11px] text-amber-800/80">Manage doctors &amp; hospital sales</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-amber-600 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+            </div>
+          ) : user?.role === "doctor" ? (
+            <div>
+              <Link
+                href="/admin"
+                onClick={onClose}
+                className="w-full p-2.5 rounded-2xl bg-emerald-500/10 hover:bg-emerald-500/15 text-emerald-900 border border-emerald-500/20 transition-colors flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold">
+                    <Stethoscope className="w-4 h-4" />
+                  </div>
+                  <div className="text-left">
+                    <div className="flex items-center gap-1.5">
+                      <p className="font-bold text-gray-900 group-hover:text-emerald-950">Doctor Consultation Desk</p>
+                      <span className="text-[9px] uppercase font-black bg-emerald-500/20 text-emerald-800 px-1.5 py-0.2 rounded-sm">Doctor</span>
+                    </div>
+                    <p className="text-[11px] text-emerald-800/80">Your patient queue &amp; clinic sales</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-emerald-600 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+            </div>
+          ) : !user ? (
+            <div>
+              <Link
+                href="/admin"
+                onClick={onClose}
+                className="w-full p-2.5 rounded-2xl hover:bg-slate-50 text-gray-700 transition-colors flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center">
+                    <ShieldCheck className="w-4 h-4" />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-bold text-gray-900 group-hover:text-emerald-950">Staff &amp; Doctor Desk</p>
+                    <p className="text-[11px] text-gray-400">Doctor roster &amp; clinic check-ins</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+            </div>
+          ) : null}
+
+          {/* Item: Log Out (Visible only if authenticated) */}
           {user && (
             <div className="pt-1 border-t border-gray-150">
               <button
