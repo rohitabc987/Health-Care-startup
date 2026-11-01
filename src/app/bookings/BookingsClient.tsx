@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Appointment, subscribeToAppointments } from "@/lib/firebase";
+import { Appointment } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
+import { useNavigation } from "@/context/NavigationContext";
 import { BookingCard } from "../components/BookingCard";
 import {
   CheckCircle,
@@ -18,22 +19,22 @@ interface BookingsClientProps {
 
 export function BookingsClient({ initialAppointments, serverUid }: BookingsClientProps) {
   const { user, isAuthenticated, openLoginModal } = useAuth();
+  const { appointments: navAppointments } = useNavigation();
   const isUserAuthenticated = Boolean(serverUid || isAuthenticated || user?.uid);
-  const [appointments, setAppointments] = useState<Appointment[]>(initialAppointments);
+
+  // 0-Read Cache-First: Consume from server cache (initialAppointments) or existing root context
+  const [appointments, setAppointments] = useState<Appointment[]>(
+    navAppointments.length > 0 ? navAppointments : initialAppointments
+  );
   const [bookingsFilter, setBookingsFilter] = useState<"upcoming" | "previous">("upcoming");
 
-  const effectiveUid = user?.uid || serverUid;
-
   useEffect(() => {
-    if (!effectiveUid) {
-      setAppointments([]);
-      return;
+    if (navAppointments.length > 0) {
+      setAppointments(navAppointments);
+    } else if (initialAppointments.length > 0) {
+      setAppointments(initialAppointments);
     }
-    const unsub = subscribeToAppointments(effectiveUid, (data) => {
-      setAppointments(data);
-    });
-    return () => unsub();
-  }, [effectiveUid]);
+  }, [navAppointments, initialAppointments]);
 
   const upcomingAppointments = appointments.filter(
     (a) => a.status === "Pending Screening" || a.status === "Escalated to Physical Visit"

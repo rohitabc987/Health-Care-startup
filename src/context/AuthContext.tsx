@@ -6,7 +6,6 @@ import {
   getStoredUserProfile, 
   saveStoredUserProfile, 
   clearStoredUserProfile,
-  subscribeToUserProfile,
   updateUserProfile 
 } from "@/lib/firebase";
 
@@ -37,6 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     setIsMounted(true);
+    // 0-Read Architecture: Hydrate user strictly from localStorage & pronto_user cookie
     const stored = getStoredUserProfile();
     setUser(stored);
 
@@ -56,18 +56,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
     window.addEventListener("storage", handleStorageChange);
 
-    let unsubUser: (() => void) | undefined = undefined;
-    if (stored?.uid) {
-      unsubUser = subscribeToUserProfile(stored.uid, (updated) => {
-        if (updated) {
-          setUser(updated);
-        }
-      });
-    }
-
     return () => {
       window.removeEventListener("storage", handleStorageChange);
-      if (unsubUser) unsubUser();
     };
   }, []);
 

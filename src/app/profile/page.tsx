@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { getCachedUserProfile } from "@/lib/firebase";
+import { parseUserProfileCookie } from "@/lib/userService";
 import { ProfileClient } from "./ProfileClient";
 
 function ProfileSkeleton() {
@@ -15,7 +16,12 @@ function ProfileSkeleton() {
 async function ProfileData() {
   const cookieStore = await cookies();
   const serverUid = cookieStore.get("pronto_uid")?.value;
-  const initialUser = serverUid ? await getCachedUserProfile(serverUid) : null;
+  const userCookieRaw = cookieStore.get("pronto_user")?.value;
+  const cookieUser = parseUserProfileCookie(userCookieRaw);
+
+  // 0-Read Architecture: Instantly read user from self-contained session cookie!
+  // Falls back to cached fetcher only if the cookie is missing or invalid.
+  const initialUser = cookieUser || (serverUid ? await getCachedUserProfile(serverUid) : null);
 
   return (
     <ProfileClient 

@@ -126,6 +126,15 @@ export async function POST(req: Request) {
       sameSite: "lax",
     });
 
+    // Self-contained session cookie: enables 0-read server-side rendering across all pages
+    response.cookies.set({
+      name: "pronto_user",
+      value: encodeURIComponent(JSON.stringify(userProfile)),
+      path: "/",
+      maxAge,
+      sameSite: "lax",
+    });
+
     if (determinedDoctorId) {
       response.cookies.set({
         name: "pronto_doctor_id",

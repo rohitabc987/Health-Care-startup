@@ -7,13 +7,37 @@ const LOCAL_STORAGE_KEY_USER_PROFILE = "pronto_user_profile";
 const COOKIE_KEY_USER_UID = "pronto_uid";
 const COOKIE_KEY_USER_ROLE = "pronto_role";
 const COOKIE_KEY_DOCTOR_ID = "pronto_doctor_id";
+const COOKIE_KEY_USER_DATA = "pronto_user";
 const userSubscribers: Array<(user: UserProfile) => void> = [];
+
+export function parseUserProfileCookie(raw?: string): UserProfile | null {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(decodeURIComponent(raw));
+    return parsed && parsed.uid ? parsed : null;
+  } catch {
+    return null;
+  }
+}
 
 export function getStoredUserProfile(): UserProfile | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = localStorage.getItem(LOCAL_STORAGE_KEY_USER_PROFILE);
     if (!raw) {
+      // Fallback: check if cookie has pronto_user and restore to localStorage
+      const cookieMatch = document.cookie
+        .split(";")
+        .map((c) => c.trim())
+        .find((c) => c.startsWith(`${COOKIE_KEY_USER_DATA}=`));
+      if (cookieMatch) {
+        const val = cookieMatch.substring(`${COOKIE_KEY_USER_DATA}=`.length);
+        const parsedFromCookie = parseUserProfileCookie(val);
+        if (parsedFromCookie?.uid) {
+          localStorage.setItem(LOCAL_STORAGE_KEY_USER_PROFILE, JSON.stringify(parsedFromCookie));
+          return parsedFromCookie;
+        }
+      }
       return null;
     }
     const parsed = JSON.parse(raw);
@@ -25,6 +49,7 @@ export function getStoredUserProfile(): UserProfile | null {
         const maxAge = 2592000;
         document.cookie = `${COOKIE_KEY_USER_UID}=${encodeURIComponent(user.uid)}; path=/; max-age=${maxAge}; SameSite=Lax`;
         document.cookie = `${COOKIE_KEY_USER_ROLE}=${encodeURIComponent(user.role || "patient")}; path=/; max-age=${maxAge}; SameSite=Lax`;
+        document.cookie = `${COOKIE_KEY_USER_DATA}=${encodeURIComponent(JSON.stringify(user))}; path=/; max-age=${maxAge}; SameSite=Lax`;
         if (user.doctorId) {
           document.cookie = `${COOKIE_KEY_DOCTOR_ID}=${encodeURIComponent(user.doctorId)}; path=/; max-age=${maxAge}; SameSite=Lax`;
         }
@@ -43,6 +68,7 @@ export function clearStoredUserProfile(): void {
       document.cookie = `${COOKIE_KEY_USER_UID}=; path=/; max-age=0; SameSite=Lax`;
       document.cookie = `${COOKIE_KEY_USER_ROLE}=; path=/; max-age=0; SameSite=Lax`;
       document.cookie = `${COOKIE_KEY_DOCTOR_ID}=; path=/; max-age=0; SameSite=Lax`;
+      document.cookie = `${COOKIE_KEY_USER_DATA}=; path=/; max-age=0; SameSite=Lax`;
     } catch (e) {
       console.error(e);
     }
@@ -58,6 +84,7 @@ export function saveStoredUserProfile(user: UserProfile) {
         const maxAge = 2592000;
         document.cookie = `${COOKIE_KEY_USER_UID}=${encodeURIComponent(user.uid)}; path=/; max-age=${maxAge}; SameSite=Lax`;
         document.cookie = `${COOKIE_KEY_USER_ROLE}=${encodeURIComponent(user.role || "patient")}; path=/; max-age=${maxAge}; SameSite=Lax`;
+        document.cookie = `${COOKIE_KEY_USER_DATA}=${encodeURIComponent(JSON.stringify(user))}; path=/; max-age=${maxAge}; SameSite=Lax`;
         if (user.doctorId) {
           document.cookie = `${COOKIE_KEY_DOCTOR_ID}=${encodeURIComponent(user.doctorId)}; path=/; max-age=${maxAge}; SameSite=Lax`;
         }
