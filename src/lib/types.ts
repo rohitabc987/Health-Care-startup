@@ -19,7 +19,6 @@ export interface UserProfile {
   age?: number;
   role?: UserRole;
   doctorId?: string;
-  clinicId?: string;
   healthId?: string;
   address?: UserAddress;
   avatar?: string;
@@ -35,7 +34,6 @@ export interface Doctor {
   specialty: string;
   specialtyCategory?: string;
   clinic: string;
-  clinicId?: string;
   phone?: string;
   rating: number;
   reviews: number;
@@ -83,9 +81,6 @@ export interface PrescriptionRecord {
   clinicName: string;
   visitDate: string;
   imageUrl: string;
-  pdfUrl?: string;
   uploadedAt: string;
   chiefComplaint?: string;
-  scheduledFollowupDate?: string;
-  fileSizeBytes?: number;
 }

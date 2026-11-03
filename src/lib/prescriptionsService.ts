@@ -98,10 +98,8 @@ export async function uploadPrescriptionPhoto(
     clinicName: metadata.clinicName,
     visitDate: metadata.visitDate || new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
     imageUrl: downloadUrl,
-    pdfUrl: cloudResult.pdfUrl,
     uploadedAt: "Just now • Mobile Camera Snapshot (~150 KB)",
     chiefComplaint: metadata.chiefComplaint || "Clinic prescription & consultation record",
-    fileSizeBytes: cloudResult.bytes,
   };
 
   if (isLiveFirebaseConfigured && db) {

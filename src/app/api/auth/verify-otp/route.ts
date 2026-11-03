@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { normalizePhoneNumber, verifyOtpCode } from "@/lib/otpStore";
-import { getUserProfileServer } from "@/lib/userService";
+import { getUserProfileServer, generateHealthId } from "@/lib/userService";
 import { INITIAL_DOCTORS } from "@/lib/mockData";
 import { UserRole, UserProfile } from "@/lib/types";
 
@@ -26,10 +26,10 @@ export async function POST(req: Request) {
       );
     }
 
-    // Determine user ID and metadata
+    // Determine user ID and metadata (All-India cluster: #IND-XXXXXXXX non-guessable deterministic token)
     const digitsOnly = normalizedPhone.replace(/\D/g, "").slice(-10);
     const uid = `user-ph-${digitsOnly}`;
-    const healthId = `#PRN-${digitsOnly.slice(-4)}-LKO`;
+    const healthId = generateHealthId(normalizedPhone);
 
     // Role-Based Access Control resolution:
     const superAdminPhones = (process.env.SUPER_ADMIN_PHONES || "+919455768694,+919876543210")

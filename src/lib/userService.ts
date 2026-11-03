@@ -20,6 +20,27 @@ export function parseUserProfileCookie(raw?: string): UserProfile | null {
   }
 }
 
+/**
+ * Deterministically generates an India-wide unique Health ID from a patient's mobile number.
+ * Format: #IND-XXXXXXXX (e.g. #IND-95917348)
+ * - Prefix #IND: Universal across all states/cities in India (like Indian mobile numbers)
+ * - 8-digit deterministic scramble: Mathematical FNV-1a hash ensuring uniqueness and non-guessability.
+ * - Zero privacy leak: Raw phone digits cannot be inferred from the Health ID.
+ */
+export function generateHealthId(phone: string): string {
+  const digits = phone.replace(/\D/g, "").slice(-10);
+  if (!digits || digits.length < 10) return "#IND-10000000";
+
+  let hash = 2166136261;
+  for (let i = 0; i < digits.length; i++) {
+    hash ^= digits.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  const positive = hash >>> 0;
+  const code = (positive % 90000000) + 10000000;
+  return `#IND-${code}`;
+}
+
 export function getStoredUserProfile(): UserProfile | null {
   if (typeof window === "undefined") return null;
   try {

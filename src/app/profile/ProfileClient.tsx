@@ -163,7 +163,7 @@ export function ProfileClient({ initialUser, serverUid }: ProfileClientProps) {
             <div className="flex items-center gap-2 mt-1.5">
               <span className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">Health ID:</span>
               <span className="text-xs font-mono font-bold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-md border border-emerald-100 inline-block">
-                {activeUser.healthId || "#PRN-8821-LKO"}
+                {activeUser.healthId || "#IND-95917348"}
               </span>
             </div>
           </div>

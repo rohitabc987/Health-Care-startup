@@ -104,7 +104,7 @@ export function BookingModal({ doctor, isOpen, onClose, onSuccess }: BookingModa
         patientUid: user.uid,
         patientName: user.name,
         patientPhone: user.phone,
-        patientHealthId: user.healthId || "#PRN-8821-LKO",
+        patientHealthId: user.healthId || "#IND-95917348",
         patientAddress: addrString,
         doctorId: doctor.id,
         doctorName: doctor.name,

@@ -132,7 +132,7 @@ export function PrescriptionsClient({ initialPrescriptions, serverUid }: Prescri
             <div className="text-right shrink-0">
               <span className="text-[10px] text-gray-400 block font-bold uppercase tracking-wider">Health ID</span>
               <span className="text-xs font-mono font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100 whitespace-nowrap inline-block">
-                {user?.healthId || "#PRN-8821-LKO"}
+                {user?.healthId || "#IND-95917348"}
               </span>
             </div>
           </div>
