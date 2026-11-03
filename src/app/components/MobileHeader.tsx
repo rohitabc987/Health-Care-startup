@@ -92,16 +92,7 @@ export function MobileHeader() {
               }`}
               aria-label="Profile and Menu"
             >
-              {user?.avatar ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={user.avatar}
-                  alt={user.name || "Profile"}
-                  className="w-full h-full rounded-full object-cover"
-                />
-              ) : (
-                getInitials(user?.name)
-              )}
+              {getInitials(user?.name)}
             </button>
 
             <ProfileDropdown

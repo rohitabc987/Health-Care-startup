@@ -88,16 +88,10 @@ export async function POST(req: Request) {
         role: determinedRole,
         doctorId: determinedDoctorId,
         healthId: existingUser?.healthId || healthId,
-        defaultClinic: matchedDoctor?.clinic || existingUser?.defaultClinic || "Apollo Clinic, Gomti Nagar",
-        registeredByGroundTeam: true,
         isNewUser: isDefaultDemoUser || isSuperAdmin || matchedDoctor ? false : (existingUser?.isNewUser ?? true),
         address: existingUser?.address || (isDefaultDemoUser ? {
-          houseNo: "Plot 42",
-          street: "Viram Khand 5",
           locality: "Gomti Nagar",
           city: "Lucknow",
-          state: "Uttar Pradesh",
-          pincode: "226010",
         } : undefined),
       };
     }

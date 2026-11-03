@@ -130,17 +130,14 @@ export function subscribeToAppointments(
  * 1-Write Booking Function (Strictly 1 Document Written)
  */
 export async function bookAppointment(
-  data: Omit<Appointment, "id" | "createdAt" | "status" | "queueBypassCode" | "bookingDate"> & {
+  data: Omit<Appointment, "id" | "createdAt" | "status" | "queueBypassCode"> & {
     queueBypassCode?: string;
-    bookingDate?: string;
   }
 ): Promise<string> {
-  const todayStr = new Date().toISOString().split("T")[0];
   const newAppointment: Appointment = {
     ...data,
     id: `apt-${Date.now()}`,
     status: "Pending Screening",
-    bookingDate: data.bookingDate || todayStr,
     createdAt: new Date().toISOString(),
     queueBypassCode: data.queueBypassCode || `PRONTO-FAST-${Math.floor(1000 + Math.random() * 9000)}`,
   };
@@ -178,7 +175,8 @@ export async function getTodayOverallSales(dateStr?: string): Promise<{ totalPat
     try {
       const q = query(
         collection(db, "appointments"),
-        where("bookingDate", "==", targetDate)
+        where("createdAt", ">=", targetDate),
+        where("createdAt", "<=", targetDate + "T23:59:59.999Z")
       );
       const snapshot = await getAggregateFromServer(q, {
         totalPatients: count(),
@@ -197,7 +195,7 @@ export async function getTodayOverallSales(dateStr?: string): Promise<{ totalPat
   }
 
   const all = getStoredAppointments();
-  const todayBookings = all.filter((a) => (a.bookingDate || a.createdAt?.slice(0, 10)) === targetDate);
+  const todayBookings = all.filter((a) => (typeof a.createdAt === "string" ? a.createdAt.slice(0, 10) : "") === targetDate);
   const totalPatients = todayBookings.length;
   const totalRevenue = todayBookings.reduce((acc, curr) => acc + (Number(curr.consultationFee) || 0), 0);
   return { totalPatients, totalRevenue };
@@ -217,8 +215,9 @@ export async function getDoctorDailySales(
     try {
       const q = query(
         collection(db, "appointments"),
-        where("bookingDate", "==", targetDate),
-        where("doctorId", "==", doctorId)
+        where("doctorId", "==", doctorId),
+        where("createdAt", ">=", targetDate),
+        where("createdAt", "<=", targetDate + "T23:59:59.999Z")
       );
       const snapshot = await getAggregateFromServer(q, {
         doctorPatients: count(),
@@ -238,7 +237,7 @@ export async function getDoctorDailySales(
 
   const all = getStoredAppointments();
   const docBookings = all.filter(
-    (a) => a.doctorId === doctorId && (a.bookingDate || a.createdAt?.slice(0, 10)) === targetDate
+    (a) => a.doctorId === doctorId && (typeof a.createdAt === "string" ? a.createdAt.slice(0, 10) : "") === targetDate
   );
   const doctorPatients = docBookings.length;
   const doctorRevenue = docBookings.reduce((acc, curr) => acc + (Number(curr.consultationFee) || 0), 0);
@@ -262,7 +261,8 @@ export async function getAppointments(params?: {
       const conditions = [];
 
       if (params?.dateStr) {
-        conditions.push(where("bookingDate", "==", params.dateStr));
+        conditions.push(where("createdAt", ">=", params.dateStr));
+        conditions.push(where("createdAt", "<=", params.dateStr + "T23:59:59.999Z"));
       }
       if (params?.doctorId) {
         conditions.push(where("doctorId", "==", params.doctorId));
@@ -286,7 +286,7 @@ export async function getAppointments(params?: {
 
   let list = getStoredAppointments();
   if (params?.dateStr) {
-    list = list.filter((a) => (a.bookingDate || a.createdAt?.slice(0, 10)) === params.dateStr);
+    list = list.filter((a) => (typeof a.createdAt === "string" ? a.createdAt.slice(0, 10) : "") === params.dateStr);
   }
   if (params?.doctorId) {
     list = list.filter((a) => a.doctorId === params.doctorId);

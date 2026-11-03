@@ -145,3 +145,43 @@ export async function addDoctor(doctor: Omit<Doctor, "id"> & { id?: string }): P
   saveStoredDoctors(updated);
   return id;
 }
+
+/**
+ * Calculates the next available consultation day based on a doctor's visiting schedule.
+ * E.g., if doctor visits on ["Mon", "Wed", "Fri"] and today is Tuesday, returns "Tomorrow (Wed)".
+ */
+export function getDoctorNextAvailable(availableDays?: string[]): string {
+  if (!availableDays || availableDays.length === 0) return "Mon, Wed, Fri";
+  if (availableDays.includes("Daily") || availableDays.length >= 7) return "Today (Open)";
+
+  const dayMap: Record<string, number> = {
+    Sun: 0, Sunday: 0,
+    Mon: 1, Monday: 1,
+    Tue: 2, Tuesday: 2,
+    Wed: 3, Wednesday: 3,
+    Thu: 4, Thursday: 4,
+    Fri: 5, Friday: 5,
+    Sat: 6, Saturday: 6,
+  };
+
+  const targetDayIndices = availableDays
+    .map((d) => dayMap[d.slice(0, 3)])
+    .filter((v): v is number => v !== undefined);
+
+  if (targetDayIndices.length === 0) return availableDays.join(", ");
+
+  const todayIndex = new Date().getDay(); // 0 is Sunday, 1 is Monday...
+
+  for (let offset = 0; offset < 7; offset++) {
+    const checkDay = (todayIndex + offset) % 7;
+    if (targetDayIndices.includes(checkDay)) {
+      if (offset === 0) return "Today";
+      if (offset === 1) return "Tomorrow";
+      const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+      return dayNames[checkDay];
+    }
+  }
+
+  return availableDays.join(", ");
+}
+

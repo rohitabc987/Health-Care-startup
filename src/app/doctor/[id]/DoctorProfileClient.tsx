@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Doctor } from "@/lib/firebase";
+import { getDoctorNextAvailable } from "@/lib/doctorsService";
 import { BookingModal } from "@/app/components/BookingModal";
 import {
   ArrowLeft,
@@ -106,9 +107,14 @@ export function DoctorProfileClient({ doctor }: DoctorProfileClientProps) {
           </div>
 
           <div className="p-3 bg-gray-50 border border-gray-150 rounded-2xl">
-            <span className="text-[10px] text-gray-500 font-medium block">Next Available</span>
-            <span className="text-xs sm:text-sm font-bold text-gray-900 mt-0.5 block">
-              {doctor.nextAvailableDay || "In 7 Days"}
+            <span className="text-[10px] text-gray-500 font-medium block">Visiting Days</span>
+            <span className="text-xs sm:text-sm font-bold text-gray-900 mt-0.5 block truncate">
+              {doctor.availableDays && doctor.availableDays.length > 0
+                ? doctor.availableDays.join(", ")
+                : (doctor.nextAvailableDay || "Mon, Wed, Fri")}
+            </span>
+            <span className="text-[10px] text-emerald-700 font-semibold block mt-0.5">
+              Next: {getDoctorNextAvailable(doctor.availableDays)}
             </span>
           </div>
         </div>

@@ -31,7 +31,7 @@ export function ProfileClient({ initialUser, serverUid }: ProfileClientProps) {
   const [editAge, setEditAge] = useState<string>(activeUser?.age ? String(activeUser.age) : "");
   const [editGender, setEditGender] = useState<"male" | "female" | "other">(activeUser?.gender || "male");
   const [locality, setLocality] = useState(activeUser?.address?.locality || "Gomti Nagar");
-  const [stateName, setStateName] = useState(activeUser?.address?.state || "Uttar Pradesh");
+  const [cityName, setCityName] = useState(activeUser?.address?.city || "Lucknow");
   const [profileSaved, setProfileSaved] = useState(false);
 
   useEffect(() => {
@@ -47,10 +47,10 @@ export function ProfileClient({ initialUser, serverUid }: ProfileClientProps) {
     if (activeUser?.address?.locality) {
       setLocality(activeUser.address.locality);
     }
-    if (activeUser?.address?.state) {
-      setStateName(activeUser.address.state);
+    if (activeUser?.address?.city) {
+      setCityName(activeUser.address.city);
     }
-  }, [activeUser?.name, activeUser?.age, activeUser?.gender, activeUser?.address?.locality, activeUser?.address?.state]);
+  }, [activeUser?.name, activeUser?.age, activeUser?.gender, activeUser?.address?.locality, activeUser?.address?.city]);
 
   const getInitials = (name?: string) => {
     if (!name) return "PT";
@@ -66,7 +66,7 @@ export function ProfileClient({ initialUser, serverUid }: ProfileClientProps) {
     const updatedAddress: UserAddress = {
       ...activeUser?.address,
       locality: locality.trim(),
-      state: stateName.trim(),
+      city: cityName.trim(),
     };
     updateUser({
       name: trimmedName,
@@ -229,7 +229,7 @@ export function ProfileClient({ initialUser, serverUid }: ProfileClientProps) {
                       <div className="flex items-center justify-between">
                         <span className="text-gray-500 font-medium">Location:</span>
                         <span className="font-bold text-gray-900 text-right truncate max-w-[65%]">
-                          {locality && stateName ? `${locality}, ${stateName}` : locality || stateName || "Gomti Nagar, Uttar Pradesh"}
+                          {locality && cityName ? `${locality}, ${cityName}` : locality || cityName || "Gomti Nagar, Lucknow"}
                         </span>
                       </div>
                     </div>
@@ -248,7 +248,7 @@ export function ProfileClient({ initialUser, serverUid }: ProfileClientProps) {
                           setEditAge(activeUser.age ? String(activeUser.age) : "");
                           setEditGender(activeUser.gender || "male");
                           setLocality(activeUser.address?.locality || "Gomti Nagar");
-                          setStateName(activeUser.address?.state || "Uttar Pradesh");
+                          setCityName(activeUser.address?.city || "Lucknow");
                           setIsEditingProfile(false);
                         }}
                         className="text-gray-400 hover:text-gray-600 text-xs flex items-center gap-0.5"
@@ -309,12 +309,12 @@ export function ProfileClient({ initialUser, serverUid }: ProfileClientProps) {
                         />
                       </div>
                       <div>
-                        <label className="text-[11px] font-bold text-gray-700 block mb-1">State</label>
+                        <label className="text-[11px] font-bold text-gray-700 block mb-1">City</label>
                         <input
                           type="text"
-                          value={stateName}
-                          onChange={(e) => setStateName(e.target.value)}
-                          placeholder="e.g. Uttar Pradesh"
+                          value={cityName}
+                          onChange={(e) => setCityName(e.target.value)}
+                          placeholder="e.g. Lucknow"
                           className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                         />
                       </div>

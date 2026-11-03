@@ -97,7 +97,7 @@ export function BookingModal({ doctor, isOpen, onClose, onSuccess }: BookingModa
     setIsSubmitting(true);
     try {
       const addrString = user.address
-        ? [user.address.locality, user.address.state].filter(Boolean).join(", ")
+        ? [user.address.locality, user.address.city].filter(Boolean).join(", ")
         : "";
 
       const aptId = await bookAppointment({
@@ -111,10 +111,8 @@ export function BookingModal({ doctor, isOpen, onClose, onSuccess }: BookingModa
         doctorSpecialty: doctor.specialty,
         doctorImage: doctor.image,
         clinicName: doctor.clinic,
-        bookingDate: new Date().toISOString().split("T")[0],
         followupDate: targetDateInfo.formatted,
         timeWindow: finalTimeWindow,
-        prescriptionUrl: "/images/prescription-demo.jpg",
         consultationFee: doctor.consultationFee,
         notes: patientNotes,
       });

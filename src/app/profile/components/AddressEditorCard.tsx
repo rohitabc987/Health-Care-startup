@@ -14,17 +14,24 @@ export function AddressEditorCard({ user, onUpdateAddress }: AddressEditorCardPr
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   const [addressForm, setAddressForm] = useState<UserAddress>({
-    houseNo: user.address?.houseNo || "Plot 42",
-    street: user.address?.street || "Viram Khand 5",
     locality: user.address?.locality || "Gomti Nagar",
     city: user.address?.city || "Lucknow",
-    state: user.address?.state || "Uttar Pradesh",
-    pincode: user.address?.pincode || "226010",
+    houseNo: user.address?.houseNo || "",
+    street: user.address?.street || "",
+    state: user.address?.state || "",
+    pincode: user.address?.pincode || "",
   });
 
   const handleSaveAddress = (e: React.FormEvent) => {
     e.preventDefault();
-    onUpdateAddress(addressForm);
+    onUpdateAddress({
+      locality: addressForm.locality?.trim() || "Gomti Nagar",
+      city: addressForm.city?.trim() || "Lucknow",
+      houseNo: addressForm.houseNo?.trim() || undefined,
+      street: addressForm.street?.trim() || undefined,
+      state: addressForm.state?.trim() || undefined,
+      pincode: addressForm.pincode?.trim() || undefined,
+    });
     setIsEditingAddress(false);
     setSaveSuccess(true);
     setTimeout(() => setSaveSuccess(false), 2500);
@@ -38,8 +45,8 @@ export function AddressEditorCard({ user, onUpdateAddress }: AddressEditorCardPr
             <MapPin className="w-4 h-4" />
           </div>
           <div>
-            <h3 className="font-bold text-sm text-gray-900 leading-tight">Patient Address</h3>
-            <p className="text-[11px] text-gray-400">Optional • Used for medicine delivery &amp; clinic reference</p>
+            <h3 className="font-bold text-sm text-gray-900 leading-tight">Patient Location</h3>
+            <p className="text-[11px] text-gray-400">Locality &amp; City used for clinic references &amp; screening</p>
           </div>
         </div>
 
@@ -67,34 +74,28 @@ export function AddressEditorCard({ user, onUpdateAddress }: AddressEditorCardPr
       {saveSuccess && (
         <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 font-semibold flex items-center gap-2 animate-in fade-in">
           <Check className="w-4 h-4 text-emerald-600" />
-          <span>Address updated successfully in Firestore!</span>
+          <span>Location updated successfully!</span>
         </div>
       )}
 
       {!isEditingAddress ? (
-        <div className="p-3.5 bg-gray-50/80 rounded-2xl border border-gray-150 text-xs space-y-1.5">
+        <div className="p-3.5 bg-gray-50/80 rounded-2xl border border-gray-150 text-xs space-y-2">
           <div className="flex justify-between">
-            <span className="text-gray-400">Flat / House / Plot:</span>
-            <span className="font-semibold text-gray-900">{user?.address?.houseNo || "Plot 42"}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-400">Street / Road:</span>
-            <span className="font-semibold text-gray-900">{user?.address?.street || "Viram Khand 5"}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-400">Locality:</span>
+            <span className="text-gray-400">Locality / Area:</span>
             <span className="font-semibold text-gray-900">{user?.address?.locality || "Gomti Nagar"}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-400">City / State:</span>
-            <span className="font-semibold text-gray-900">
-              {user?.address?.city || "Lucknow"}, {user?.address?.state || "Uttar Pradesh"}
-            </span>
+            <span className="text-gray-400">City:</span>
+            <span className="font-semibold text-gray-900">{user?.address?.city || "Lucknow"}</span>
           </div>
-          <div className="flex justify-between pt-1 border-t border-gray-200">
-            <span className="text-gray-400">Pincode:</span>
-            <span className="font-mono font-bold text-emerald-800">{user?.address?.pincode || "226010"}</span>
-          </div>
+          {(user?.address?.houseNo || user?.address?.street) && (
+            <div className="flex justify-between pt-1 border-t border-gray-200/60 text-gray-400">
+              <span>Street / Flat (Optional):</span>
+              <span className="text-gray-600 truncate max-w-[60%]">
+                {[user?.address?.houseNo, user?.address?.street].filter(Boolean).join(", ")}
+              </span>
+            </div>
+          )}
         </div>
       ) : (
         <form onSubmit={handleSaveAddress} className="space-y-3 pt-1 text-xs">

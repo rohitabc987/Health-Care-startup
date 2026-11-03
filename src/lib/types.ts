@@ -1,10 +1,10 @@
 // Core TypeScript Types & Database Schemas for Pronto Health
 
 export interface UserAddress {
-  houseNo?: string;
-  street?: string;
   locality?: string;
   city?: string;
+  houseNo?: string;
+  street?: string;
   state?: string;
   pincode?: string;
 }
@@ -21,10 +21,7 @@ export interface UserProfile {
   doctorId?: string;
   healthId?: string;
   address?: UserAddress;
-  avatar?: string;
   createdAt?: any;
-  defaultClinic?: string;
-  registeredByGroundTeam?: boolean;
   isNewUser?: boolean;
 }
 
@@ -32,16 +29,17 @@ export interface Doctor {
   id: string;
   name: string;
   specialty: string;
-  specialtyCategory?: string;
   clinic: string;
   phone?: string;
   rating: number;
   reviews: number;
   image: string;
-  experienceYears?: number;
+  experienceYears?: number; // Optional
   isNew?: boolean;
   isActive?: boolean;
-  nextAvailableDay?: string;
+  availableDays?: string[]; // e.g. ["Mon", "Wed", "Fri"] or ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+  clinicTimings?: string;   // e.g. "5:00 PM - 8:00 PM"
+  nextAvailableDay?: string; // Formatted display or dynamic calculation
   consultationFee: number;
   regularFee: number;
 }
@@ -63,12 +61,10 @@ export interface Appointment {
   doctorSpecialty?: string;
   doctorImage?: string;
   clinicName?: string;
-  bookingDate: string; // ISO "YYYY-MM-DD" e.g. "2026-10-28" for date-scoped aggregate queries
   followupDate: string; // ISO date or formatted (e.g., "Nov 02, 2026")
   timeWindow: string;   // e.g. "Evening (5:00 PM - 7:00 PM)"
   status: AppointmentStatus;
-  prescriptionUrl: string;
-  createdAt: any;
+  createdAt: any;       // Timestamp when booked (replaces redundant bookingDate)
   consultationFee: number;
   notes?: string;
   queueBypassCode?: string; // High-priority clinic bypass token if escalated
@@ -84,3 +80,4 @@ export interface PrescriptionRecord {
   uploadedAt: string;
   chiefComplaint?: string;
 }
+

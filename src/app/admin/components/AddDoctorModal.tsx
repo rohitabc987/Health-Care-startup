@@ -17,10 +17,11 @@ export function AddDoctorModal({ isOpen, onClose, onAddDoctor }: AddDoctorModalP
     clinic: "Pronto Health Hub, Gomti Nagar",
     consultationFee: 500,
     regularFee: 800,
-    experienceYears: 10,
+    experienceYears: "",
     rating: 4.9,
     reviews: 120,
     image: "/images/doctor-1.jpg",
+    schedule: "Mon, Wed, Fri",
   });
 
   if (!isOpen) return null;
@@ -29,10 +30,25 @@ export function AddDoctorModal({ isOpen, onClose, onAddDoctor }: AddDoctorModalP
     e.preventDefault();
     if (!form.name.trim()) return;
 
+    const daysMap: Record<string, string[]> = {
+      "Mon, Wed, Fri": ["Mon", "Wed", "Fri"],
+      "Tue, Thu, Sat": ["Tue", "Thu", "Sat"],
+      "Mon-Sat (Daily)": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+    };
+
     onAddDoctor({
-      ...form,
+      name: form.name.trim(),
+      specialty: form.specialty.trim(),
+      clinic: form.clinic.trim(),
+      consultationFee: form.consultationFee,
+      regularFee: form.regularFee,
+      experienceYears: form.experienceYears ? Number(form.experienceYears) : undefined,
+      rating: form.rating,
+      reviews: form.reviews,
+      image: form.image,
       isActive: true,
-      nextAvailableDay: "In 7 Days",
+      availableDays: daysMap[form.schedule] || ["Mon", "Wed", "Fri"],
+      nextAvailableDay: form.schedule,
     });
 
     onClose();
@@ -123,27 +139,41 @@ export function AddDoctorModal({ isOpen, onClose, onAddDoctor }: AddDoctorModalP
 
           <div className="grid grid-cols-2 gap-2.5">
             <div>
-              <label className="font-bold text-gray-700 block mb-1">Experience (Years)</label>
+              <label className="font-bold text-gray-700 block mb-1">Experience (Optional)</label>
               <input
                 type="number"
                 value={form.experienceYears}
-                onChange={(e) => setForm({ ...form, experienceYears: Number(e.target.value) })}
+                onChange={(e) => setForm({ ...form, experienceYears: e.target.value })}
+                placeholder="e.g. 10"
                 className="w-full px-3 py-2 bg-white rounded-xl border border-gray-200 font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               />
             </div>
             <div>
-              <label className="font-bold text-gray-700 block mb-1">Doctor Photo</label>
+              <label className="font-bold text-gray-700 block mb-1">Visiting Schedule</label>
               <select
-                value={form.image}
-                onChange={(e) => setForm({ ...form, image: e.target.value })}
+                value={form.schedule}
+                onChange={(e) => setForm({ ...form, schedule: e.target.value })}
                 className="w-full px-3 py-2 bg-white rounded-xl border border-gray-200 font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               >
-                <option value="/images/doctor-1.jpg">Avatar 1 (Female Specialist)</option>
-                <option value="/images/doctor-2.jpg">Avatar 2 (Male Senior Physician)</option>
-                <option value="/images/doctor-3.jpg">Avatar 3 (Female Pediatrician)</option>
-                <option value="/images/doctor-4.jpg">Avatar 4 (Male Orthopedic)</option>
+                <option value="Mon, Wed, Fri">Mon, Wed, Fri</option>
+                <option value="Tue, Thu, Sat">Tue, Thu, Sat</option>
+                <option value="Mon-Sat (Daily)">Mon-Sat (Daily)</option>
               </select>
             </div>
+          </div>
+
+          <div>
+            <label className="font-bold text-gray-700 block mb-1">Doctor Photo</label>
+            <select
+              value={form.image}
+              onChange={(e) => setForm({ ...form, image: e.target.value })}
+              className="w-full px-3 py-2 bg-white rounded-xl border border-gray-200 font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+            >
+              <option value="/images/doctor-1.jpg">Avatar 1 (Female Specialist)</option>
+              <option value="/images/doctor-2.jpg">Avatar 2 (Male Senior Physician)</option>
+              <option value="/images/doctor-3.jpg">Avatar 3 (Female Pediatrician)</option>
+              <option value="/images/doctor-4.jpg">Avatar 4 (Male Orthopedic)</option>
+            </select>
           </div>
 
           <div className="flex gap-2 pt-2">
