@@ -31,7 +31,7 @@ export function ProfileClient({ initialUser, serverUid }: ProfileClientProps) {
   const [editAge, setEditAge] = useState<string>(activeUser?.age ? String(activeUser.age) : "");
   const [editGender, setEditGender] = useState<"male" | "female" | "other">(activeUser?.gender || "male");
   const [locality, setLocality] = useState(activeUser?.address?.locality || "Gomti Nagar");
-  const [cityName, setCityName] = useState(activeUser?.address?.city || "Lucknow");
+  const [cityName, setCityName] = useState(activeUser?.address?.city || "Kanpur");
   const [profileSaved, setProfileSaved] = useState(false);
 
   useEffect(() => {
@@ -229,7 +229,7 @@ export function ProfileClient({ initialUser, serverUid }: ProfileClientProps) {
                       <div className="flex items-center justify-between">
                         <span className="text-gray-500 font-medium">Location:</span>
                         <span className="font-bold text-gray-900 text-right truncate max-w-[65%]">
-                          {locality && cityName ? `${locality}, ${cityName}` : locality || cityName || "Gomti Nagar, Lucknow"}
+                          {locality && cityName ? `${locality}, ${cityName}` : locality || cityName || "Gomti Nagar, Kanpur"}
                         </span>
                       </div>
                     </div>
@@ -248,7 +248,7 @@ export function ProfileClient({ initialUser, serverUid }: ProfileClientProps) {
                           setEditAge(activeUser.age ? String(activeUser.age) : "");
                           setEditGender(activeUser.gender || "male");
                           setLocality(activeUser.address?.locality || "Gomti Nagar");
-                          setCityName(activeUser.address?.city || "Lucknow");
+                          setCityName(activeUser.address?.city || "Kanpur");
                           setIsEditingProfile(false);
                         }}
                         className="text-gray-400 hover:text-gray-600 text-xs flex items-center gap-0.5"
@@ -314,7 +314,7 @@ export function ProfileClient({ initialUser, serverUid }: ProfileClientProps) {
                           type="text"
                           value={cityName}
                           onChange={(e) => setCityName(e.target.value)}
-                          placeholder="e.g. Lucknow"
+                          placeholder="e.g. Kanpur"
                           className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                         />
                       </div>

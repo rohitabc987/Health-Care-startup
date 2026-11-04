@@ -5,6 +5,7 @@ import { AppProviders } from "./providers";
 import { BottomNav } from "./components/BottomNav";
 import { DesktopHeader } from "./components/DesktopHeader";
 import { MobileHeader } from "./components/MobileHeader";
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
   title: "Pronto Health | Complete Doctor & Patient Healthcare Platform",
@@ -57,6 +58,7 @@ export default function RootLayout({
             <BottomNav />
           </Suspense>
         </AppProviders>
+        <Analytics />
       </body>
     </html>
   );

@@ -15,6 +15,7 @@ export interface UserProfile {
   uid: string;
   name: string;
   phone: string;
+  phoneDigits?: string;
   gender?: "male" | "female" | "other";
   age?: number;
   role?: UserRole;
@@ -23,6 +24,7 @@ export interface UserProfile {
   address?: UserAddress;
   createdAt?: any;
   isNewUser?: boolean;
+  searchKeywords?: string[];
 }
 
 export interface Doctor {
@@ -31,6 +33,7 @@ export interface Doctor {
   specialty: string;
   clinic: string;
   phone?: string;
+  phoneDigits?: string;
   rating: number;
   reviews: number;
   image: string;
@@ -42,6 +45,7 @@ export interface Doctor {
   nextAvailableDay?: string; // Formatted display or dynamic calculation
   consultationFee: number;
   regularFee: number;
+  searchKeywords?: string[];
 }
 
 export type AppointmentStatus = 
@@ -54,6 +58,7 @@ export interface Appointment {
   patientUid: string;
   patientName?: string;
   patientPhone?: string;
+  patientPhoneDigits?: string;
   patientHealthId?: string;
   patientAddress?: string;
   doctorId: string;
@@ -68,6 +73,7 @@ export interface Appointment {
   consultationFee: number;
   notes?: string;
   queueBypassCode?: string; // High-priority clinic bypass token if escalated
+  searchKeywords?: string[];
 }
 
 export interface PrescriptionRecord {

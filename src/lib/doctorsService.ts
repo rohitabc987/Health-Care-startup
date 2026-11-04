@@ -7,11 +7,13 @@ import {
   setDoc, 
   getDocs,
   getDoc,
-  where 
+  where,
+  limit
 } from "firebase/firestore";
 import { Doctor } from "./types";
 import { INITIAL_DOCTORS } from "./mockData";
 import { db, isLiveFirebaseConfigured } from "@/lib/firebaseConfig";
+import { generateDoctorKeywords, normalizePhoneDigits, normalizeSearchQuery } from "./searchUtils";
 
 const LOCAL_STORAGE_KEY_DOCTORS = "pronto_doctors_catalog";
 const doctorSubscribers: Array<(doctors: Doctor[]) => void> = [];
@@ -123,9 +125,19 @@ export async function toggleDoctorStatus(doctorId: string, isActive: boolean): P
 
 export async function addDoctor(doctor: Omit<Doctor, "id"> & { id?: string }): Promise<string> {
   const id = doctor.id || `doc-${Date.now()}`;
+  const phoneDigits = doctor.phone ? normalizePhoneDigits(doctor.phone) : undefined;
+  const searchKeywords = generateDoctorKeywords({
+    name: doctor.name,
+    phone: doctor.phone,
+    specialty: doctor.specialty,
+    clinic: doctor.clinic,
+  });
+
   const newDoc: Doctor = {
     ...doctor,
     id,
+    phoneDigits,
+    searchKeywords,
     isActive: doctor.isActive ?? true,
     rating: doctor.rating || 4.9,
     reviews: doctor.reviews || 10,
@@ -144,6 +156,33 @@ export async function addDoctor(doctor: Omit<Doctor, "id"> & { id?: string }): P
   const updated = [newDoc, ...current];
   saveStoredDoctors(updated);
   return id;
+}
+
+/**
+ * Admin Doctor Search: Searches Firestore doctors collection by name, specialty, clinic, or phone.
+ */
+export async function searchDoctors(searchTerm: string, limitCount = 20): Promise<Doctor[]> {
+  const term = normalizeSearchQuery(searchTerm);
+  if (!term) return [];
+
+  if (isLiveFirebaseConfigured && db) {
+    try {
+      const q = query(
+        collection(db, "doctors"),
+        where("searchKeywords", "array-contains", term),
+        limit(limitCount)
+      );
+      const snap = await getDocs(q);
+      const results: Doctor[] = [];
+      snap.forEach((docSnap) => results.push({ id: docSnap.id, ...(docSnap.data() as Omit<Doctor, "id">) }));
+      if (results.length > 0) return results;
+    } catch (err) {
+      console.warn("Firestore searchDoctors failed, fallback to local:", err);
+    }
+  }
+
+  const current = getStoredDoctors();
+  return current.filter((doc) => doc.searchKeywords?.some((k) => k.includes(term)));
 }
 
 /**

@@ -39,7 +39,12 @@ export function PrescriptionsClient({ initialPrescriptions, serverUid }: Prescri
       return;
     }
     const unsub = subscribeToPrescriptions(effectiveUid, (data) => {
-      setPrescriptions(data);
+      // Guarantee strictly unique items by ID
+      const uniqueMap = new Map<string, PrescriptionRecord>();
+      data.forEach((item) => {
+        if (item && item.id) uniqueMap.set(item.id, item);
+      });
+      setPrescriptions(Array.from(uniqueMap.values()));
     });
     return () => unsub();
   }, [effectiveUid]);
@@ -142,9 +147,12 @@ export function PrescriptionsClient({ initialPrescriptions, serverUid }: Prescri
             {/* Left Column: Streamlined Upload Card */}
             <div className="lg:col-span-5 lg:sticky lg:top-20">
               <PrescriptionUpload
-                patientUid={user?.uid || "patient-demo-001"}
+                patientUid={effectiveUid || "patient-demo-001"}
                 onUploadSuccess={(newRecord) => {
-                  setPrescriptions((prev) => [newRecord, ...prev]);
+                  setPrescriptions((prev) => {
+                    if (prev.some((p) => p.id === newRecord.id)) return prev;
+                    return [newRecord, ...prev];
+                  });
                 }}
               />
             </div>
@@ -172,9 +180,9 @@ export function PrescriptionsClient({ initialPrescriptions, serverUid }: Prescri
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {prescriptions.map((p) => (
+                  {prescriptions.map((p, idx) => (
                     <div
-                      key={p.id}
+                      key={p.id || `presc-${idx}`}
                       className="bg-white rounded-3xl border border-gray-150 p-4 shadow-xs space-y-3 hover:border-emerald-300 transition-all"
                     >
                       <div className="flex items-start gap-3.5">

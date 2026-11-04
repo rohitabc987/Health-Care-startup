@@ -87,6 +87,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
     saveStoredUserProfile(updated);
     setUser(updated);
+    updateUserProfile(user.uid, updated).catch((err) => {
+      console.warn("Could not sync updated profile to Firestore:", err);
+    });
   };
 
   const openLoginModal = (options?: LoginModalOptions | any) => {

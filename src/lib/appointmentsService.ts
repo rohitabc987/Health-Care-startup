@@ -17,6 +17,7 @@ import {
 import { Appointment, AppointmentStatus } from "./types";
 import { INITIAL_APPOINTMENTS } from "./mockData";
 import { db, isLiveFirebaseConfigured } from "@/lib/firebaseConfig";
+import { generateAppointmentKeywords, normalizePhoneDigits, normalizeSearchQuery } from "./searchUtils";
 
 const LOCAL_STORAGE_KEY_APPOINTMENTS = "pronto_medical_appointments";
 const appointmentSubscribers: Array<(appointments: Appointment[]) => void> = [];
@@ -134,12 +135,24 @@ export async function bookAppointment(
     queueBypassCode?: string;
   }
 ): Promise<string> {
+  const patientPhoneDigits = normalizePhoneDigits(data.patientPhone);
+  const queueBypassCode = data.queueBypassCode || `PRONTO-FAST-${Math.floor(1000 + Math.random() * 9000)}`;
+  const searchKeywords = generateAppointmentKeywords({
+    patientName: data.patientName,
+    patientPhone: data.patientPhone,
+    patientHealthId: data.patientHealthId,
+    doctorName: data.doctorName,
+    queueBypassCode,
+  });
+
   const newAppointment: Appointment = {
     ...data,
     id: `apt-${Date.now()}`,
+    patientPhoneDigits,
     status: "Pending Screening",
     createdAt: new Date().toISOString(),
-    queueBypassCode: data.queueBypassCode || `PRONTO-FAST-${Math.floor(1000 + Math.random() * 9000)}`,
+    queueBypassCode,
+    searchKeywords,
   };
 
   let appointmentId = newAppointment.id;
@@ -251,15 +264,20 @@ export async function getAppointments(params?: {
   dateStr?: string;
   doctorId?: string;
   patientUid?: string;
+  searchTerm?: string;
   pageSize?: number;
 }): Promise<Appointment[]> {
   const pageSize = params?.pageSize || 25;
+  const cleanSearch = params?.searchTerm ? normalizeSearchQuery(params.searchTerm) : "";
 
   if (isLiveFirebaseConfigured && db) {
     try {
-      let q = collection(db, "appointments") as any;
+      const q = collection(db, "appointments") as any;
       const conditions = [];
 
+      if (cleanSearch) {
+        conditions.push(where("searchKeywords", "array-contains", cleanSearch));
+      }
       if (params?.dateStr) {
         conditions.push(where("createdAt", ">=", params.dateStr));
         conditions.push(where("createdAt", "<=", params.dateStr + "T23:59:59.999Z"));
@@ -285,6 +303,15 @@ export async function getAppointments(params?: {
   }
 
   let list = getStoredAppointments();
+  if (cleanSearch) {
+    list = list.filter(
+      (a) =>
+        a.searchKeywords?.some((k) => k.includes(cleanSearch)) ||
+        a.patientName?.toLowerCase().includes(cleanSearch) ||
+        a.patientPhone?.includes(cleanSearch) ||
+        a.patientHealthId?.toLowerCase().includes(cleanSearch)
+    );
+  }
   if (params?.dateStr) {
     list = list.filter((a) => (typeof a.createdAt === "string" ? a.createdAt.slice(0, 10) : "") === params.dateStr);
   }

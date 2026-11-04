@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pronto Health - Clinic Care Coordinator Field Playbook</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    @media print {
+      body {
+        background: white !important;
+        color: black !important;
+        padding: 0 !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .slide-container {
+        display: block !important;
+      }
+      .slide-page {
+        display: flex !important;
+        page-break-after: always;
+        break-after: page;
+        min-height: 100vh;
+        border: none !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+        padding: 2.5rem !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans antialiased selection:bg-emerald-500 selection:text-white">
+
+  <!-- Top Fixed Control Bar (Hidden when printing to PDF) -->
+  <header class="no-print sticky top-0 z-50 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-xl bg-emerald-500 text-slate-950 font-black flex items-center justify-center text-sm shadow-md shadow-emerald-500/20">
+        P+
+      </div>
+      <div>
+        <h1 class="text-xs sm:text-sm font-bold text-white tracking-tight">Pronto Health — On-Ground Worker Training Deck</h1>
+        <p class="text-[11px] text-slate-400">90-Second Patient Onboarding &amp; Follow-up Conversion Playbook</p>
+      </div>
+    </div>
+
+    <!-- Navigation Controls -->
+    <div class="flex items-center gap-2">
+      <div class="bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700 text-xs font-mono font-semibold text-emerald-400">
+        Slide <span id="current-slide-num">1</span> / <span id="total-slides-num">9</span>
+      </div>
+      <button 
+        type="button" 
+        onclick="prevSlide()" 
+        class="p-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl border border-slate-700 transition-all text-xs font-bold active:scale-95"
+        title="Previous Slide (Left Arrow)"
+      >
+        ◀ Prev
+      </button>
+      <button 
+        type="button" 
+        onclick="nextSlide()" 
+        class="p-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl shadow-md shadow-emerald-600/30 transition-all text-xs font-bold active:scale-95"
+        title="Next Slide (Right Arrow)"
+      >
+        Next ▶
+      </button>
+      <button 
+        type="button" 
+        onclick="window.print()" 
+        class="ml-2 px-3.5 py-1.5 bg-slate-100 hover:bg-white text-slate-900 rounded-xl font-bold text-xs shadow-md transition-all flex items-center gap-1.5 active:scale-95"
+        title="Print as PDF / Handout"
+      >
+        <span>🖨️ Save as PDF</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Slide Deck Main Viewport -->
+  <main class="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8">
+    <div class="slide-container">
+
+      <!-- ================= SLIDE 1: TITLE & MISSION ================= -->
+      <section class="slide-page bg-slate-950 border border-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl flex flex-col justify-between min-h-[580px] transition-all">
+        <div class="space-y-6">
+          <div class="flex items-center justify-between">
+            <span class="px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full text-xs font-bold uppercase tracking-wider">
+              Field Executive Manual • V1.0 Live
+            </span>
+            <span class="text-xs text-slate-500 font-mono">Clinic Desk SOP</span>
+          </div>
+
+          <div class="space-y-3 pt-2">
+            <h2 class="text-2xl sm:text-4xl lg:text-5xl font-black text-white leading-tight">
+              Mastering the <span class="text-emerald-400">90-Second</span> Patient Onboarding &amp; Follow-up Conversion
+            </h2>
+            <p class="text-slate-400 text-sm sm:text-base max-w-2xl leading-relaxed">
+              How our on-ground Care Coordinator intercepts OPD patients, digitizes prescriptions into lifetime Health IDs, and locks in doctor follow-ups before the patient leaves the clinic.
+            </p>
+          </div>
+
+          <!-- 3 Golden Targets -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-4">
+            <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+              <span class="text-2xl block mb-1">⏱️</span>
+              <p class="text-xs font-bold text-white">Under 90 Seconds</p>
+              <p class="text-xs text-slate-400 mt-0.5">Zero form fatigue for patient</p>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+              <span class="text-2xl block mb-1">📋</span>
+              <p class="text-xs font-bold text-white">&gt; 90% Slip Digitization</p>
+              <p class="text-xs text-slate-400 mt-0.5">Prescriptions saved to vault</p>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+              <span class="text-2xl block mb-1">⚡</span>
+              <p class="text-xs font-bold text-white">&gt; 75% Follow-up Bookings</p>
+              <p class="text-xs text-slate-400 mt-0.5">With Zero-Queue Bypass Pass</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-6 border-t border-slate-800 flex items-center justify-between text-xs text-slate-500">
+          <span>Pronto Health Ground Operations</span>
+          <span>Press <strong>Next ▶</strong> or <strong>Right Arrow</strong> to continue</span>
+        </div>
+      </section>
+
+      <!-- ================= SLIDE 2: WHY PATIENTS DROP OFF & OUR SOLUTION ================= -->
+      <section class="slide-page hidden bg-slate-950 border border-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl flex flex-col justify-between min-h-[580px] transition-all">
+        <div class="space-y-5">
+          <div class="flex items-center justify-between">
+            <span class="px-3 py-1 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-full text-xs font-bold uppercase tracking-wider">
+              The Problem &amp; The Fix
+            </span>
+            <span class="text-xs text-slate-500 font-mono">Slide 2 / 9</span>
+          </div>
+
+          <h2 class="text-xl sm:text-3xl font-black text-white">
+            Why Patients Fail to Follow-up (And How We Win Them Over)
+          </h2>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+            <!-- Pain points -->
+            <div class="bg-rose-950/20 border border-rose-900/40 p-5 rounded-2xl space-y-3">
+              <div class="flex items-center gap-2 text-rose-400 font-bold text-sm">
+                <span>❌ Why 70% Patients Don't Return:</span>
+              </div>
+              <ul class="text-xs text-slate-300 space-y-2.5 leading-relaxed">
+                <li class="flex items-start gap-2">
+                  <span class="text-rose-400 shrink-0 font-bold">•</span>
+                  <span><strong>Agonizing OPD Queues:</strong> Waiting 1 to 2 hours again next week feels unbearable.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-rose-400 shrink-0 font-bold">•</span>
+                  <span><strong>Lost Paper Slips:</strong> 40% patients lose or forget their previous prescription at home.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-rose-400 shrink-0 font-bold">•</span>
+                  <span><strong>The "I feel fine" trap:</strong> After 3 days of antibiotics, symptoms subside and they skip follow-up.</span>
+                </li>
+              </ul>
+            </div>
+
+            <!-- Pronto Solutions -->
+            <div class="bg-emerald-950/20 border border-emerald-900/40 p-5 rounded-2xl space-y-3">
+              <div class="flex items-center gap-2 text-emerald-400 font-bold text-sm">
+                <span>✅ Pronto's Irresistible Offer:</span>
+              </div>
+              <ul class="text-xs text-slate-300 space-y-2.5 leading-relaxed">
+                <li class="flex items-start gap-2">
+                  <span class="text-emerald-400 shrink-0 font-bold">✔</span>
+                  <span><strong>Zero-Queue Fast Pass (PRONTO-FAST):</strong> Walk straight past the waiting crowd into the doctor's room.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-emerald-400 shrink-0 font-bold">✔</span>
+                  <span><strong>Lifetime Health ID (#IND-XXXX):</strong> Digital vault stores paper slip permanently. Never lost.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-emerald-400 shrink-0 font-bold">✔</span>
+                  <span><strong>Locked Follow-up Discount:</strong> Fixed consultation fee of ₹500 (locked vs regular ₹800).</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-3 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-400 text-center">
+          💡 <strong>Core Takeaway:</strong> You are not "selling an appointment". You are giving the patient an <strong>Express Queue-Bypass Pass</strong>.
+        </div>
+      </section>
+
+      <!-- ================= SLIDE 3: THE 90-SECOND IN-CLINIC FLOWCHART ================= -->
+      <section class="slide-page hidden bg-slate-950 border border-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl flex flex-col justify-between min-h-[580px] transition-all">
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full text-xs font-bold uppercase tracking-wider">
+              Process Blueprint
+            </span>
+            <span class="text-xs text-slate-500 font-mono">Slide 3 / 9</span>
+          </div>
+
+          <h2 class="text-xl sm:text-2xl font-black text-white">
+            The 5-Step In-Clinic Flow (Strictly 90 Seconds)
+          </h2>
+
+          <div class="space-y-2.5 pt-1">
+            <!-- Step 1 -->
+            <div class="p-3 bg-slate-900 border border-slate-800 rounded-2xl flex items-center justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <span class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 font-black text-xs flex items-center justify-center shrink-0">1</span>
+                <div>
+                  <h4 class="text-xs font-bold text-white">The Doorstep Intercept (0 - 10s)</h4>
+                  <p class="text-[11px] text-slate-400">Catch patient right outside doctor cabin with prescription in hand.</p>
+                </div>
+              </div>
+              <span class="text-xs font-mono text-amber-400 bg-amber-950/40 px-2.5 py-1 rounded-lg border border-amber-900/40">10 sec</span>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="p-3 bg-slate-900 border border-slate-800 rounded-2xl flex items-center justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <span class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 font-black text-xs flex items-center justify-center shrink-0">2</span>
+                <div>
+                  <h4 class="text-xs font-bold text-white">1-Tap Mobile OTP Onboarding (10 - 30s)</h4>
+                  <p class="text-[11px] text-slate-400">Ask WhatsApp number $\rightarrow$ Enter 6-digit OTP $\rightarrow$ Generates #IND- Health ID.</p>
+                </div>
+              </div>
+              <span class="text-xs font-mono text-emerald-400 bg-emerald-950/40 px-2.5 py-1 rounded-lg border border-emerald-900/40">20 sec</span>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="p-3 bg-slate-900 border border-slate-800 rounded-2xl flex items-center justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <span class="w-8 h-8 rounded-xl bg-teal-500/20 text-teal-400 font-black text-xs flex items-center justify-center shrink-0">3</span>
+                <div>
+                  <h4 class="text-xs font-bold text-white">Snap &amp; Digitize Prescription (30 - 50s)</h4>
+                  <p class="text-[11px] text-slate-400">Take crisp phone camera photo of paper slip $\rightarrow$ Save to patient's cloud vault.</p>
+                </div>
+              </div>
+              <span class="text-xs font-mono text-teal-400 bg-teal-950/40 px-2.5 py-1 rounded-lg border border-teal-900/40">20 sec</span>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="p-3 bg-slate-900 border border-slate-800 rounded-2xl flex items-center justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <span class="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-400 font-black text-xs flex items-center justify-center shrink-0">4</span>
+                <div>
+                  <h4 class="text-xs font-bold text-white">Lock Follow-up &amp; Issue Pass (50 - 80s)</h4>
+                  <p class="text-[11px] text-slate-400">Select 7-Day / 10-Day review window $\rightarrow$ Generate PRONTO-FAST bypass token.</p>
+                </div>
+              </div>
+              <span class="text-xs font-mono text-indigo-400 bg-indigo-950/40 px-2.5 py-1 rounded-lg border border-indigo-900/40">30 sec</span>
+            </div>
+
+            <!-- Step 5 -->
+            <div class="p-3 bg-slate-900 border border-slate-800 rounded-2xl flex items-center justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <span class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 font-black text-xs flex items-center justify-center shrink-0">5</span>
+                <div>
+                  <h4 class="text-xs font-bold text-white">Hand-off &amp; Confirmation (80 - 90s)</h4>
+                  <p class="text-[11px] text-slate-400">Hand back physical slip + show digital Zero-Queue pass on mobile screen.</p>
+                </div>
+              </div>
+              <span class="text-xs font-mono text-emerald-400 bg-emerald-950/40 px-2.5 py-1 rounded-lg border border-emerald-900/40">10 sec</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-xs text-slate-500 text-center">Total time: 90 seconds. Fast, seamless, zero friction.</div>
+      </section>
+
+      <!-- ================= SLIDE 4: STEP 1 - THE GOLDEN INTERCEPT ================= -->
+      <section class="slide-page hidden bg-slate-950 border border-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl flex flex-col justify-between min-h-[580px] transition-all">
+        <div class="space-y-5">
+          <div class="flex items-center justify-between">
+            <span class="px-3 py-1 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-full text-xs font-bold uppercase tracking-wider">
+              Step 1: The Doorstep Intercept
+            </span>
+            <span class="text-xs text-slate-500 font-mono">Slide 4 / 9</span>
+          </div>
+
+          <h2 class="text-xl sm:text-2xl font-black text-white">
+            Catching the Patient at the Right 10 Seconds
+          </h2>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-3">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-400">Exact Hindi Opening Script</h3>
+              <div class="p-3.5 bg-slate-950 border border-emerald-900/40 rounded-xl text-xs text-slate-200 leading-relaxed font-medium">
+                &ldquo;Namaste Sir/Ma'am, doctor sahab ne prescription diya hai? Layein, main aapka official Pronto Digital Health Card aur Doctor Review Pass bana deta hoon, bas 1 minute lagega.&rdquo;
+              </div>
+              <p class="text-[11px] text-slate-400">
+                Notice: You are not asking <em>&ldquo;Can I have your prescription?&rdquo;</em> You gently extend your hand with a warm smile.
+              </p>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-3">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Executive Body Language Rules</h3>
+              <ul class="text-xs text-slate-300 space-y-2">
+                <li class="flex items-start gap-2">
+                  <span class="text-emerald-400 font-bold">✔</span>
+                  <span><strong>Physical Position:</strong> Stand exactly 3 steps outside the doctor's cabin door.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-emerald-400 font-bold">✔</span>
+                  <span><strong>The Pronto Uniform:</strong> Clean Pronto ID badge/lanyard visibly worn.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-rose-400 font-bold">✖</span>
+                  <span><strong>Never Intercept at Clinic Gate:</strong> Once the patient steps out into the parking lot, you lose them forever.</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-3 bg-emerald-950/20 border border-emerald-900/40 rounded-xl text-xs text-emerald-300">
+          🎯 <strong>Golden Rule:</strong> Have their paper prescription in your hands before opening the app.
+        </div>
+      </section>
+
+      <!-- ================= SLIDE 5: STEP 2 - 1-TAP MOBILE ONBOARDING ================= -->
+      <section class="slide-page hidden bg-slate-950 border border-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl flex flex-col justify-between min-h-[580px] transition-all">
+        <div class="space-y-5">
+          <div class="flex items-center justify-between">
+            <span class="px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full text-xs font-bold uppercase tracking-wider">
+              Step 2: 1-Tap Onboarding
+            </span>
+            <span class="text-xs text-slate-500 font-mono">Slide 5 / 9</span>
+          </div>
+
+          <h2 class="text-xl sm:text-2xl font-black text-white">
+            Zero-Form Registration (Mobile $\rightarrow$ OTP $\rightarrow$ Done)
+          </h2>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+            <div class="space-y-3">
+              <p class="text-xs text-slate-300 leading-relaxed">
+                Patients hate filling long forms while standing up. In our web app, you only ask for their <strong>10-digit WhatsApp number</strong>.
+              </p>
+
+              <div class="space-y-2 text-xs">
+                <div class="p-3 bg-slate-900 border border-slate-800 rounded-xl">
+                  <span class="font-bold text-white block mb-0.5">1. Ask &amp; Enter Phone</span>
+                  <span class="text-slate-400">&ldquo;Sir, aapka WhatsApp number batayein.&rdquo;</span>
+                </div>
+                <div class="p-3 bg-slate-900 border border-slate-800 rounded-xl">
+                  <span class="font-bold text-white block mb-0.5">2. Tap &ldquo;Send 6-Digit OTP&rdquo;</span>
+                  <span class="text-slate-400">Arrives in 3 seconds on patient's SMS.</span>
+                </div>
+                <div class="p-3 bg-slate-900 border border-slate-800 rounded-xl">
+                  <span class="font-bold text-white block mb-0.5">3. Instant #IND- ID Generated</span>
+                  <span class="text-slate-400">The app creates deterministic All-India Health ID: <strong class="text-emerald-400">#IND-37141300</strong></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- UI Visual Card Representation -->
+            <div class="bg-slate-900 border border-slate-800 p-5 rounded-3xl space-y-3 shadow-lg">
+              <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                <span class="text-[11px] font-bold text-emerald-400 font-mono">LIVE SCREEN MOCKUP</span>
+                <span class="text-[10px] text-slate-500">Pronto Verified</span>
+              </div>
+              <div class="space-y-2 text-xs">
+                <div>
+                  <label class="text-[10px] text-slate-400 block mb-0.5 font-bold uppercase">Phone Number</label>
+                  <div class="px-3 py-2 bg-slate-950 rounded-xl border border-slate-800 font-mono text-emerald-400 font-bold">
+                    +91 98765 43210
+                  </div>
+                </div>
+                <div>
+                  <label class="text-[10px] text-slate-400 block mb-0.5 font-bold uppercase">Assigned Digital Health ID</label>
+                  <div class="px-3 py-2 bg-emerald-950/40 rounded-xl border border-emerald-500/30 font-mono text-emerald-300 font-bold flex items-center justify-between">
+                    <span>#IND-37141300</span>
+                    <span class="text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded font-sans">Active</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-xs text-slate-500 text-center">Takes only 20 seconds. No password, no captcha, no email required.</div>
+      </section>
+
+      <!-- ================= SLIDE 6: STEP 3 - DIGITIZE PRESCRIPTION ================= -->
+      <section class="slide-page hidden bg-slate-950 border border-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl flex flex-col justify-between min-h-[580px] transition-all">
+        <div class="space-y-5">
+          <div class="flex items-center justify-between">
+            <span class="px-3 py-1 bg-teal-500/10 text-teal-400 border border-teal-500/20 rounded-full text-xs font-bold uppercase tracking-wider">
+              Step 3: Prescription Snap
+            </span>
+            <span class="text-xs text-slate-500 font-mono">Slide 6 / 9</span>
+          </div>
+
+          <h2 class="text-xl sm:text-2xl font-black text-white">
+            Digitizing the Slip (Prescription Vault Upload)
+          </h2>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-3">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-teal-400">Camera Quality Checklist</h3>
+              <ul class="text-xs text-slate-300 space-y-2.5">
+                <li class="flex items-start gap-2">
+                  <span class="text-teal-400 font-bold">1.</span>
+                  <span><strong>Doctor Stamp &amp; Signature:</strong> Must be in the frame.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-teal-400 font-bold">2.</span>
+                  <span><strong>Follow-up Days:</strong> Ensure the doctor's review note (e.g. <em>&ldquo;Review 7 days&rdquo;</em>) is clearly visible.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-teal-400 font-bold">3.</span>
+                  <span><strong>No Shadows:</strong> Hold tablet/phone directly parallel to avoid lighting glare.</span>
+                </li>
+              </ul>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-3">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-400">Patient Reassurance Script</h3>
+              <div class="p-3.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 leading-relaxed font-medium">
+                &ldquo;Sir, aapka original paper parcha return hai. Iski digital copy aapke Health ID mein lifetime safe ho gayi hai. Agle hafte aane par paper bhool bhi gaye, toh doctor sahab direct system se dekh lenge.&rdquo;
+              </div>
+              <p class="text-[11px] text-slate-400">
+                This single line builds massive relief because patients constantly worry about losing clinic receipts.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-3 bg-teal-950/20 border border-teal-900/40 rounded-xl text-xs text-teal-300 text-center">
+          📁 All uploads sync directly to Cloudinary &amp; Firestore for 1-read retrieval in Admin.
+        </div>
+      </section>
+
+      <!-- ================= SLIDE 7: STEP 4 - THE ASSUMPTIVE CLOSE ================= -->
+      <section class="slide-page hidden bg-slate-950 border border-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl flex flex-col justify-between min-h-[580px] transition-all">
+        <div class="space-y-5">
+          <div class="flex items-center justify-between">
+            <span class="px-3 py-1 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-full text-xs font-bold uppercase tracking-wider">
+              Step 4: Booking &amp; Fast Pass
+            </span>
+            <span class="text-xs text-slate-500 font-mono">Slide 7 / 9</span>
+          </div>
+
+          <h2 class="text-xl sm:text-2xl font-black text-white">
+            The Assumptive Close (How to Book with 85%+ Success)
+          </h2>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Wrong vs Right -->
+            <div class="bg-rose-950/20 border border-rose-900/40 p-5 rounded-2xl space-y-2">
+              <span class="text-rose-400 text-xs font-bold block uppercase tracking-wider">❌ Never Ask Open Questions:</span>
+              <p class="text-xs text-slate-300 italic">
+                &ldquo;Sir, kya aap agle hafte follow-up book karna chahenge?&rdquo;
+              </p>
+              <p class="text-[11px] text-rose-300/80 pt-1">
+                Result: 60% patients will say <em>&ldquo;Main baad mein ghar jaake dekhta hoon.&rdquo;</em>
+              </p>
+            </div>
+
+            <div class="bg-emerald-950/20 border border-emerald-900/40 p-5 rounded-2xl space-y-2">
+              <span class="text-emerald-400 text-xs font-bold block uppercase tracking-wider">✅ The Assumptive Alternative:</span>
+              <p class="text-xs text-slate-200 font-medium">
+                &ldquo;Doctor Sahab ne specifically 7 din baad dawaai ka response check karne ko bola hai. Main aapka slot <strong>Morning (10:00 AM)</strong> mein lock karun ya <strong>Evening (6:00 PM)</strong> mein?&rdquo;
+              </p>
+              <p class="text-[11px] text-emerald-300/80 pt-1">
+                Result: Patient chooses a time instead of rejecting the appointment!
+              </p>
+            </div>
+          </div>
+
+          <!-- The Pass Reveal -->
+          <div class="p-4 bg-slate-900 border border-slate-800 rounded-2xl flex items-center justify-between gap-3">
+            <div>
+              <span class="text-[10px] uppercase font-bold text-slate-400 block">Generated Pass Token</span>
+              <span class="text-lg font-black font-mono text-emerald-400">PRONTO-FAST-7721</span>
+              <span class="text-xs text-slate-400 block mt-0.5">Zero-Queue Clinic Bypass Pass (Locked ₹500 fee)</span>
+            </div>
+            <div class="px-3 py-1.5 bg-emerald-500 text-slate-950 font-bold text-xs rounded-xl shadow-md">
+              Instant Confirm
+            </div>
+          </div>
+        </div>
+
+        <div class="text-xs text-slate-500 text-center">Doctor's authority + Either/Or choice = Maximum booking compliance.</div>
+      </section>
+
+      <!-- ================= SLIDE 8: OBJECTION HANDLING ================= -->
+      <section class="slide-page hidden bg-slate-950 border border-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl flex flex-col justify-between min-h-[580px] transition-all">
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="px-3 py-1 bg-purple-500/10 text-purple-400 border border-purple-500/20 rounded-full text-xs font-bold uppercase tracking-wider">
+              Handling Hesitations
+            </span>
+            <span class="text-xs text-slate-500 font-mono">Slide 8 / 9</span>
+          </div>
+
+          <h2 class="text-xl sm:text-2xl font-black text-white">
+            Common Patient Objections &amp; Winning Counter-Scripts
+          </h2>
+
+          <div class="space-y-2.5 pt-1 text-xs">
+            <!-- Objection 1 -->
+            <div class="p-3.5 bg-slate-900 border border-slate-800 rounded-2xl space-y-1">
+              <p class="font-bold text-rose-400">Patient: &ldquo;Mujhe nahi pata agle hafte main free rahunga ya nahi.&rdquo;</p>
+              <p class="text-slate-200">
+                <strong>Executive Reply:</strong> &ldquo;Aap bilkul fikar mat kijiye sir! Abhi book karne se aapka discount slot aur queue-bypass pass lock ho jata hai. Agar us din emergency aa gayi, toh aap bina kisi charge ke WhatsApp par 1 click mein date aage kar sakte hain.&rdquo;
+              </p>
+            </div>
+
+            <!-- Objection 2 -->
+            <div class="p-3.5 bg-slate-900 border border-slate-800 rounded-2xl space-y-1">
+              <p class="font-bold text-rose-400">Patient: &ldquo;Main theek ho jaunga toh aane ki kya zaroorat hai?&rdquo;</p>
+              <p class="text-slate-200">
+                <strong>Executive Reply:</strong> &ldquo;Sir, doctor sahab ne specifically dosage review ke liye bulaya hai taaki bimari wapas na aaye. Review consult mein waise bhi sirf 5 minute lagte hain aur Pronto Pass se line mein bhi nahi baithna padega.&rdquo;
+              </p>
+            </div>
+
+            <!-- Objection 3 -->
+            <div class="p-3.5 bg-slate-900 border border-slate-800 rounded-2xl space-y-1">
+              <p class="font-bold text-rose-400">Patient: &ldquo;Kya is service ka koi extra charge hai?&rdquo;</p>
+              <p class="text-slate-200">
+                <strong>Executive Reply:</strong> &ldquo;Bilkul nahi sir! Pronto Digital Health ID aur Zero-Queue Pass 100% free clinic service hai. Ulta aapka consultation ₹800 ke badle ₹500 mein lock ho gaya hai.&rdquo;
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-xs text-slate-500 text-center">Never argue. Validate their concern, remove friction, and highlight the Zero-Queue Pass.</div>
+      </section>
+
+      <!-- ================= SLIDE 9: DAILY TARGETS & SUMMARY ================= -->
+      <section class="slide-page hidden bg-slate-950 border border-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl flex flex-col justify-between min-h-[580px] transition-all">
+        <div class="space-y-5">
+          <div class="flex items-center justify-between">
+            <span class="px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full text-xs font-bold uppercase tracking-wider">
+              Daily Worker Scorecard
+            </span>
+            <span class="text-xs text-slate-500 font-mono">Slide 9 / 9</span>
+          </div>
+
+          <h2 class="text-xl sm:text-2xl font-black text-white">
+            Daily Execution Targets &amp; Golden Rules
+          </h2>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-3">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-400">Daily Target Benchmarks</h3>
+              <div class="space-y-2 text-xs">
+                <div class="flex justify-between items-center py-1.5 border-b border-slate-800">
+                  <span class="text-slate-400">Prescription Upload Rate</span>
+                  <span class="font-bold text-emerald-400">&ge; 90% of OPD Footfall</span>
+                </div>
+                <div class="flex justify-between items-center py-1.5 border-b border-slate-800">
+                  <span class="text-slate-400">Follow-up Booking Rate</span>
+                  <span class="font-bold text-emerald-400">&ge; 75% of Uploads</span>
+                </div>
+                <div class="flex justify-between items-center py-1.5 border-b border-slate-800">
+                  <span class="text-slate-400">Average Interaction Time</span>
+                  <span class="font-bold text-white">&le; 90 Seconds</span>
+                </div>
+                <div class="flex justify-between items-center py-1.5">
+                  <span class="text-slate-400">Admin KPI Check</span>
+                  <span class="font-bold text-emerald-400">Every Evening at 7:30 PM</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-2.5">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">5 Golden Worker Rules</h3>
+              <ol class="text-xs text-slate-300 space-y-1.5 list-decimal pl-4">
+                <li>Never let a patient reach the parking lot before intercepting.</li>
+                <li>Always lead with the <strong>Zero-Queue Pass</strong> benefit.</li>
+                <li>Never ask Yes/No; offer Morning vs Evening slot.</li>
+                <li>Ensure the physical prescription is handed back with a smile.</li>
+                <li>Verify that the patient received the SMS/WhatsApp with their pass.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-4 bg-emerald-600 rounded-2xl flex items-center justify-between gap-3 text-white">
+          <div>
+            <h4 class="font-bold text-sm">Ready to Deploy on Ground!</h4>
+            <p class="text-xs text-emerald-100">Click &ldquo;Save as PDF&rdquo; at top right to print physical training handouts.</p>
+          </div>
+          <button 
+            type="button" 
+            onclick="window.print()" 
+            class="px-4 py-2 bg-white text-slate-950 rounded-xl text-xs font-black shadow-md hover:bg-emerald-50 transition-all shrink-0"
+          >
+            🖨️ Print Handbook
+          </button>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Interactive Slide Navigation Script -->
+  <script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide-page');
+    const totalSlides = slides.length;
+
+    document.getElementById('total-slides-num').innerText = totalSlides;
+
+    function showSlide(index) {
+      if (index < 0) index = 0;
+      if (index >= totalSlides) index = totalSlides - 1;
+      currentSlide = index;
+
+      slides.forEach((slide, i) => {
+        if (i === currentSlide) {
+          slide.classList.remove('hidden');
+        } else {
+          slide.classList.add('hidden');
+        }
+      });
+
+      document.getElementById('current-slide-num').innerText = currentSlide + 1;
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides - 1) {
+        showSlide(currentSlide + 1);
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 0) {
+        showSlide(currentSlide - 1);
+      }
+    }
+
+    // Keyboard Arrow Controls
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        prevSlide();
+      }
+    });
+  </script>
+</body>
+</html>
+

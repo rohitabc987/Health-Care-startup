@@ -15,7 +15,7 @@ export function AddressEditorCard({ user, onUpdateAddress }: AddressEditorCardPr
 
   const [addressForm, setAddressForm] = useState<UserAddress>({
     locality: user.address?.locality || "Gomti Nagar",
-    city: user.address?.city || "Lucknow",
+    city: user.address?.city || "Kanpur",
     houseNo: user.address?.houseNo || "",
     street: user.address?.street || "",
     state: user.address?.state || "",
@@ -26,7 +26,7 @@ export function AddressEditorCard({ user, onUpdateAddress }: AddressEditorCardPr
     e.preventDefault();
     onUpdateAddress({
       locality: addressForm.locality?.trim() || "Gomti Nagar",
-      city: addressForm.city?.trim() || "Lucknow",
+      city: addressForm.city?.trim() || "Kanpur",
       houseNo: addressForm.houseNo?.trim() || undefined,
       street: addressForm.street?.trim() || undefined,
       state: addressForm.state?.trim() || undefined,
@@ -86,7 +86,7 @@ export function AddressEditorCard({ user, onUpdateAddress }: AddressEditorCardPr
           </div>
           <div className="flex justify-between">
             <span className="text-gray-400">City:</span>
-            <span className="font-semibold text-gray-900">{user?.address?.city || "Lucknow"}</span>
+            <span className="font-semibold text-gray-900">{user?.address?.city || "Kanpur"}</span>
           </div>
           {(user?.address?.houseNo || user?.address?.street) && (
             <div className="flex justify-between pt-1 border-t border-gray-200/60 text-gray-400">
@@ -162,7 +162,7 @@ export function AddressEditorCard({ user, onUpdateAddress }: AddressEditorCardPr
                 type="text"
                 value={addressForm.city}
                 onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })}
-                placeholder="e.g. Lucknow"
+                placeholder="e.g. Kanpur"
                 className="w-full px-3 py-2 bg-white rounded-xl border border-gray-200 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               />
             </div>

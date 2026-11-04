@@ -1,8 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useState, useMemo } from "react";
 import { Doctor } from "@/lib/firebase";
-import { Plus, ToggleLeft, ToggleRight } from "lucide-react";
+import { Plus, ToggleLeft, ToggleRight, Search, X } from "lucide-react";
+import { normalizeSearchQuery } from "@/lib/searchUtils";
 
 interface AdminDoctorCatalogProps {
   doctorsList: Doctor[];
@@ -15,12 +16,38 @@ export function AdminDoctorCatalog({
   onOpenAddModal,
   onToggleDoctor,
 }: AdminDoctorCatalogProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredDoctors = useMemo(() => {
+    const raw = searchQuery.trim();
+    if (!raw) return doctorsList;
+
+    const term = normalizeSearchQuery(raw);
+    return doctorsList.filter((doc) => {
+      if (doc.searchKeywords && doc.searchKeywords.some((k) => k.includes(term))) {
+        return true;
+      }
+      const name = doc.name.toLowerCase();
+      const spec = doc.specialty.toLowerCase();
+      const clinic = doc.clinic.toLowerCase();
+      const phone = (doc.phone || "").replace(/\D/g, "");
+
+      return (
+        name.includes(term) ||
+        spec.includes(term) ||
+        clinic.includes(term) ||
+        phone.includes(term)
+      );
+    });
+  }, [doctorsList, searchQuery]);
+
   return (
     <div className="space-y-4">
       <div className="bg-white p-4 sm:p-5 rounded-3xl border border-gray-150 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-sm sm:text-base font-black text-gray-900">
-            Doctor Catalog Management
+            Doctor Catalog Management ({filteredDoctors.length}
+            {filteredDoctors.length !== doctorsList.length ? ` of ${doctorsList.length}` : ""})
           </h2>
           <p className="text-xs text-gray-400">
             Doctors shown on the home page are managed strictly from this Admin panel.
@@ -37,9 +64,36 @@ export function AdminDoctorCatalog({
         </button>
       </div>
 
+      {/* Doctor Search Bar */}
+      <div className="relative">
+        <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search doctor by name, specialty, clinic, or mobile..."
+          className="w-full pl-9 pr-8 py-2.5 bg-white border border-gray-200 rounded-2xl text-xs font-medium placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-xs transition-all"
+        />
+        {searchQuery && (
+          <button
+            type="button"
+            onClick={() => setSearchQuery("")}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
+
       {/* Doctor Cards with Active / Inactive Toggle */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {doctorsList.map((doc) => (
+      {filteredDoctors.length === 0 ? (
+        <div className="bg-white p-8 rounded-3xl border border-gray-150 text-center text-xs text-gray-400 space-y-1">
+          <p className="font-semibold text-gray-600">No doctors match &quot;{searchQuery}&quot;</p>
+          <p className="text-[11px]">Try searching by specialty (e.g. &quot;Cardiology&quot;) or doctor surname.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {filteredDoctors.map((doc) => (
           <div 
             key={doc.id}
             className={`bg-white p-4 sm:p-5 rounded-3xl border transition-all flex items-start justify-between gap-3 shadow-xs ${
@@ -98,6 +152,7 @@ export function AdminDoctorCatalog({
           </div>
         ))}
       </div>
+      )}
     </div>
   );
 }

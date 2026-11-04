@@ -1,4 +1,9 @@
-import { Doctor, UserProfile, PrescriptionRecord, Appointment } from "./types";
+import type { Doctor, UserProfile, PrescriptionRecord, Appointment } from "./types";
+import { 
+  generateDoctorKeywords, 
+  generatePatientKeywords, 
+  generateAppointmentKeywords 
+} from "./searchUtils";
 
 export const INITIAL_DOCTORS: Doctor[] = [
   {
@@ -7,6 +12,7 @@ export const INITIAL_DOCTORS: Doctor[] = [
     specialty: "Cardiology & Internal Medicine",
     clinic: "Apollo Clinic, Gomti Nagar",
     phone: "+919876500001",
+    phoneDigits: "9876500001",
     rating: 4.9,
     reviews: 1420,
     image: "/images/doctor-1.jpg",
@@ -18,6 +24,12 @@ export const INITIAL_DOCTORS: Doctor[] = [
     nextAvailableDay: "Mon, Wed, Fri",
     consultationFee: 500,
     regularFee: 800,
+    searchKeywords: generateDoctorKeywords({
+      name: "Dr. Ananya Sharma",
+      phone: "+919876500001",
+      specialty: "Cardiology & Internal Medicine",
+      clinic: "Apollo Clinic, Gomti Nagar",
+    }),
   },
   {
     id: "doc-2",
@@ -25,6 +37,7 @@ export const INITIAL_DOCTORS: Doctor[] = [
     specialty: "General Physician & Diabetology",
     clinic: "Sanjeevani Health Hub, Sector 4",
     phone: "+919876500002",
+    phoneDigits: "9876500002",
     rating: 4.9,
     reviews: 2180,
     image: "/images/doctor-2.jpg",
@@ -36,6 +49,12 @@ export const INITIAL_DOCTORS: Doctor[] = [
     nextAvailableDay: "Tue, Thu, Sat",
     consultationFee: 400,
     regularFee: 650,
+    searchKeywords: generateDoctorKeywords({
+      name: "Dr. Rajesh Verma",
+      phone: "+919876500002",
+      specialty: "General Physician & Diabetology",
+      clinic: "Sanjeevani Health Hub, Sector 4",
+    }),
   },
   {
     id: "doc-3",
@@ -43,6 +62,7 @@ export const INITIAL_DOCTORS: Doctor[] = [
     specialty: "Pediatrics & Child Wellness",
     clinic: "Little Feet Children's Clinic",
     phone: "+919876500003",
+    phoneDigits: "9876500003",
     rating: 4.9,
     reviews: 980,
     image: "/images/doctor-3.jpg",
@@ -54,6 +74,12 @@ export const INITIAL_DOCTORS: Doctor[] = [
     nextAvailableDay: "Mon-Sat (Daily)",
     consultationFee: 450,
     regularFee: 700,
+    searchKeywords: generateDoctorKeywords({
+      name: "Dr. Sarah Jenkins",
+      phone: "+919876500003",
+      specialty: "Pediatrics & Child Wellness",
+      clinic: "Little Feet Children's Clinic",
+    }),
   },
   {
     id: "doc-4",
@@ -61,6 +87,7 @@ export const INITIAL_DOCTORS: Doctor[] = [
     specialty: "Orthopedics & Joint Care",
     clinic: "Metro Specialty Clinic, Viram Khand",
     phone: "+919876500004",
+    phoneDigits: "9876500004",
     rating: 4.8,
     reviews: 1640,
     image: "/images/doctor-4.jpg",
@@ -71,6 +98,12 @@ export const INITIAL_DOCTORS: Doctor[] = [
     nextAvailableDay: "Mon, Thu, Sat",
     consultationFee: 600,
     regularFee: 900,
+    searchKeywords: generateDoctorKeywords({
+      name: "Dr. Amitav Ghosh",
+      phone: "+919876500004",
+      specialty: "Orthopedics & Joint Care",
+      clinic: "Metro Specialty Clinic, Viram Khand",
+    }),
   },
 ];
 
@@ -78,26 +111,25 @@ export const INITIAL_USER: UserProfile = {
   uid: "patient-demo-001",
   name: "Rahul Verma",
   phone: "+91 98765 43210",
+  phoneDigits: "9876543210",
   role: "patient",
   healthId: "#IND-37141300",
   address: {
     locality: "Swaroop Nagar",
     city: "Kanpur",
   },
+  searchKeywords: generatePatientKeywords({
+    name: "Rahul Verma",
+    phone: "+91 98765 43210",
+    healthId: "#IND-37141300",
+    address: {
+      locality: "Swaroop Nagar",
+      city: "Kanpur",
+    },
+  }),
 };
 
-export const INITIAL_PRESCRIPTIONS: PrescriptionRecord[] = [
-  {
-    id: "presc-101",
-    patientUid: "patient-demo-001",
-    doctorName: "Dr. Ananya Sharma",
-    clinicName: "Apollo Clinic, Swaroop Nagar",
-    visitDate: "Oct 18, 2026",
-    imageUrl: "/images/prescription-demo.jpg",
-    uploadedAt: "Oct 18, 2026",
-    chiefComplaint: "Post-hypertension & Amoxicillin review",
-  },
-];
+export const INITIAL_PRESCRIPTIONS: PrescriptionRecord[] = [];
 
 export const INITIAL_APPOINTMENTS: Appointment[] = [
   {
@@ -105,6 +137,7 @@ export const INITIAL_APPOINTMENTS: Appointment[] = [
     patientUid: "patient-demo-001",
     patientName: "Rahul Verma",
     patientPhone: "+91 98765 43210",
+    patientPhoneDigits: "9876543210",
     patientHealthId: "#IND-37141300",
     patientAddress: "Swaroop Nagar, Kanpur",
     doctorId: "doc-1",
@@ -118,5 +151,12 @@ export const INITIAL_APPOINTMENTS: Appointment[] = [
     consultationFee: 500,
     notes: "Review BP log after 7 days on Lisinopril 10mg",
     queueBypassCode: "PRONTO-FAST-7721",
+    searchKeywords: generateAppointmentKeywords({
+      patientName: "Rahul Verma",
+      patientPhone: "+91 98765 43210",
+      patientHealthId: "#IND-37141300",
+      doctorName: "Dr. Ananya Sharma",
+      queueBypassCode: "PRONTO-FAST-7721",
+    }),
   },
 ];

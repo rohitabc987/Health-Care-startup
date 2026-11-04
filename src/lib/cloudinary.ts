@@ -94,53 +94,46 @@ export async function uploadSlipToCloudinary(
     console.warn("Client pre-compression skipped, using original file:", compErr);
   }
 
-  // If live Cloudinary credentials are set
+  // Live Cloudinary credentials upload
   if (cloudName && cloudName !== "demo") {
-    try {
-      const formData = new FormData();
+    const formData = new FormData();
+    // Ensure file or blob has explicit filename so Cloudinary accepts it
+    if (fileToUpload instanceof Blob && !(fileToUpload instanceof File)) {
+      formData.append("file", fileToUpload, "prescription.webp");
+    } else {
       formData.append("file", fileToUpload);
-      formData.append("upload_preset", uploadPreset);
-      formData.append("folder", `prescriptions/${patientUid}`);
-      formData.append("transformation", "q_auto:good,f_auto,w_1600,c_limit,e_auto_contrast");
-
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!res.ok) {
-        throw new Error(`Cloudinary upload failed with HTTP ${res.status}`);
-      }
-
-      const data = await res.json();
-      return {
-        url: data.secure_url,
-        pdfUrl: data.secure_url.replace(/\.[^/.]+$/, ".pdf"),
-        publicId: data.public_id,
-        bytes: data.bytes || 150000,
-        format: data.format || "webp",
-        width: data.width,
-        height: data.height,
-      };
-    } catch (cloudErr) {
-      console.warn("Cloudinary API call error, using optimized local data URL fallback:", cloudErr);
     }
-  }
+    formData.append("upload_preset", uploadPreset);
+    formData.append("folder", `prescriptions/${patientUid}`);
 
-  // Offline / Demo fallback: use the client-compressed high-quality WebP data URL
-  if (!localDataUrl) {
-    localDataUrl = await new Promise<string>((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.readAsDataURL(file);
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+      method: "POST",
+      body: formData,
     });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => null);
+      const errMsg = errorData?.error?.message || `HTTP ${res.status}`;
+      throw new Error(`Cloudinary upload failed: ${errMsg}`);
+    }
+
+    const data = await res.json();
+    const rawUrl = data.secure_url || data.url;
+    // Inject on-the-fly Cloudinary delivery transformation (contrast & auto-format)
+    const optimizedUrl = rawUrl.includes("/upload/")
+      ? rawUrl.replace("/upload/", "/upload/q_auto:good,f_auto,w_1600,c_limit,e_auto_contrast/")
+      : rawUrl;
+
+    return {
+      url: optimizedUrl,
+      pdfUrl: rawUrl.replace(/\.[^/.]+$/, ".pdf"),
+      publicId: data.public_id,
+      bytes: data.bytes || 150000,
+      format: data.format || "webp",
+      width: data.width,
+      height: data.height,
+    };
   }
 
-  return {
-    url: localDataUrl,
-    pdfUrl: localDataUrl,
-    publicId: `local-slip-${Date.now()}`,
-    bytes: fileToUpload.size || 145000,
-    format: "webp",
-  };
+  throw new Error("Cloudinary cloud name is missing. Please configure NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME in your environment.");
 }

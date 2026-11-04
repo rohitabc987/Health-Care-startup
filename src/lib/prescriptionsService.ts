@@ -5,44 +5,16 @@ import {
   query, 
   where, 
   orderBy, 
-  getDocs 
+  getDocs,
+  onSnapshot 
 } from "firebase/firestore";
-import { PrescriptionRecord } from "./types";
-import { INITIAL_PRESCRIPTIONS } from "./mockData";
+import type { PrescriptionRecord } from "./types";
 import { db, isLiveFirebaseConfigured } from "@/lib/firebaseConfig";
 import { uploadSlipToCloudinary } from "./cloudinary";
 
-const LOCAL_STORAGE_KEY_PRESCRIPTIONS = "pronto_medical_prescriptions";
-const prescriptionSubscribers: Array<(prescriptions: PrescriptionRecord[]) => void> = [];
-
-export function getStoredPrescriptions(): PrescriptionRecord[] {
-  if (typeof window === "undefined") return INITIAL_PRESCRIPTIONS;
-  try {
-    const raw = localStorage.getItem(LOCAL_STORAGE_KEY_PRESCRIPTIONS);
-    if (!raw) {
-      localStorage.setItem(LOCAL_STORAGE_KEY_PRESCRIPTIONS, JSON.stringify(INITIAL_PRESCRIPTIONS));
-      return INITIAL_PRESCRIPTIONS;
-    }
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : INITIAL_PRESCRIPTIONS;
-  } catch {
-    return INITIAL_PRESCRIPTIONS;
-  }
-}
-
-export function saveStoredPrescriptions(data: PrescriptionRecord[]) {
-  if (typeof window !== "undefined") {
-    try {
-      localStorage.setItem(LOCAL_STORAGE_KEY_PRESCRIPTIONS, JSON.stringify(data));
-    } catch (e) {
-      console.error(e);
-    }
-  }
-  prescriptionSubscribers.forEach((cb) => cb(data));
-}
-
 /**
  * Server-Side Fetcher for Server Components (e.g. /prescriptions page.tsx)
+ * Queries strictly from Firestore database.
  */
 export async function getPrescriptionsServer(patientUid = "patient-demo-001"): Promise<PrescriptionRecord[]> {
   if (isLiveFirebaseConfigured && db) {
@@ -55,29 +27,66 @@ export async function getPrescriptionsServer(patientUid = "patient-demo-001"): P
       const snap = await getDocs(q);
       const list: PrescriptionRecord[] = [];
       snap.forEach((d) => list.push({ id: d.id, ...(d.data() as Omit<PrescriptionRecord, "id">) }));
-      if (list.length > 0) return list;
+      return list;
     } catch (err) {
-      console.warn("getPrescriptionsServer error, fallback to initial:", err);
+      console.warn("getPrescriptionsServer Firestore error:", err);
     }
   }
-  return INITIAL_PRESCRIPTIONS.filter((p) => p.patientUid === patientUid);
+  return [];
 }
 
+/**
+ * Realtime Database Listener for Patient Prescriptions
+ * Listens strictly to Firestore "prescriptions" collection in realtime.
+ */
 export function subscribeToPrescriptions(
   patientUid: string,
   callback: (prescriptions: PrescriptionRecord[]) => void
 ): () => void {
-  prescriptionSubscribers.push(callback);
-  callback(getStoredPrescriptions().filter((p) => p.patientUid === patientUid));
+  // Purge any stale legacy local cache from previous sessions
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.removeItem("pronto_medical_prescriptions");
+    } catch {}
+  }
 
-  return () => {
-    const index = prescriptionSubscribers.indexOf(callback);
-    if (index > -1) {
-      prescriptionSubscribers.splice(index, 1);
+  if (isLiveFirebaseConfigured && db) {
+    try {
+      const q = query(
+        collection(db, "prescriptions"),
+        where("patientUid", "==", patientUid),
+        orderBy("createdAt", "desc")
+      );
+
+      const unsubscribe = onSnapshot(
+        q,
+        (snapshot) => {
+          const list: PrescriptionRecord[] = [];
+          snapshot.forEach((docSnap) => {
+            list.push({ id: docSnap.id, ...(docSnap.data() as Omit<PrescriptionRecord, "id">) });
+          });
+          callback(list);
+        },
+        (error) => {
+          console.warn("Firestore prescriptions onSnapshot error:", error);
+          callback([]);
+        }
+      );
+
+      return unsubscribe;
+    } catch (err) {
+      console.warn("Error setting up prescriptions Firestore listener:", err);
     }
-  };
+  }
+
+  callback([]);
+  return () => {};
 }
 
+/**
+ * Upload prescription photo strictly to Cloudinary & save document into Firestore.
+ * Zero local fallback — strictly Cloudinary HTTPS CDN & Firestore database.
+ */
 export async function uploadPrescriptionPhoto(
   file: File,
   patientUid: string,
@@ -88,34 +97,38 @@ export async function uploadPrescriptionPhoto(
     chiefComplaint?: string;
   }
 ): Promise<PrescriptionRecord> {
+  // 1. Upload to Cloudinary (returns real https://res.cloudinary.com/... URL)
   const cloudResult = await uploadSlipToCloudinary(file, patientUid);
   const downloadUrl = cloudResult.url;
 
-  const newRecord: PrescriptionRecord = {
-    id: `presc-${Date.now()}`,
+  const newRecordData = {
     patientUid,
     doctorName: metadata.doctorName,
     clinicName: metadata.clinicName,
     visitDate: metadata.visitDate || new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
     imageUrl: downloadUrl,
-    uploadedAt: "Just now • Mobile Camera Snapshot (~150 KB)",
+    uploadedAt: "Just now • Cloudinary Vault",
     chiefComplaint: metadata.chiefComplaint || "Clinic prescription & consultation record",
   };
 
+  let docId = `presc-${Date.now()}`;
+
+  // 2. Save document directly into Firestore database
   if (isLiveFirebaseConfigured && db) {
     try {
-      await addDoc(collection(db, "prescriptions"), {
-        ...newRecord,
+      const docRef = await addDoc(collection(db, "prescriptions"), {
+        ...newRecordData,
         createdAt: serverTimestamp(),
       });
+      docId = docRef.id;
     } catch (err) {
-      console.warn("Firestore prescription add error, saving locally:", err);
+      console.error("Firestore prescription add error:", err);
+      throw err;
     }
   }
 
-  const current = getStoredPrescriptions();
-  const updated = [newRecord, ...current];
-  saveStoredPrescriptions(updated);
-
-  return newRecord;
+  return {
+    id: docId,
+    ...newRecordData,
+  };
 }

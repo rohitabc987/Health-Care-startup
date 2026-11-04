@@ -23,8 +23,8 @@ export function PrescriptionUpload({ patientUid, onUploadSuccess }: Prescription
   const [isUploading, setIsUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [doctorName, setDoctorName] = useState(INITIAL_DOCTORS[0].name);
-  const [clinicName, setClinicName] = useState(INITIAL_DOCTORS[0].clinic);
+  const [doctorName, setDoctorName] = useState(INITIAL_DOCTORS[0]?.name || "Dr. Ananya Sharma");
+  const [clinicName, setClinicName] = useState(INITIAL_DOCTORS[0]?.clinic || "Apollo Clinic, Gomti Nagar");
   const [visitDate, setVisitDate] = useState("2026-10-25");
   const [chiefComplaint, setChiefComplaint] = useState("");
   const [uploadSuccess, setUploadSuccess] = useState(false);

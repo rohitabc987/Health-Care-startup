@@ -13,6 +13,7 @@ interface AddDoctorModalProps {
 export function AddDoctorModal({ isOpen, onClose, onAddDoctor }: AddDoctorModalProps) {
   const [form, setForm] = useState({
     name: "",
+    phone: "",
     specialty: "General Physician & Internal Medicine",
     clinic: "Pronto Health Hub, Gomti Nagar",
     consultationFee: 500,
@@ -38,6 +39,7 @@ export function AddDoctorModal({ isOpen, onClose, onAddDoctor }: AddDoctorModalP
 
     onAddDoctor({
       name: form.name.trim(),
+      phone: form.phone.trim() || undefined,
       specialty: form.specialty.trim(),
       clinic: form.clinic.trim(),
       consultationFee: form.consultationFee,
@@ -86,6 +88,17 @@ export function AddDoctorModal({ isOpen, onClose, onAddDoctor }: AddDoctorModalP
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               placeholder="e.g. Dr. Vikram Sethi"
+              className="w-full px-3 py-2 bg-white rounded-xl border border-gray-200 font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="font-bold text-gray-700 block mb-1">Doctor Mobile Number (Optional)</label>
+            <input
+              type="tel"
+              value={form.phone}
+              onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              placeholder="e.g. +91 98765 00005"
               className="w-full px-3 py-2 bg-white rounded-xl border border-gray-200 font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none"
             />
           </div>

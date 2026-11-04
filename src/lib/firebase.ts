@@ -8,5 +8,6 @@ export * from "./doctorsService";
 export * from "./userService";
 export * from "./prescriptionsService";
 export * from "./appointmentsService";
+export * from "./searchUtils";
 export * from "./cacheConfig";
 export * from "./cachedDataService";

@@ -1,7 +1,7 @@
-import { doc, onSnapshot, setDoc, getDoc } from "firebase/firestore";
+import { doc, onSnapshot, setDoc, getDoc, collection, query, where, limit, getDocs } from "firebase/firestore";
 import { UserProfile } from "./types";
-import { INITIAL_USER } from "./mockData";
 import { db, isLiveFirebaseConfigured } from "@/lib/firebaseConfig";
+import { generatePatientKeywords, normalizePhoneDigits, normalizeSearchQuery } from "./searchUtils";
 
 const LOCAL_STORAGE_KEY_USER_PROFILE = "pronto_user_profile";
 const COOKIE_KEY_USER_UID = "pronto_uid";
@@ -178,13 +178,29 @@ export async function updateUserProfile(
     phone: data.phone || "",
     role: "patient" as const,
   };
+
+  const finalName = data.name !== undefined ? data.name : current.name;
+  const finalPhone = data.phone !== undefined ? data.phone : current.phone;
+  const finalHealthId = data.healthId !== undefined ? data.healthId : current.healthId;
+  const finalAddress = {
+    ...(current.address || {}),
+    ...(data.address || {}),
+  };
+
+  const phoneDigits = normalizePhoneDigits(finalPhone);
+  const searchKeywords = generatePatientKeywords({
+    name: finalName,
+    phone: finalPhone,
+    healthId: finalHealthId,
+    address: finalAddress,
+  });
+
   const updated: UserProfile = {
     ...current,
     ...data,
-    address: {
-      ...(current.address || {}),
-      ...(data.address || {}),
-    },
+    phoneDigits,
+    searchKeywords,
+    address: finalAddress,
   };
 
   if (isLiveFirebaseConfigured && db) {
@@ -198,4 +214,52 @@ export async function updateUserProfile(
 
   saveStoredUserProfile(updated);
   return updated;
+}
+
+/**
+ * Admin Patient Search: Searches Firestore users collection using phone, healthId, or searchKeywords.
+ * Cost-effective: 1 read per matched record, max limitCount.
+ */
+export async function searchPatients(searchTerm: string, limitCount = 20): Promise<UserProfile[]> {
+  const term = normalizeSearchQuery(searchTerm);
+  if (!term) return [];
+
+  // 1. Direct O(1) Key Lookup if 10-digit phone
+  const digits = normalizePhoneDigits(searchTerm);
+  if (digits.length === 10) {
+    if (isLiveFirebaseConfigured && db) {
+      try {
+        const snap = await getDoc(doc(db, "users", `user-ph-${digits}`));
+        if (snap.exists()) {
+          return [snap.data() as UserProfile];
+        }
+      } catch (err) {
+        console.warn("Direct phone lookup error:", err);
+      }
+    }
+  }
+
+  // 2. Query by searchKeywords using array-contains
+  if (isLiveFirebaseConfigured && db) {
+    try {
+      const q = query(
+        collection(db, "users"),
+        where("searchKeywords", "array-contains", term),
+        limit(limitCount)
+      );
+      const snap = await getDocs(q);
+      const results: UserProfile[] = [];
+      snap.forEach((docSnap) => results.push(docSnap.data() as UserProfile));
+      if (results.length > 0) return results;
+    } catch (err) {
+      console.warn("Firestore searchPatients failed:", err);
+    }
+  }
+
+  // Local fallback (offline / demo)
+  const stored = getStoredUserProfile();
+  if (stored && stored.searchKeywords?.some((k) => k.includes(term))) {
+    return [stored];
+  }
+  return [];
 }

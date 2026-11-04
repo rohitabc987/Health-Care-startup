@@ -3,6 +3,7 @@ import { normalizePhoneNumber, verifyOtpCode } from "@/lib/otpStore";
 import { getUserProfileServer, generateHealthId } from "@/lib/userService";
 import { INITIAL_DOCTORS } from "@/lib/mockData";
 import { UserRole, UserProfile } from "@/lib/types";
+import { generatePatientKeywords } from "@/lib/searchUtils";
 
 export async function POST(req: Request) {
   try {
@@ -65,34 +66,51 @@ export async function POST(req: Request) {
       userProfile = {
         ...existingUser,
         phone: normalizedPhone,
+        phoneDigits: digitsOnly,
         role: determinedRole,
         doctorId: determinedDoctorId || existingUser.doctorId,
         isNewUser: false,
+        searchKeywords: generatePatientKeywords({
+          name: existingUser.name,
+          phone: normalizedPhone,
+          healthId: existingUser.healthId,
+          address: existingUser.address,
+        }),
       };
     } else {
       const isDefaultDemoUser = normalizedPhone === "+919876543210";
       const name = isSuperAdmin
         ? (existingUser?.name && !existingUser.name.startsWith("Patient") ? existingUser.name : "Super Admin")
         : matchedDoctor
-        ? matchedDoctor.name
-        : isDefaultDemoUser
-        ? "Rahul Verma"
-        : (existingUser?.name || `Patient (+91 ${digitsOnly.slice(0, 5)} ${digitsOnly.slice(5)})`);
+          ? matchedDoctor.name
+          : isDefaultDemoUser
+            ? "Rahul Verma"
+            : (existingUser?.name || `Patient (+91 ${digitsOnly.slice(0, 5)} ${digitsOnly.slice(5)})`);
+
+      const finalHealthId = existingUser?.healthId || healthId;
+      const finalAddress = existingUser?.address || (isDefaultDemoUser ? {
+        locality: "Gomti Nagar",
+        city: "Kanpur",
+      } : undefined);
 
       userProfile = {
         uid,
         phone: normalizedPhone,
+        phoneDigits: digitsOnly,
         name,
         age: existingUser?.age || (isDefaultDemoUser ? 28 : undefined),
         gender: existingUser?.gender || (isDefaultDemoUser ? "male" : undefined),
         role: determinedRole,
         doctorId: determinedDoctorId,
-        healthId: existingUser?.healthId || healthId,
+        healthId: finalHealthId,
         isNewUser: isDefaultDemoUser || isSuperAdmin || matchedDoctor ? false : (existingUser?.isNewUser ?? true),
-        address: existingUser?.address || (isDefaultDemoUser ? {
-          locality: "Gomti Nagar",
-          city: "Lucknow",
-        } : undefined),
+        address: finalAddress,
+        searchKeywords: generatePatientKeywords({
+          name,
+          phone: normalizedPhone,
+          healthId: finalHealthId,
+          address: finalAddress,
+        }),
       };
     }
 
