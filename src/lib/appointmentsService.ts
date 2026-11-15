@@ -1,6 +1,7 @@
 import { 
   collection, 
   addDoc, 
+  setDoc,
   serverTimestamp, 
   query, 
   where, 
@@ -14,7 +15,7 @@ import {
   count, 
   sum 
 } from "firebase/firestore";
-import { Appointment, AppointmentStatus } from "./types";
+import { Appointment, AppointmentStatus, AppointmentQueueStatus } from "./types";
 import { INITIAL_APPOINTMENTS } from "./mockData";
 import { db, isLiveFirebaseConfigured } from "@/lib/firebaseConfig";
 import { generateAppointmentKeywords, normalizePhoneDigits, normalizeSearchQuery } from "./searchUtils";
@@ -331,7 +332,9 @@ export async function updateAppointmentStatus(
   if (isLiveFirebaseConfigured && db) {
     try {
       const docRef = doc(db, "appointments", appointmentId);
-      await updateDoc(docRef, { status });
+      const localItem = getStoredAppointments().find((a) => a.id === appointmentId);
+      const mergedData = localItem ? { ...localItem, status } : { status };
+      await setDoc(docRef, mergedData, { merge: true });
       return;
     } catch (err) {
       console.warn("Firestore update error, updating local store:", err);
@@ -341,4 +344,126 @@ export async function updateAppointmentStatus(
   const current = getStoredAppointments();
   const updated = current.map((item) => (item.id === appointmentId ? { ...item, status } : item));
   saveStoredAppointments(updated);
+}
+
+/**
+ * Fetch a single appointment by ID (Server or Client fallback)
+ */
+export async function getAppointmentById(appointmentId: string): Promise<Appointment | null> {
+  if (isLiveFirebaseConfigured && db) {
+    try {
+      const snap = await getDocs(query(collection(db, "appointments"), where("__name__", "==", appointmentId)));
+      if (!snap.empty) {
+        const d = snap.docs[0];
+        return { id: d.id, ...(d.data() as Omit<Appointment, "id">) };
+      }
+    } catch (err) {
+      console.warn("getAppointmentById Firestore lookup error:", err);
+    }
+  }
+
+  const list = getStoredAppointments();
+  return list.find((a) => a.id === appointmentId) || null;
+}
+
+/**
+ * Update an appointment's queue status and tele-consultation metadata
+ */
+export async function updateAppointmentQueueStatus(
+  appointmentId: string,
+  queueStatus: AppointmentQueueStatus,
+  metadata?: {
+    consultationOutcome?: 'continued_meds' | 'dose_adjusted' | 'escalated_to_clinic';
+    consultationNotes?: string;
+    preCheckNotes?: string;
+    meetingRoomUrl?: string;
+  }
+): Promise<void> {
+  const updatePayload: Record<string, any> = { queueStatus };
+  if (metadata?.consultationOutcome) updatePayload.consultationOutcome = metadata.consultationOutcome;
+  if (metadata?.consultationNotes !== undefined) updatePayload.consultationNotes = metadata.consultationNotes;
+  if (metadata?.preCheckNotes !== undefined) updatePayload.preCheckNotes = metadata.preCheckNotes;
+  if (metadata?.meetingRoomUrl) updatePayload.meetingRoomUrl = metadata.meetingRoomUrl;
+
+  if (queueStatus === 'completed') {
+    updatePayload.status = 'Screening Complete';
+  } else if (queueStatus === 'escalated') {
+    updatePayload.status = 'Escalated to Physical Visit';
+    updatePayload.queueBypassCode = `FAST-PASS-${Math.floor(100 + Math.random() * 900)}`;
+  }
+
+  if (isLiveFirebaseConfigured && db) {
+    try {
+      const docRef = doc(db, "appointments", appointmentId);
+      const localItem = getStoredAppointments().find((a) => a.id === appointmentId);
+      const mergedData = localItem ? { ...localItem, ...updatePayload } : updatePayload;
+      await setDoc(docRef, mergedData, { merge: true });
+      return;
+    } catch (err) {
+      console.warn("Firestore updateAppointmentQueueStatus error, updating local store:", err);
+    }
+  }
+
+  const current = getStoredAppointments();
+  const updated = current.map((item) =>
+    item.id === appointmentId ? { ...item, ...updatePayload } : item
+  );
+  saveStoredAppointments(updated);
+}
+
+/**
+ * Real-time listener for Doctor's Live Virtual Queue
+ * Queries without requiring Firebase Composite Indexes; sorts in memory
+ */
+export function subscribeToDoctorQueue(
+  doctorId: string | undefined,
+  callback: (appointments: Appointment[]) => void
+): () => void {
+  // Local subscriber
+  const localCb = (all: Appointment[]) => {
+    const filtered = doctorId ? all.filter((a) => a.doctorId === doctorId) : all;
+    callback(filtered);
+  };
+  appointmentSubscribers.push(localCb);
+
+  let unsubscribeFirestore: (() => void) | undefined = undefined;
+
+  if (isLiveFirebaseConfigured && db) {
+    try {
+      // Avoid composite index: query by doctorId single field (or all), sort in client memory
+      const q = doctorId
+        ? query(collection(db, "appointments"), where("doctorId", "==", doctorId))
+        : query(collection(db, "appointments"));
+
+      unsubscribeFirestore = onSnapshot(
+        q,
+        (snapshot) => {
+          const list: Appointment[] = [];
+          snapshot.forEach((docSnap) => {
+            list.push({ id: docSnap.id, ...(docSnap.data() as Omit<Appointment, "id">) });
+          });
+          if (list.length > 0) {
+            // Sort in memory by createdAt descending
+            list.sort((a, b) => {
+              const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+              const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+              return timeB - timeA;
+            });
+            callback(list);
+          }
+        },
+        (error) => {
+          console.warn("subscribeToDoctorQueue Firestore error:", error);
+        }
+      );
+    } catch (err) {
+      console.warn("subscribeToDoctorQueue setup error:", err);
+    }
+  }
+
+  return () => {
+    if (unsubscribeFirestore) unsubscribeFirestore();
+    const idx = appointmentSubscribers.indexOf(localCb);
+    if (idx !== -1) appointmentSubscribers.splice(idx, 1);
+  };
 }

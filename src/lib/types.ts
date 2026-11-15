@@ -53,6 +53,14 @@ export type AppointmentStatus =
   | 'Escalated to Physical Visit' 
   | 'Screening Complete';
 
+export type AppointmentQueueStatus = 
+  | 'waiting_precheck'   // Fresh appointment, waiting for care team to ping
+  | 'ready_for_doctor'   // Verified audio & network, waiting in runway for doctor
+  | 'in_consultation'    // Currently live with doctor
+  | 'parked_tech_issue'  // Network drop / unreachable; coordinator troubleshooting
+  | 'completed'          // Follow-up consultation completed
+  | 'escalated';         // Physical clinic visit required
+
 export interface Appointment {
   id: string;
   patientUid: string;
@@ -74,6 +82,15 @@ export interface Appointment {
   notes?: string;
   queueBypassCode?: string; // High-priority clinic bypass token if escalated
   searchKeywords?: string[];
+
+  // Virtual Queue & Tele-Consult Fields:
+  queueStatus?: AppointmentQueueStatus;
+  meetingRoomUrl?: string;          // e.g. https://meet.jit.si/livesehat-apt-123
+  queueOrder?: number;              // FIFO sorting rank
+  consultationOutcome?: 'continued_meds' | 'dose_adjusted' | 'escalated_to_clinic';
+  consultationNotes?: string;
+  preCheckNotes?: string;           // e.g. "4G verified, has fever reports"
+  prescriptionSlipUrl?: string;     // Link to patient's latest slip for quick preview
 }
 
 export interface PrescriptionRecord {

@@ -251,6 +251,43 @@ export function ProfileDropdown({ isOpen, onClose, currentLocation = "Viram Khan
             </button>
           </div>
 
+          {/* Live Virtual Queue & Doctor Hot-Seat Links */}
+          <div className="pt-1 border-t border-gray-150 space-y-1">
+            <Link
+              href="/admin/queue"
+              onClick={onClose}
+              className="w-full p-2.5 rounded-2xl bg-amber-500/10 hover:bg-amber-500/15 text-amber-900 border border-amber-500/20 transition-colors flex items-center justify-between group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-bold">
+                  <ShieldCheck className="w-4 h-4" />
+                </div>
+                <div className="text-left">
+                  <p className="font-bold text-gray-900 group-hover:text-amber-950">Live Queue Runway</p>
+                  <p className="text-[11px] text-amber-800/80">Care team pre-check &amp; staging</p>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-amber-600 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+
+            <Link
+              href="/doctor/consultation"
+              onClick={onClose}
+              className="w-full p-2.5 rounded-2xl bg-emerald-500/10 hover:bg-emerald-500/15 text-emerald-900 border border-emerald-500/20 transition-colors flex items-center justify-between group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold">
+                  <Stethoscope className="w-4 h-4" />
+                </div>
+                <div className="text-left">
+                  <p className="font-bold text-gray-900 group-hover:text-emerald-950">Doctor Hot-Seat</p>
+                  <p className="text-[11px] text-emerald-800/80">High-throughput consultation desk</p>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-emerald-600 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+          </div>
+
           {/* Role-Based Operations Desk Link */}
           {user?.role === "super_admin" ? (
             <div>

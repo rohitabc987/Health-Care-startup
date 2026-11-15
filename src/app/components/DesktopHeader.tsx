@@ -25,6 +25,8 @@ export function DesktopHeader() {
     { label: "Home", href: "/" },
     { label: "My Bookings", href: "/bookings", count: activeBookingsCount },
     { label: "Prescriptions", href: "/prescriptions" },
+    { label: "Live Queue", href: "/admin/queue" },
+    { label: "Doctor Hot-Seat", href: "/doctor/consultation" },
   ];
 
   return (
