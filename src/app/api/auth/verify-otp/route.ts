@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { normalizePhoneNumber, verifyOtpCode } from "@/lib/otpStore";
 import { getUserProfileServer, generateHealthId } from "@/lib/userService";
-import { INITIAL_DOCTORS } from "@/lib/mockData";
-import { UserRole, UserProfile } from "@/lib/types";
+import { UserRole, UserProfile, Doctor } from "@/lib/types";
 import { generatePatientKeywords } from "@/lib/searchUtils";
+import { db, isLiveFirebaseConfigured } from "@/lib/firebaseConfig";
+import { collection, query, where, getDocs } from "firebase/firestore";
 
 export async function POST(req: Request) {
   try {
@@ -33,15 +34,27 @@ export async function POST(req: Request) {
     const healthId = generateHealthId(normalizedPhone);
 
     // Role-Based Access Control resolution:
-    const superAdminPhones = (process.env.SUPER_ADMIN_PHONES || "+919455768694,+919876543210")
+    const superAdminPhones = (process.env.SUPER_ADMIN_PHONES || "+919455768694")
       .split(",")
       .map((p) => normalizePhoneNumber(p.trim()));
     const isSuperAdmin = superAdminPhones.includes(normalizedPhone);
 
-    // Check if phone matches any registered doctor
-    const matchedDoctor = INITIAL_DOCTORS.find(
-      (doc) => doc.phone && normalizePhoneNumber(doc.phone) === normalizedPhone
-    );
+    // Check if phone matches any registered doctor in Firestore database
+    let matchedDoctor: Doctor | undefined = undefined;
+    if (isLiveFirebaseConfigured && db) {
+      try {
+        const docQuery = query(
+          collection(db, "doctors"),
+          where("phoneDigits", "==", digitsOnly)
+        );
+        const docSnap = await getDocs(docQuery);
+        if (!docSnap.empty) {
+          matchedDoctor = { id: docSnap.docs[0].id, ...(docSnap.docs[0].data() as Omit<Doctor, "id">) };
+        }
+      } catch (e) {
+        console.warn("Doctor lookup in verify-otp failed:", e);
+      }
+    }
 
     // Check if user already exists in Firestore database
     const existingUser = await getUserProfileServer(uid);
@@ -78,32 +91,26 @@ export async function POST(req: Request) {
         }),
       };
     } else {
-      const isDefaultDemoUser = normalizedPhone === "+919876543210";
       const name = isSuperAdmin
         ? (existingUser?.name && !existingUser.name.startsWith("Patient") ? existingUser.name : "Super Admin")
         : matchedDoctor
           ? matchedDoctor.name
-          : isDefaultDemoUser
-            ? "Rahul Verma"
-            : (existingUser?.name || `Patient (+91 ${digitsOnly.slice(0, 5)} ${digitsOnly.slice(5)})`);
+          : (existingUser?.name || `Patient (+91 ${digitsOnly.slice(0, 5)} ${digitsOnly.slice(5)})`);
 
       const finalHealthId = existingUser?.healthId || healthId;
-      const finalAddress = existingUser?.address || (isDefaultDemoUser ? {
-        locality: "Gomti Nagar",
-        city: "Kanpur",
-      } : undefined);
+      const finalAddress = existingUser?.address || undefined;
 
       userProfile = {
         uid,
         phone: normalizedPhone,
         phoneDigits: digitsOnly,
         name,
-        age: existingUser?.age || (isDefaultDemoUser ? 28 : undefined),
-        gender: existingUser?.gender || (isDefaultDemoUser ? "male" : undefined),
+        age: existingUser?.age || undefined,
+        gender: existingUser?.gender || undefined,
         role: determinedRole,
         doctorId: determinedDoctorId,
         healthId: finalHealthId,
-        isNewUser: isDefaultDemoUser || isSuperAdmin || matchedDoctor ? false : (existingUser?.isNewUser ?? true),
+        isNewUser: isSuperAdmin || Boolean(matchedDoctor) ? false : (existingUser?.isNewUser ?? true),
         address: finalAddress,
         searchKeywords: generatePatientKeywords({
           name,

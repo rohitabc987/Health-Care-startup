@@ -16,7 +16,6 @@ import {
   sum 
 } from "firebase/firestore";
 import { Appointment, AppointmentStatus, AppointmentQueueStatus } from "./types";
-import { INITIAL_APPOINTMENTS } from "./mockData";
 import { db, isLiveFirebaseConfigured } from "@/lib/firebaseConfig";
 import { generateAppointmentKeywords, normalizePhoneDigits, normalizeSearchQuery } from "./searchUtils";
 
@@ -24,16 +23,29 @@ const LOCAL_STORAGE_KEY_APPOINTMENTS = "pronto_medical_appointments";
 const appointmentSubscribers: Array<(appointments: Appointment[]) => void> = [];
 
 export function getStoredAppointments(): Appointment[] {
-  if (typeof window === "undefined") return INITIAL_APPOINTMENTS;
+  if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(LOCAL_STORAGE_KEY_APPOINTMENTS);
-    if (!raw) {
-      localStorage.setItem(LOCAL_STORAGE_KEY_APPOINTMENTS, JSON.stringify(INITIAL_APPOINTMENTS));
-      return INITIAL_APPOINTMENTS;
+    if (!raw) return [];
+    if (raw.includes("apt-101") || raw.includes("Rahul Verma") || raw.includes("Dr. Ananya Sharma")) {
+      localStorage.removeItem(LOCAL_STORAGE_KEY_APPOINTMENTS);
+      return [];
     }
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      const cleaned = parsed.filter(
+        (a) => !["apt-101", "apt-102", "apt-103", "apt-104"].includes(a.id) &&
+               a.patientName !== "Rahul Verma" &&
+               a.doctorName !== "Dr. Ananya Sharma"
+      );
+      if (cleaned.length !== parsed.length) {
+        localStorage.setItem(LOCAL_STORAGE_KEY_APPOINTMENTS, JSON.stringify(cleaned));
+      }
+      return cleaned;
+    }
+    return [];
   } catch {
-    return INITIAL_APPOINTMENTS;
+    return [];
   }
 }
 
@@ -49,25 +61,28 @@ export function saveStoredAppointments(data: Appointment[]) {
 }
 
 /**
- * Server-Side Fetcher for Server Components (e.g. /bookings page.tsx)
+ * Server-Side Fetcher for Server Components (e.g. /bookings, /admin/queue, /doctor/consultation)
+ * Queries strictly from Firestore database.
  */
-export async function getAppointmentsServer(patientUid = "patient-demo-001"): Promise<Appointment[]> {
+export async function getAppointmentsServer(patientUid?: string): Promise<Appointment[]> {
   if (isLiveFirebaseConfigured && db) {
     try {
-      const q = query(
-        collection(db, "appointments"),
-        where("patientUid", "==", patientUid),
-        orderBy("createdAt", "desc")
-      );
+      const q = patientUid
+        ? query(
+            collection(db, "appointments"),
+            where("patientUid", "==", patientUid),
+            orderBy("createdAt", "desc")
+          )
+        : query(collection(db, "appointments"), orderBy("createdAt", "desc"));
       const snap = await getDocs(q);
       const list: Appointment[] = [];
       snap.forEach((d) => list.push({ id: d.id, ...(d.data() as Omit<Appointment, "id">) }));
-      if (list.length > 0) return list;
+      return list;
     } catch (err) {
-      console.warn("getAppointmentsServer error, fallback to initial:", err);
+      console.warn("getAppointmentsServer error:", err);
     }
   }
-  return INITIAL_APPOINTMENTS.filter((a) => a.patientUid === patientUid);
+  return [];
 }
 
 /**
@@ -97,11 +112,7 @@ export function subscribeToAppointments(
           snapshot.forEach((docSnap) => {
             list.push({ id: docSnap.id, ...(docSnap.data() as Omit<Appointment, "id">) });
           });
-          if (list.length > 0) {
-            callback(list);
-          } else {
-            callback(getStoredAppointments().filter((a) => a.patientUid === patientUid));
-          }
+          callback(list);
         },
         (error) => {
           console.warn("Firestore onSnapshot error, fallback to local store:", error);
@@ -114,7 +125,7 @@ export function subscribeToAppointments(
     }
   }
 
-  // Initial emit with local/mock data
+  // Initial emit with local data
   callback(getStoredAppointments().filter((a) => a.patientUid === patientUid));
 
   return () => {
@@ -146,11 +157,16 @@ export async function bookAppointment(
     queueBypassCode,
   });
 
+  const generatedId = `apt-${Date.now()}`;
+  const meetingRoomUrl = data.meetingRoomUrl || `https://meet.jit.si/livesehat-tele-${generatedId}`;
+
   const newAppointment: Appointment = {
     ...data,
-    id: `apt-${Date.now()}`,
+    id: generatedId,
     patientPhoneDigits,
     status: "Pending Screening",
+    queueStatus: data.queueStatus || "waiting_precheck",
+    meetingRoomUrl,
     createdAt: new Date().toISOString(),
     queueBypassCode,
     searchKeywords,
@@ -197,12 +213,10 @@ export async function getTodayOverallSales(dateStr?: string): Promise<{ totalPat
         totalRevenue: sum("consultationFee"),
       });
       const data = snapshot.data();
-      if ((data.totalPatients || 0) > 0) {
-        return {
-          totalPatients: data.totalPatients || 0,
-          totalRevenue: data.totalRevenue || 0,
-        };
-      }
+      return {
+        totalPatients: data.totalPatients || 0,
+        totalRevenue: data.totalRevenue || 0,
+      };
     } catch (err) {
       console.warn("getAggregateFromServer failed, falling back to local calculation:", err);
     }
@@ -238,12 +252,10 @@ export async function getDoctorDailySales(
         doctorRevenue: sum("consultationFee"),
       });
       const data = snapshot.data();
-      if ((data.doctorPatients || 0) > 0) {
-        return {
-          doctorPatients: data.doctorPatients || 0,
-          doctorRevenue: data.doctorRevenue || 0,
-        };
-      }
+      return {
+        doctorPatients: data.doctorPatients || 0,
+        doctorRevenue: data.doctorRevenue || 0,
+      };
     } catch (err) {
       console.warn("getDoctorDailySales aggregate failed, falling back to local calculation:", err);
     }
@@ -442,27 +454,32 @@ export function subscribeToDoctorQueue(
           snapshot.forEach((docSnap) => {
             list.push({ id: docSnap.id, ...(docSnap.data() as Omit<Appointment, "id">) });
           });
-          if (list.length > 0) {
-            // Sort in memory by createdAt descending
-            list.sort((a, b) => {
-              const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-              const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-              return timeB - timeA;
-            });
-            callback(list);
-          }
+          list.sort((a, b) => {
+            const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+            const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+            return timeB - timeA;
+          });
+          callback(list);
         },
         (error) => {
-          console.warn("subscribeToDoctorQueue Firestore error:", error);
+          if (error.name !== "AbortError") {
+            console.warn("subscribeToDoctorQueue Firestore error:", error);
+          }
         }
       );
-    } catch (err) {
-      console.warn("subscribeToDoctorQueue setup error:", err);
+    } catch (err: any) {
+      if (err.name !== "AbortError") {
+        console.warn("subscribeToDoctorQueue setup error:", err);
+      }
     }
   }
 
   return () => {
-    if (unsubscribeFirestore) unsubscribeFirestore();
+    if (unsubscribeFirestore) {
+      try {
+        unsubscribeFirestore();
+      } catch {}
+    }
     const idx = appointmentSubscribers.indexOf(localCb);
     if (idx !== -1) appointmentSubscribers.splice(idx, 1);
   };

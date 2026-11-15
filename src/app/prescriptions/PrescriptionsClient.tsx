@@ -5,7 +5,7 @@ import Link from "next/link";
 import {
   PrescriptionRecord,
   subscribeToPrescriptions,
-  INITIAL_DOCTORS,
+  subscribeToDoctors,
   Doctor
 } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
@@ -28,10 +28,16 @@ export function PrescriptionsClient({ initialPrescriptions, serverUid }: Prescri
   const { user, isAuthenticated, openLoginModal } = useAuth();
   const isUserAuthenticated = Boolean(serverUid || isAuthenticated || user?.uid);
   const [prescriptions, setPrescriptions] = useState<PrescriptionRecord[]>(initialPrescriptions);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [previewPrescription, setPreviewPrescription] = useState<PrescriptionRecord | null>(null);
   const [bookingDoctor, setBookingDoctor] = useState<Doctor | null>(null);
 
   const effectiveUid = user?.uid || serverUid;
+
+  useEffect(() => {
+    const unsub = subscribeToDoctors((list) => setDoctors(list));
+    return () => unsub();
+  }, []);
 
   useEffect(() => {
     if (!effectiveUid) {
@@ -50,10 +56,12 @@ export function PrescriptionsClient({ initialPrescriptions, serverUid }: Prescri
   }, [effectiveUid]);
 
   const handleBookFollowup = (docName: string) => {
-    const matched = INITIAL_DOCTORS.find(
+    const matched = doctors.find(
       (d) => d.name.toLowerCase() === docName.toLowerCase()
-    ) || INITIAL_DOCTORS[0];
-    setBookingDoctor(matched);
+    ) || doctors[0] || null;
+    if (matched) {
+      setBookingDoctor(matched);
+    }
   };
 
   return (

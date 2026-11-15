@@ -180,15 +180,35 @@ export function HomeClient({ initialDoctors }: HomeClientProps) {
           </span>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
-          {filteredDoctors.map((doc) => (
-            <DoctorCard
-              key={doc.id}
-              doctor={doc}
-              onBookingSuccess={() => router.push("/bookings")}
-            />
-          ))}
-        </div>
+        {filteredDoctors.length === 0 ? (
+          <div className="bg-white rounded-3xl border border-gray-150 p-6 sm:p-8 text-center max-w-md mx-auto space-y-3.5 shadow-2xs">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
+              <Stethoscope className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-gray-900">No Doctors Registered in Catalog</h3>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Onboard doctors in the Admin Desk to allow patients to book online follow-up slots.
+              </p>
+            </div>
+            <Link
+              href="/admin"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-2xl shadow-sm transition-all"
+            >
+              Add Doctor in Admin Desk
+            </Link>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
+            {filteredDoctors.map((doc) => (
+              <DoctorCard
+                key={doc.id}
+                doctor={doc}
+                onBookingSuccess={() => router.push("/bookings")}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

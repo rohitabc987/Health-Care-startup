@@ -6,7 +6,8 @@ import {
   Appointment,
   subscribeToDoctorQueue,
   updateAppointmentQueueStatus,
-  INITIAL_DOCTORS
+  subscribeToDoctors,
+  Doctor
 } from "@/lib/firebase";
 import { TeleConsultationRoom } from "@/app/components/TeleConsultationRoom";
 import {
@@ -31,21 +32,34 @@ interface DoctorConsultationClientProps {
 
 export function DoctorConsultationClient({ initialAppointments }: DoctorConsultationClientProps) {
   const [appointments, setAppointments] = useState<Appointment[]>(initialAppointments);
-  const [selectedDoctorId, setSelectedDoctorId] = useState<string>("doc-1");
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [selectedDoctorId, setSelectedDoctorId] = useState<string>("");
   const [selectedOutcome, setSelectedOutcome] = useState<"continued_meds" | "dose_adjusted" | "escalated_to_clinic">("continued_meds");
   const [doctorNotes, setDoctorNotes] = useState<string>("Review complete. Patient is recovering well, continue current medication.");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewPrescriptionUrl, setPreviewPrescriptionUrl] = useState<string | null>(null);
 
+  // Subscribe to real doctors from Firestore
+  useEffect(() => {
+    const unsub = subscribeToDoctors((docs) => {
+      setDoctors(docs);
+      if (docs.length > 0 && !selectedDoctorId) {
+        setSelectedDoctorId(docs[0].id);
+      }
+    });
+    return () => unsub();
+  }, [selectedDoctorId]);
+
   // Subscribe to live queue updates for this doctor
   useEffect(() => {
+    if (!selectedDoctorId) return;
     const unsub = subscribeToDoctorQueue(selectedDoctorId, (list) => {
       setAppointments(list);
     });
     return () => unsub();
   }, [selectedDoctorId]);
 
-  const activeDoctor = INITIAL_DOCTORS.find((d) => d.id === selectedDoctorId) || INITIAL_DOCTORS[0];
+  const activeDoctor = doctors.find((d) => d.id === selectedDoctorId) || doctors[0];
 
   // Separate currently active patient from the ready queue
   const currentConsulting = appointments.find((a) => a.queueStatus === "in_consultation");
@@ -95,13 +109,37 @@ export function DoctorConsultationClient({ initialAppointments }: DoctorConsulta
     currentConsulting?.prescriptionSlipUrl ||
     "https://res.cloudinary.com/ptq7bun2/image/upload/q_auto:good,f_auto,w_1600,c_limit,e_auto_contrast/prescription_demo.jpg";
 
+  if (doctors.length === 0) {
+    return (
+      <div className="max-w-md mx-auto my-12 bg-white rounded-3xl border border-gray-150 p-6 sm:p-8 text-center space-y-4 shadow-sm animate-in fade-in">
+        <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto shadow-inner">
+          <Video className="w-7 h-7" />
+        </div>
+        <div>
+          <h2 className="text-base font-bold text-gray-900">No Doctors Registered in Database</h2>
+          <p className="text-xs text-gray-500 mt-1">
+            Please register or add a doctor in the Admin panel to start live video consultations.
+          </p>
+        </div>
+        <Link
+          href="/admin"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold rounded-2xl transition-all shadow-sm"
+        >
+          Open Admin Panel
+        </Link>
+      </div>
+    );
+  }
+
+  const doctorInitial = activeDoctor?.name?.replace("Dr. ", "").charAt(0) || "D";
+
   return (
     <div className="max-w-7xl mx-auto p-3 sm:p-5 space-y-4 animate-in fade-in duration-200">
       {/* Top Session Bar */}
       <div className="bg-white rounded-3xl border border-gray-150 p-4 sm:p-5 shadow-xs flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center font-bold text-lg shadow-sm">
-            {activeDoctor.name.charAt(4) || "D"}
+            {doctorInitial}
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -111,7 +149,7 @@ export function DoctorConsultationClient({ initialAppointments }: DoctorConsulta
               <span className="text-xs text-gray-400 font-medium">High Throughput Mode</span>
             </div>
             <h1 className="text-base sm:text-lg font-black text-gray-900 mt-0.5">
-              {activeDoctor.name} • {activeDoctor.specialty}
+              {activeDoctor?.name} • {activeDoctor?.specialty}
             </h1>
           </div>
         </div>
@@ -123,7 +161,7 @@ export function DoctorConsultationClient({ initialAppointments }: DoctorConsulta
             onChange={(e) => setSelectedDoctorId(e.target.value)}
             className="text-xs font-semibold bg-gray-50 border border-gray-200 rounded-2xl px-3 py-2 text-gray-800 focus:outline-emerald-500"
           >
-            {INITIAL_DOCTORS.map((d) => (
+            {doctors.map((d) => (
               <option key={d.id} value={d.id}>
                 {d.name}
               </option>

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { uploadPrescriptionPhoto, PrescriptionRecord, INITIAL_DOCTORS } from "@/lib/firebase";
+import { uploadPrescriptionPhoto, PrescriptionRecord, subscribeToDoctors, Doctor } from "@/lib/firebase";
 import { revalidatePatientDataAction } from "@/app/actions/cacheActions";
 import { 
   Camera, 
@@ -23,8 +23,9 @@ export function PrescriptionUpload({ patientUid, onUploadSuccess }: Prescription
   const [isUploading, setIsUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [doctorName, setDoctorName] = useState(INITIAL_DOCTORS[0]?.name || "Dr. Ananya Sharma");
-  const [clinicName, setClinicName] = useState(INITIAL_DOCTORS[0]?.clinic || "Apollo Clinic, Gomti Nagar");
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [doctorName, setDoctorName] = useState("");
+  const [clinicName, setClinicName] = useState("");
   const [visitDate, setVisitDate] = useState("2026-10-25");
   const [chiefComplaint, setChiefComplaint] = useState("");
   const [uploadSuccess, setUploadSuccess] = useState(false);
@@ -32,7 +33,15 @@ export function PrescriptionUpload({ patientUid, onUploadSuccess }: Prescription
 
   useEffect(() => {
     setVisitDate(new Date().toISOString().split("T")[0]);
-  }, []);
+    const unsub = subscribeToDoctors((docs) => {
+      setDoctors(docs);
+      if (docs.length > 0 && !doctorName) {
+        setDoctorName(docs[0].name);
+        setClinicName(docs[0].clinic);
+      }
+    });
+    return () => unsub();
+  }, [doctorName]);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const cameraInputRef = useRef<HTMLInputElement | null>(null);
@@ -53,7 +62,7 @@ export function PrescriptionUpload({ patientUid, onUploadSuccess }: Prescription
 
   const handleDoctorChange = (docName: string) => {
     setDoctorName(docName);
-    const found = INITIAL_DOCTORS.find((d) => d.name === docName);
+    const found = doctors.find((d) => d.name === docName);
     if (found) {
       setClinicName(found.clinic);
     }
@@ -237,17 +246,27 @@ export function PrescriptionUpload({ patientUid, onUploadSuccess }: Prescription
               <label className="text-[11px] font-bold text-gray-700 block mb-1">
                 Consulting Doctor
               </label>
-              <select
-                value={doctorName}
-                onChange={(e) => handleDoctorChange(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white font-medium text-gray-800 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-              >
-                {INITIAL_DOCTORS.map((d) => (
-                  <option key={d.id} value={d.name}>
-                    {d.name} ({d.specialty})
-                  </option>
-                ))}
-              </select>
+              {doctors.length > 0 ? (
+                <select
+                  value={doctorName}
+                  onChange={(e) => handleDoctorChange(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white font-medium text-gray-800 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                >
+                  {doctors.map((d) => (
+                    <option key={d.id} value={d.name}>
+                      {d.name} ({d.specialty})
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  placeholder="Doctor Name (e.g. Dr. Rajesh Verma)"
+                  value={doctorName}
+                  onChange={(e) => setDoctorName(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white font-medium text-gray-800 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                />
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-2">

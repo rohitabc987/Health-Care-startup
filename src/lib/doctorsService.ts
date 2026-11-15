@@ -11,7 +11,6 @@ import {
   limit
 } from "firebase/firestore";
 import { Doctor } from "./types";
-import { INITIAL_DOCTORS } from "./mockData";
 import { db, isLiveFirebaseConfigured } from "@/lib/firebaseConfig";
 import { generateDoctorKeywords, normalizePhoneDigits, normalizeSearchQuery } from "./searchUtils";
 
@@ -19,17 +18,24 @@ const LOCAL_STORAGE_KEY_DOCTORS = "pronto_doctors_catalog";
 const doctorSubscribers: Array<(doctors: Doctor[]) => void> = [];
 
 export function getStoredDoctors(): Doctor[] {
-  if (typeof window === "undefined") return INITIAL_DOCTORS;
+  if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(LOCAL_STORAGE_KEY_DOCTORS);
-    if (!raw) {
-      localStorage.setItem(LOCAL_STORAGE_KEY_DOCTORS, JSON.stringify(INITIAL_DOCTORS));
-      return INITIAL_DOCTORS;
-    }
+    if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : INITIAL_DOCTORS;
+    if (Array.isArray(parsed)) {
+      // Purge any legacy mock doctors (doc-1, doc-2, etc.)
+      const cleaned = parsed.filter(
+        (d) => !["doc-1", "doc-2", "doc-3", "doc-4"].includes(d.id) && d.name !== "Dr. Ananya Sharma"
+      );
+      if (cleaned.length !== parsed.length) {
+        localStorage.setItem(LOCAL_STORAGE_KEY_DOCTORS, JSON.stringify(cleaned));
+      }
+      return cleaned;
+    }
+    return [];
   } catch {
-    return INITIAL_DOCTORS;
+    return [];
   }
 }
 
@@ -46,7 +52,7 @@ export function saveStoredDoctors(data: Doctor[]) {
 
 /**
  * Server-Side Fetcher for Server Components (e.g. page.tsx)
- * Runs on server, returns active doctors with zero client-side latency.
+ * Queries strictly from the Firestore database.
  */
 export async function getActiveDoctorsServer(): Promise<Doctor[]> {
   if (isLiveFirebaseConfigured && db) {
@@ -55,12 +61,12 @@ export async function getActiveDoctorsServer(): Promise<Doctor[]> {
       const snap = await getDocs(q);
       const list: Doctor[] = [];
       snap.forEach((d) => list.push({ id: d.id, ...(d.data() as Omit<Doctor, "id">) }));
-      if (list.length > 0) return list;
+      return list;
     } catch (err) {
-      console.warn("getActiveDoctorsServer failed, using initial doctors:", err);
+      console.warn("getActiveDoctorsServer failed:", err);
     }
   }
-  return INITIAL_DOCTORS.filter((d) => d.isActive !== false);
+  return [];
 }
 
 export async function getDoctorByIdServer(doctorId: string): Promise<Doctor | null> {
@@ -71,31 +77,44 @@ export async function getDoctorByIdServer(doctorId: string): Promise<Doctor | nu
         return { id: snap.id, ...snap.data() } as Doctor;
       }
     } catch (err) {
-      console.warn("getDoctorByIdServer error, fallback:", err);
+      console.warn("getDoctorByIdServer error:", err);
     }
   }
-  return INITIAL_DOCTORS.find((d) => d.id === doctorId) || null;
+  return null;
 }
 
 /**
- * Real-time listener for Doctor directory
+ * Real-time listener for Doctor directory directly from Firestore database
  */
 export function subscribeToDoctors(callback: (doctors: Doctor[]) => void): () => void {
+  // Purge any legacy mock doctors from local storage
+  if (typeof window !== "undefined") {
+    try {
+      const raw = localStorage.getItem(LOCAL_STORAGE_KEY_DOCTORS);
+      if (raw && (raw.includes("doc-1") || raw.includes("Dr. Ananya Sharma"))) {
+        localStorage.removeItem(LOCAL_STORAGE_KEY_DOCTORS);
+      }
+    } catch {}
+  }
+
   if (isLiveFirebaseConfigured && db) {
     try {
       const q = query(collection(db, "doctors"));
-      const unsubscribe = onSnapshot(q, (snapshot) => {
-        const docs: Doctor[] = [];
-        snapshot.forEach((d) => docs.push({ id: d.id, ...(d.data() as Omit<Doctor, "id">) }));
-        if (docs.length > 0) {
+      const unsubscribe = onSnapshot(
+        q,
+        (snapshot) => {
+          const docs: Doctor[] = [];
+          snapshot.forEach((d) => docs.push({ id: d.id, ...(d.data() as Omit<Doctor, "id">) }));
           callback(docs);
-        } else {
+        },
+        (error) => {
+          console.warn("Doctors onSnapshot error:", error);
           callback(getStoredDoctors());
         }
-      });
+      );
       return unsubscribe;
     } catch (err) {
-      console.warn("Doctors onSnapshot error, fallback to local:", err);
+      console.warn("Doctors onSnapshot setup error:", err);
     }
   }
 

@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { Appointment, updateAppointmentStatus } from "@/lib/firebase";
-import { INITIAL_DOCTORS } from "@/lib/mockData";
 import { revalidatePatientDataAction } from "@/app/actions/cacheActions";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -89,11 +88,8 @@ export function BookingCard({ appointment, onStatusChange, showDoctorTools }: Bo
   };
 
   // Resolve doctor image and profile link
-  const matchedDoctor = INITIAL_DOCTORS.find(
-    (d) => d.id === appointment.doctorId || d.name.toLowerCase() === appointment.doctorName?.toLowerCase()
-  );
-  const doctorImage = appointment.doctorImage || matchedDoctor?.image || "/images/doctor-1.jpg";
-  const doctorProfileUrl = `/doctor/${appointment.doctorId || matchedDoctor?.id || "doc-1"}`;
+  const doctorImage = appointment.doctorImage || "/images/doctor-1.jpg";
+  const doctorProfileUrl = appointment.doctorId ? `/doctor/${appointment.doctorId}` : "/";
 
   return (
     <div className="bg-white rounded-3xl border border-gray-150 p-4 sm:p-5 shadow-xs hover:border-emerald-300 transition-all duration-200 space-y-3.5">

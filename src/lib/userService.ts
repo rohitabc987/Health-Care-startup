@@ -55,6 +55,10 @@ export function getStoredUserProfile(): UserProfile | null {
         const val = cookieMatch.substring(`${COOKIE_KEY_USER_DATA}=`.length);
         const parsedFromCookie = parseUserProfileCookie(val);
         if (parsedFromCookie?.uid) {
+          if (parsedFromCookie.uid === "patient-demo-001" || parsedFromCookie.name === "Rahul Verma") {
+            clearStoredUserProfile();
+            return null;
+          }
           localStorage.setItem(LOCAL_STORAGE_KEY_USER_PROFILE, JSON.stringify(parsedFromCookie));
           return parsedFromCookie;
         }
@@ -62,6 +66,10 @@ export function getStoredUserProfile(): UserProfile | null {
       return null;
     }
     const parsed = JSON.parse(raw);
+    if (parsed && (parsed.uid === "patient-demo-001" || parsed.name === "Rahul Verma")) {
+      clearStoredUserProfile();
+      return null;
+    }
     const user = parsed && parsed.uid ? parsed : null;
     // Auto-sync cookies if missing in browser
     if (user?.uid && typeof document !== "undefined") {
