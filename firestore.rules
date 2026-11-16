@@ -1,0 +1,44 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =====================================================
+    // 1. DOCTORS DIRECTORY
+    // - Publicly readable for patients and visitors.
+    // - Completely LOCKED from all browser / direct client writes.
+    // - Only Next.js Server Actions using Firebase Admin SDK server credentials can write.
+    // =====================================================
+    match /doctors/{doctorId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // =====================================================
+    // 2. USER PROFILES
+    // Read and write allowed for patient profiles & auth sync.
+    // =====================================================
+    match /users/{uid} {
+      allow read, write: if true;
+    }
+
+    // =====================================================
+    // 3. APPOINTMENTS & VIRTUAL QUEUE
+    // Patients create bookings; status updates handled in queue.
+    // Deletion blocked.
+    // =====================================================
+    match /appointments/{appointmentId} {
+      allow read, create, update: if true;
+      allow delete: if false;
+    }
+
+    // =====================================================
+    // 4. PRESCRIPTIONS VAULT
+    // Patients upload consultation slips & prescriptions.
+    // Deletion blocked.
+    // =====================================================
+    match /prescriptions/{prescriptionId} {
+      allow read, create, update: if true;
+      allow delete: if false;
+    }
+  }
+}

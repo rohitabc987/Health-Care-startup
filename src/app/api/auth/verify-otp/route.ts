@@ -4,7 +4,7 @@ import { getUserProfileServer, generateHealthId } from "@/lib/userService";
 import { UserRole, UserProfile, Doctor } from "@/lib/types";
 import { generatePatientKeywords } from "@/lib/searchUtils";
 import { db, isLiveFirebaseConfigured } from "@/lib/firebaseConfig";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, setDoc } from "firebase/firestore";
 
 export async function POST(req: Request) {
   try {
@@ -62,7 +62,8 @@ export async function POST(req: Request) {
     let determinedRole: UserRole = "patient";
     let determinedDoctorId: string | undefined = undefined;
 
-    if (isSuperAdmin) {
+    // 1. Direct assignment from Firestore users collection
+    if (existingUser?.role === "super_admin" || isSuperAdmin) {
       determinedRole = "super_admin";
     } else if (matchedDoctor) {
       determinedRole = "doctor";
@@ -119,6 +120,18 @@ export async function POST(req: Request) {
           address: finalAddress,
         }),
       };
+    }
+
+    // Immediately sync user profile to Firestore database
+    if (isLiveFirebaseConfigured && db) {
+      try {
+        const sanitizedProfile = Object.fromEntries(
+          Object.entries(userProfile).filter(([_, v]) => v !== undefined)
+        );
+        await setDoc(doc(db, "users", uid), sanitizedProfile, { merge: true });
+      } catch (err) {
+        console.warn("Error saving user profile to Firestore in verify-otp:", err);
+      }
     }
 
     const response = NextResponse.json({

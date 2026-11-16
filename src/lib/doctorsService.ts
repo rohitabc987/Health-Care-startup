@@ -105,6 +105,7 @@ export function subscribeToDoctors(callback: (doctors: Doctor[]) => void): () =>
         (snapshot) => {
           const docs: Doctor[] = [];
           snapshot.forEach((d) => docs.push({ id: d.id, ...(d.data() as Omit<Doctor, "id">) }));
+          saveStoredDoctors(docs);
           callback(docs);
         },
         (error) => {
@@ -144,10 +145,10 @@ export async function toggleDoctorStatus(doctorId: string, isActive: boolean): P
 
 export async function addDoctor(doctor: Omit<Doctor, "id"> & { id?: string }): Promise<string> {
   const id = doctor.id || `doc-${Date.now()}`;
-  const phoneDigits = doctor.phone ? normalizePhoneDigits(doctor.phone) : undefined;
+  const phoneDigits = doctor.phone ? normalizePhoneDigits(doctor.phone) : "";
   const searchKeywords = generateDoctorKeywords({
     name: doctor.name,
-    phone: doctor.phone,
+    phone: doctor.phone || "",
     specialty: doctor.specialty,
     clinic: doctor.clinic,
   });
@@ -155,7 +156,11 @@ export async function addDoctor(doctor: Omit<Doctor, "id"> & { id?: string }): P
   const newDoc: Doctor = {
     ...doctor,
     id,
-    phoneDigits,
+    phone: doctor.phone || "",
+    phoneDigits: phoneDigits || "",
+    experienceYears: doctor.experienceYears ?? 5,
+    availableDays: doctor.availableDays || ["Mon", "Wed", "Fri"],
+    nextAvailableDay: doctor.nextAvailableDay || "Mon, Wed, Fri",
     searchKeywords,
     isActive: doctor.isActive ?? true,
     rating: doctor.rating || 4.9,
@@ -163,9 +168,14 @@ export async function addDoctor(doctor: Omit<Doctor, "id"> & { id?: string }): P
     image: doctor.image || "/images/doctor-1.jpg",
   };
 
+  // Strip any undefined values to prevent Firestore unsupported field value errors
+  const sanitizedDoc = Object.fromEntries(
+    Object.entries(newDoc).filter(([_, v]) => v !== undefined)
+  );
+
   if (isLiveFirebaseConfigured && db) {
     try {
-      await setDoc(doc(db, "doctors", id), newDoc);
+      await setDoc(doc(db, "doctors", id), sanitizedDoc);
     } catch (err) {
       console.warn("Error adding doctor to Firestore:", err);
     }

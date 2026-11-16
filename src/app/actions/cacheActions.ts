@@ -41,7 +41,8 @@ export async function revalidateTodayAnalyticsAction() {
  */
 export async function revalidatePatientDataAction(patientUid?: string) {
   try {
-    const uid = patientUid || "patient-demo-001";
+    if (!patientUid) return { success: true };
+    const uid = patientUid;
     updateTag(CACHE_TAGS.PATIENT_BOOKINGS(uid));
     updateTag(CACHE_TAGS.PATIENT_PRESCRIPTIONS(uid));
     updateTag(CACHE_TAGS.USER_PROFILE(uid));

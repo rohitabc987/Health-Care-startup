@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { Stethoscope, ArrowLeft, LogIn } from "lucide-react";
+import { Stethoscope, ArrowLeft, LogIn, User } from "lucide-react";
 import { ProfileDropdown } from "./ProfileDropdown";
 
 // The 4 primary bottom-tab root pages where back button should be hidden
@@ -14,7 +14,12 @@ export function MobileHeader() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
+  const [mounted, setMounted] = useState(false);
   const [isMobileProfileOpen, setIsMobileProfileOpen] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const isMainTab = MAIN_TAB_ROUTES.includes(pathname);
   const showBackButton = !isMainTab;
@@ -64,43 +69,49 @@ export function MobileHeader() {
           </Link>
         </div>
 
-        {/* Right Section: Profile Avatar or Login Trigger or Skip */}
-        {isLoginPage ? (
-          <Link
-            href="/"
-            className="text-xs font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-xl transition-colors"
-          >
-            Skip
-          </Link>
-        ) : !isAuthenticated ? (
-          <Link
-            href={`/login${pathname && pathname !== "/" ? `?redirect=${encodeURIComponent(pathname)}` : ""}`}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition-all"
-          >
-            <LogIn className="w-3.5 h-3.5 stroke-[2.3]" />
-            <span>Login</span>
-          </Link>
-        ) : (
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setIsMobileProfileOpen(!isMobileProfileOpen)}
-              className={`w-8 h-8 rounded-full font-bold text-xs flex items-center justify-center transition-all ${
-                isMobileProfileOpen
-                  ? "bg-emerald-600 text-white ring-2 ring-emerald-500/30"
-                  : "bg-emerald-100 text-emerald-800 border border-emerald-300"
-              }`}
-              aria-label="Profile and Menu"
+        {/* Right Section: Neutral User Icon during SSR/Hydration, then Login or Profile */}
+        <div className="relative" suppressHydrationWarning>
+          {!mounted ? (
+            <div className="w-8 h-8 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-400">
+              <User className="w-4 h-4 text-gray-400" />
+            </div>
+          ) : isLoginPage ? (
+            <Link
+              href="/"
+              className="text-xs font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-xl transition-colors"
             >
-              {getInitials(user?.name)}
-            </button>
+              Skip
+            </Link>
+          ) : !isAuthenticated ? (
+            <Link
+              href={`/login${pathname && pathname !== "/" ? `?redirect=${encodeURIComponent(pathname)}` : ""}`}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition-all"
+            >
+              <LogIn className="w-3.5 h-3.5 stroke-[2.3]" />
+              <span>Login</span>
+            </Link>
+          ) : (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsMobileProfileOpen(!isMobileProfileOpen)}
+                className={`w-8 h-8 rounded-full font-bold text-xs flex items-center justify-center transition-all ${
+                  isMobileProfileOpen
+                    ? "bg-emerald-600 text-white ring-2 ring-emerald-500/30"
+                    : "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                }`}
+                aria-label="Profile and Menu"
+              >
+                {getInitials(user?.name)}
+              </button>
 
-            <ProfileDropdown
-              isOpen={isMobileProfileOpen}
-              onClose={() => setIsMobileProfileOpen(false)}
-            />
-          </div>
-        )}
+              <ProfileDropdown
+                isOpen={isMobileProfileOpen}
+                onClose={() => setIsMobileProfileOpen(false)}
+              />
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );

@@ -169,6 +169,14 @@ export function LoginClient() {
           !stored.name.startsWith("Patient (+91")) ||
         (data.user && !data.user.isNewUser && data.user.name && !data.user.name.startsWith("Patient (+91"));
 
+      const roleTarget =
+        data.user?.role === "super_admin"
+          ? "/admin"
+          : data.user?.role === "doctor"
+            ? "/doctor/consultation"
+            : "/bookings";
+      const finalRedirect = redirectUrl && redirectUrl !== "/" ? redirectUrl : roleTarget;
+
       if (isAlreadyConfigured) {
         const finalUser = {
           ...data.user,
@@ -176,14 +184,14 @@ export function LoginClient() {
           isNewUser: false,
         };
         login(finalUser);
-        router.push(redirectUrl);
+        router.push(finalRedirect);
       } else if (data.user?.isNewUser) {
         setVerifiedUser(data.user);
         setStep("onboarding");
       } else {
-        // Returning patient: immediate login & redirect
+        // Immediate login & role-based redirect
         login(data.user);
-        router.push(redirectUrl);
+        router.push(finalRedirect);
       }
     } catch (err: any) {
       setErrorMsg(err.message || "Invalid OTP code. Please retry.");
@@ -225,7 +233,14 @@ export function LoginClient() {
 
       await updateUserProfile(finalUser.uid, finalUser);
       login(finalUser);
-      router.push(redirectUrl);
+      const roleTarget =
+        finalUser.role === "super_admin"
+          ? "/admin"
+          : finalUser.role === "doctor"
+            ? "/doctor/consultation"
+            : "/bookings";
+      const finalRedirect = redirectUrl && redirectUrl !== "/" ? redirectUrl : roleTarget;
+      router.push(finalRedirect);
     } catch (err: any) {
       setErrorMsg(err.message || "Could not save profile. Please retry.");
       setIsLoading(false);
@@ -258,14 +273,14 @@ export function LoginClient() {
           <div className="mb-5 text-center">
             <h1 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">
               {step === "phone" && "Enter your mobile number"}
-              {step === "otp" && "Verify with WhatsApp OTP"}
+              {step === "otp" && "Verify Mobile Number"}
               {step === "onboarding" && "What's your name?"}
             </h1>
             <p className="text-xs sm:text-sm text-gray-500 mt-1.5 max-w-xs mx-auto">
-              {step === "phone" && "We will send a 6-digit verification code directly to your WhatsApp"}
+              {step === "phone" && "We'll send an OTP to verify your account"}
               {step === "otp" && (
                 <span>
-                  Code sent via WhatsApp to <strong className="text-gray-800 font-semibold">+91 {phone}</strong> •{" "}
+                  Enter the 6-digit code sent to <strong className="text-gray-800 font-semibold">+91 {phone}</strong> •{" "}
                   <button
                     type="button"
                     onClick={() => {
@@ -294,11 +309,8 @@ export function LoginClient() {
           {step === "phone" && (
             <form onSubmit={handleSendOtp} className="space-y-4">
               <div>
-                <label className="text-xs font-bold text-gray-700 block mb-1.5 flex items-center justify-between">
-                  <span>Mobile Number (WhatsApp)</span>
-                  <span className="text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
-                    WhatsApp OTP
-                  </span>
+                <label className="text-xs font-bold text-gray-700 block mb-1.5">
+                  Mobile Number
                 </label>
                 <div className="relative flex items-center">
                   <div className="absolute left-3 flex items-center gap-1 text-xs font-bold text-gray-800 bg-gray-100 px-2 py-1 rounded-lg border border-gray-200">

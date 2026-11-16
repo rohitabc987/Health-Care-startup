@@ -86,6 +86,12 @@ export function DoctorCard({ doctor, onBookingSuccess }: DoctorCardProps) {
               <MapPin className="w-2.5 h-2.5 text-gray-400 shrink-0" />
               <span className="truncate">{doctor.clinic}</span>
             </p>
+
+            {doctor.clinicTimings && (
+              <p className="text-[10px] text-emerald-800 font-semibold mt-1 flex items-center gap-1 bg-emerald-50/80 px-1.5 py-0.5 rounded-md border border-emerald-100/60 w-fit truncate">
+                <span>⏰ {doctor.clinicTimings}</span>
+              </p>
+            )}
           </div>
 
           {/* Pricing: Doctor Consultation Fee */}

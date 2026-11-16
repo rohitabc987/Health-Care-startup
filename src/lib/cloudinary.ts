@@ -137,3 +137,52 @@ export async function uploadSlipToCloudinary(
 
   throw new Error("Cloudinary cloud name is missing. Please configure NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME in your environment.");
 }
+
+/**
+ * Upload Doctor Avatar/Photo to Cloudinary
+ * Compresses to clean square WebP profile format and uploads to Cloudinary doctors folder.
+ */
+export async function uploadDoctorPhotoToCloudinary(file: File): Promise<string> {
+  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME?.trim().replace(/['"]/g, "");
+  const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_PRESET?.trim().replace(/['"]/g, "") || "pronto_prescriptions";
+
+  let fileToUpload: Blob | File = file;
+  try {
+    const compressed = await compressImageOnClient(file, 800, 0.85);
+    fileToUpload = compressed.blob;
+  } catch (compErr) {
+    console.warn("Doctor avatar pre-compression skipped, using original file:", compErr);
+  }
+
+  if (cloudName && cloudName !== "demo") {
+    const formData = new FormData();
+    if (fileToUpload instanceof Blob && !(fileToUpload instanceof File)) {
+      formData.append("file", fileToUpload, "doctor-avatar.webp");
+    } else {
+      formData.append("file", fileToUpload);
+    }
+    formData.append("upload_preset", uploadPreset);
+    formData.append("folder", "doctors/avatars");
+
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => null);
+      const errMsg = errorData?.error?.message || `HTTP ${res.status}`;
+      throw new Error(`Doctor photo upload failed: ${errMsg}`);
+    }
+
+    const data = await res.json();
+    const rawUrl = data.secure_url || data.url;
+    // Add auto-format & face-focused square thumbnail optimization
+    const optimized = rawUrl.includes("/upload/")
+      ? rawUrl.replace("/upload/", "/upload/q_auto:good,f_auto,w_500,h_500,c_fill,g_face/")
+      : rawUrl;
+    return optimized;
+  }
+
+  throw new Error("Cloudinary is not configured. Please check NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME.");
+}

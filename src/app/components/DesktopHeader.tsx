@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useNavigation } from "@/context/NavigationContext";
@@ -11,8 +11,13 @@ import { ProfileDropdown } from "./ProfileDropdown";
 export function DesktopHeader() {
   const pathname = usePathname();
   const { activeBookingsCount } = useNavigation();
-  const { user, isAuthenticated, openLoginModal } = useAuth();
+  const { user, isAuthenticated } = useAuth();
+  const [mounted, setMounted] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const getInitials = (name?: string) => {
     if (!name) return "PT";
@@ -21,13 +26,15 @@ export function DesktopHeader() {
     return name.slice(0, 2).toUpperCase();
   };
 
+  const isDoctor = mounted ? user?.role === "doctor" : false;
+  const isSuperAdmin = mounted ? user?.role === "super_admin" : false;
+
   const navLinks = [
     { label: "Home", href: "/" },
-    { label: "My Bookings", href: "/bookings", count: activeBookingsCount },
-    { label: "Prescriptions", href: "/prescriptions" },
-    { label: "Live Queue", href: "/admin/queue" },
-    { label: "Doctor Hot-Seat", href: "/doctor/consultation" },
-  ];
+    { label: "My Bookings", href: "/bookings", count: activeBookingsCount, show: !isDoctor },
+    { label: "Prescriptions", href: "/prescriptions", show: !isDoctor },
+    { label: "Doctor Hot-Seat", href: "/doctor/consultation", show: isSuperAdmin || isDoctor },
+  ].filter((item) => item.show !== false);
 
   return (
     <header className="hidden md:block sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200">
@@ -60,8 +67,8 @@ export function DesktopHeader() {
                   key={item.href}
                   href={item.href}
                   className={`relative py-5 text-sm transition-colors flex items-center gap-1.5 ${isActive
-                      ? "text-emerald-700 font-bold"
-                      : "text-gray-600 hover:text-gray-900 font-medium"
+                    ? "text-emerald-700 font-bold"
+                    : "text-gray-600 hover:text-gray-900 font-medium"
                     }`}
                 >
                   <span>{item.label}</span>
@@ -89,9 +96,13 @@ export function DesktopHeader() {
             </button>
           </nav>
 
-          {/* Right: Profile or Login */}
-          <div className="relative flex items-center gap-3">
-            {!isAuthenticated ? (
+          {/* Right: Neutral User Icon during SSR/Hydration, then Login or Profile */}
+          <div className="relative flex items-center gap-3" suppressHydrationWarning>
+            {!mounted ? (
+              <div className="w-10 h-10 rounded-2xl bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-400">
+                <User className="w-5 h-5 text-gray-400" />
+              </div>
+            ) : !isAuthenticated ? (
               <Link
                 href="/login"
                 className="px-4 py-2 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-emerald-600/20 flex items-center gap-2 transition-all active:scale-95"
@@ -105,8 +116,8 @@ export function DesktopHeader() {
                   type="button"
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
                   className={`w-10 h-10 rounded-2xl font-black text-sm flex items-center justify-center transition-all ${isProfileOpen
-                      ? "bg-emerald-600 text-white ring-4 ring-emerald-500/20 shadow-md"
-                      : "bg-emerald-100 hover:bg-emerald-200 text-emerald-800 border border-emerald-300"
+                    ? "bg-emerald-600 text-white ring-4 ring-emerald-500/20 shadow-md"
+                    : "bg-emerald-100 hover:bg-emerald-200 text-emerald-800 border border-emerald-300"
                     }`}
                   aria-label="Patient Profile and Menu"
                 >

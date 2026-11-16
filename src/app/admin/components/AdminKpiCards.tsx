@@ -30,9 +30,9 @@ export function AdminKpiCards({
         <div className="text-3xl sm:text-4xl font-black">
           {patientsCount}
         </div>
-        <p className="text-[11px] text-emerald-100">
+        <p className="text-[11px] text-emerald-100 font-medium">
           {isAll 
-            ? "Computed via server-side count() [Cost: 1 Read]" 
+            ? "Total confirmed patient visits for today" 
             : "Total patients booked with selected doctor"}
         </p>
       </div>
@@ -46,8 +46,8 @@ export function AdminKpiCards({
         <div className="text-3xl sm:text-4xl font-black text-emerald-400">
           ₹{revenueCount.toLocaleString()}
         </div>
-        <p className="text-[11px] text-slate-400">
-          Computed via server-side sum(&apos;consultationFee&apos;) [Cost: 1 Read]
+        <p className="text-[11px] text-slate-400 font-medium">
+          Total consultation fees collected today
         </p>
       </div>
 
@@ -60,8 +60,8 @@ export function AdminKpiCards({
         <div className="text-3xl sm:text-4xl font-black text-gray-900">
           ₹{avgFee}
         </div>
-        <p className="text-[11px] text-gray-400">
-          Zero document hotspots • Strictly 1 write per booking
+        <p className="text-[11px] text-gray-400 font-medium">
+          Average earnings per patient consultation
         </p>
       </div>
     </div>

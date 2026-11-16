@@ -121,6 +121,21 @@ export function ProfileDropdown({ isOpen, onClose, currentLocation = "Viram Khan
                     </span>
                   </div>
                   <p className="text-xs text-gray-500 font-mono mt-0.5">{user?.phone || ""}</p>
+                  {user?.role === "super_admin" && (
+                    <span className="inline-flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded-full mt-1">
+                      👑 Super Admin
+                    </span>
+                  )}
+                  {user?.role === "doctor" && (
+                    <span className="inline-flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-900 border border-emerald-300 px-2 py-0.5 rounded-full mt-1">
+                      🩺 Doctor
+                    </span>
+                  )}
+                  {(!user?.role || user?.role === "patient") && (
+                    <span className="inline-flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200 px-2 py-0.5 rounded-full mt-1">
+                      👤 Patient
+                    </span>
+                  )}
                   {user?.healthId && (
                     <p className="text-[10px] font-mono text-emerald-700 font-semibold mt-0.5">{user.healthId}</p>
                   )}

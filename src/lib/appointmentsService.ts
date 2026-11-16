@@ -176,8 +176,11 @@ export async function bookAppointment(
 
   if (isLiveFirebaseConfigured && db) {
     try {
+      const sanitized = Object.fromEntries(
+        Object.entries(newAppointment).filter(([_, v]) => v !== undefined)
+      );
       const docRef = await addDoc(collection(db, "appointments"), {
-        ...newAppointment,
+        ...sanitized,
         createdAt: serverTimestamp(),
       });
       appointmentId = docRef.id;
@@ -409,7 +412,10 @@ export async function updateAppointmentQueueStatus(
       const docRef = doc(db, "appointments", appointmentId);
       const localItem = getStoredAppointments().find((a) => a.id === appointmentId);
       const mergedData = localItem ? { ...localItem, ...updatePayload } : updatePayload;
-      await setDoc(docRef, mergedData, { merge: true });
+      const sanitized = Object.fromEntries(
+        Object.entries(mergedData).filter(([_, v]) => v !== undefined)
+      );
+      await setDoc(docRef, sanitized, { merge: true });
       return;
     } catch (err) {
       console.warn("Firestore updateAppointmentQueueStatus error, updating local store:", err);

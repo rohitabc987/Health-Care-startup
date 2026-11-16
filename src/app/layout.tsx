@@ -39,14 +39,10 @@ export default function RootLayout({
       <body className="bg-slate-50 text-slate-900 antialiased min-h-screen flex flex-col selection:bg-emerald-100 selection:text-emerald-900">
         <AppProviders>
           {/* Top Desktop Navigation Header (Visible on Desktop / Laptop) */}
-          <Suspense fallback={null}>
-            <DesktopHeader />
-          </Suspense>
+          <DesktopHeader />
 
           {/* Top Mobile Navigation Header (Visible on Mobile / Tablet) */}
-          <Suspense fallback={null}>
-            <MobileHeader />
-          </Suspense>
+          <MobileHeader />
 
           {/* Responsive Application Container */}
           <main className="flex-1 w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-3 md:pt-4 pb-24 md:pb-12">

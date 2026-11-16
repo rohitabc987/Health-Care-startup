@@ -107,12 +107,17 @@ export function DoctorProfileClient({ doctor }: DoctorProfileClientProps) {
           </div>
 
           <div className="p-3 bg-gray-50 border border-gray-150 rounded-2xl">
-            <span className="text-[10px] text-gray-500 font-medium block">Visiting Days</span>
+            <span className="text-[10px] text-gray-500 font-medium block">Visiting Schedule &amp; Timings</span>
             <span className="text-xs sm:text-sm font-bold text-gray-900 mt-0.5 block truncate">
               {doctor.availableDays && doctor.availableDays.length > 0
-                ? doctor.availableDays.join(", ")
+                ? (doctor.availableDays.length === 7 ? "All 7 Days (Mon-Sun)" : doctor.availableDays.join(", "))
                 : (doctor.nextAvailableDay || "Mon, Wed, Fri")}
             </span>
+            {doctor.clinicTimings && (
+              <span className="text-[11px] text-emerald-800 font-semibold block mt-0.5">
+                ⏰ {doctor.clinicTimings}
+              </span>
+            )}
             <span className="text-[10px] text-emerald-700 font-semibold block mt-0.5">
               Next: {getDoctorNextAvailable(doctor.availableDays)}
             </span>

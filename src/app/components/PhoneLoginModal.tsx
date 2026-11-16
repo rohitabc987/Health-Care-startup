@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { updateUserProfile, getStoredUserProfile } from "@/lib/firebase";
 import {
@@ -24,12 +25,13 @@ interface PhoneLoginModalProps {
   isBookingFlow?: boolean;
 }
 
-export function PhoneLoginModal({ 
-  isOpen, 
-  onClose, 
-  allowSkip = true, 
-  isBookingFlow = false 
+export function PhoneLoginModal({
+  isOpen,
+  onClose,
+  allowSkip = true,
+  isBookingFlow = false
 }: PhoneLoginModalProps) {
+  const router = useRouter();
   const { login } = useAuth();
   const [step, setStep] = useState<"phone" | "otp" | "onboarding">("phone");
   const [phone, setPhone] = useState("");
@@ -182,12 +184,20 @@ export function PhoneLoginModal({
         };
         login(finalUser);
         onClose();
+        if (!isBookingFlow) {
+          if (finalUser.role === "super_admin") router.push("/admin");
+          else if (finalUser.role === "doctor") router.push("/doctor/consultation");
+        }
       } else if (data.user?.isNewUser) {
         setVerifiedUser(data.user);
         setStep("onboarding");
       } else {
         login(data.user);
         onClose();
+        if (!isBookingFlow) {
+          if (data.user?.role === "super_admin") router.push("/admin");
+          else if (data.user?.role === "doctor") router.push("/doctor/consultation");
+        }
       }
     } catch (err: any) {
       setErrorMsg(err.message || "Invalid OTP code");
@@ -250,10 +260,10 @@ export function PhoneLoginModal({
           <div className="w-8" />
           <div className="text-center">
             <h3 className="font-bold text-gray-900 text-sm sm:text-base leading-tight">
-              {step === "phone" ? "Enter your mobile number" : step === "otp" ? "Verify with WhatsApp OTP" : "Complete Your Profile"}
+              {step === "phone" ? "Enter your mobile number" : step === "otp" ? "Verify Mobile Number" : "Complete Your Profile"}
             </h3>
             <p className="text-[11px] text-gray-500 font-medium mt-0.5">
-              {step === "phone" ? "We will send a 6-digit verification code to your WhatsApp" : step === "otp" ? `Code sent via WhatsApp to +91 ${phone}` : "Basic details for doctor prescriptions"}
+              {step === "phone" ? "We'll send an OTP to verify your account" : step === "otp" ? `Enter the 6-digit code sent to +91 ${phone}` : "Basic details for doctor prescriptions"}
             </p>
           </div>
           <button
@@ -276,11 +286,8 @@ export function PhoneLoginModal({
           {step === "phone" && (
             <form onSubmit={handleSendOtp} className="space-y-4">
               <div>
-                <label className="text-xs font-bold text-gray-700 block mb-1.5 flex items-center justify-between">
-                  <span>Mobile Number (WhatsApp)</span>
-                  <span className="text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
-                    WhatsApp OTP
-                  </span>
+                <label className="text-xs font-bold text-gray-700 block mb-1.5">
+                  Whatsapp Number
                 </label>
                 <div className="relative flex items-center">
                   <div className="absolute left-3 flex items-center gap-1 text-xs font-bold text-gray-800 bg-gray-100 px-2 py-1 rounded-lg border border-gray-200">

@@ -64,7 +64,7 @@ export function AdminBookingsTable({
             {filteredAppointments.length !== appointments.length ? ` of ${appointments.length}` : ""})
           </h2>
           <p className="text-xs text-gray-400">
-            Self-contained snapshots (1-read guarantee with zero N+1 secondary lookups)
+            Real-time appointments for the selected date
           </p>
         </div>
 

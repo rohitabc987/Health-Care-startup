@@ -17,6 +17,7 @@ export interface LoginModalOptions {
 interface AuthContextType {
   user: UserProfile | null;
   isAuthenticated: boolean;
+  isMounted: boolean;
   isLoginModalOpen: boolean;
   loginModalOptions?: LoginModalOptions;
   openLoginModal: (options?: LoginModalOptions | any) => void;
@@ -111,6 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       value={{
         user,
         isAuthenticated: isMounted && Boolean(user && user.phone),
+        isMounted,
         isLoginModalOpen,
         loginModalOptions,
         openLoginModal,

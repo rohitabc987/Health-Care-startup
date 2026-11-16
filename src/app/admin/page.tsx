@@ -3,46 +3,42 @@ import { cookies } from "next/headers";
 import { connection } from "next/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { 
-  getCachedTodaySales, 
-  getCachedActiveDoctors, 
-  getAppointments,
-  getDoctorDailySales,
-  Doctor,
-  Appointment
-} from "@/lib/firebase";
 import { UserRole } from "@/lib/types";
-import { AdminClient } from "./AdminClient";
+import { getUserProfileServer } from "@/lib/userService";
+import { AdminDashboardClient } from "./AdminDashboardClient";
 import { ShieldAlert, ArrowLeft } from "lucide-react";
 
 function AdminSkeleton() {
   return (
     <div className="w-full space-y-6 animate-pulse py-2">
       <div className="h-28 bg-slate-800 rounded-3xl" />
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="h-32 bg-gray-200/70 rounded-3xl" />
-        <div className="h-32 bg-gray-200/70 rounded-3xl" />
-        <div className="h-32 bg-gray-200/70 rounded-3xl" />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="h-72 bg-gray-200/70 rounded-3xl" />
+        <div className="h-72 bg-gray-200/70 rounded-3xl" />
+        <div className="h-72 bg-gray-200/70 rounded-3xl" />
       </div>
-      <div className="h-96 bg-gray-200/60 rounded-3xl" />
     </div>
   );
 }
 
 async function AdminData() {
-  // Indicate to Next.js 16 prerender engine to wait for real request before reading request-time IO / new Date()
   await connection();
   const cookieStore = await cookies();
   const uid = cookieStore.get("pronto_uid")?.value;
-  const role = (cookieStore.get("pronto_role")?.value as UserRole) || "patient";
+  let role = (cookieStore.get("pronto_role")?.value as UserRole) || "patient";
   const doctorId = cookieStore.get("pronto_doctor_id")?.value;
 
-  // Unauthenticated visitors are directed to login
   if (!uid) {
     redirect("/login?redirect=/admin");
   }
 
-  // Patients do not have access to admin/doctor operations
+  const dbUser = await getUserProfileServer(uid);
+  if (dbUser?.role === "super_admin") {
+    role = "super_admin";
+  } else if (dbUser?.role === "doctor") {
+    role = "doctor";
+  }
+
   if (role === "patient") {
     return (
       <div className="min-h-[70vh] flex items-center justify-center px-4">
@@ -68,52 +64,15 @@ async function AdminData() {
     );
   }
 
-  const todayStr = new Date().toISOString().split("T")[0];
-
-  let initialOverallMetrics: { totalPatients: number; totalRevenue: number } = { totalPatients: 0, totalRevenue: 0 };
-  let initialDoctors: Doctor[] = [];
-  let initialAppointments: Appointment[] = [];
-
-  if (role === "doctor" && doctorId) {
-    // Doctor View: Only load their own doctor's appointments and metrics
-    const [allDocs, docSales, docApts] = await Promise.all([
-      getCachedActiveDoctors(),
-      getDoctorDailySales(doctorId, todayStr),
-      getAppointments({ dateStr: todayStr, doctorId, pageSize: 50 }),
-    ]);
-
-    initialDoctors = allDocs.filter((d) => d.id === doctorId);
-    initialOverallMetrics = {
-      totalPatients: docSales.doctorPatients,
-      totalRevenue: docSales.doctorRevenue,
-    };
-    initialAppointments = docApts;
-  } else {
-    // Super Admin & Clinic Staff View: Load full clinic and doctor roster
-    const [metrics, docs, apts] = await Promise.all([
-      getCachedTodaySales(todayStr),
-      getCachedActiveDoctors(),
-      getAppointments({ dateStr: todayStr, pageSize: 50 }),
-    ]);
-
-    initialOverallMetrics = metrics;
-    initialDoctors = docs;
-    initialAppointments = apts;
-  }
-
+  // Pure zero-read launchpad: Database queries are deferred to dedicated module pages
   return (
-    <AdminClient
-      initialOverallMetrics={initialOverallMetrics}
-      initialDoctors={initialDoctors}
-      initialAppointments={initialAppointments}
+    <AdminDashboardClient
       userRole={role}
       currentDoctorId={doctorId}
     />
   );
 }
 
-// Next.js Server Component
-// Prerenders static shell and streams role-based admin or doctor data
 export default function AdminPage() {
   return (
     <Suspense fallback={<AdminSkeleton />}>

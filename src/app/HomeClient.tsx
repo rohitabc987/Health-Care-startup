@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Doctor, subscribeToDoctors } from "@/lib/firebase";
+import { useAuth } from "@/context/AuthContext";
 import { DoctorCard } from "./components/DoctorCard";
 import {
   Sparkles,
@@ -20,6 +21,8 @@ interface HomeClientProps {
 
 export function HomeClient({ initialDoctors }: HomeClientProps) {
   const router = useRouter();
+  const { user } = useAuth();
+  const isSuperAdmin = user?.role === "super_admin";
   const [doctors, setDoctors] = useState<Doctor[]>(initialDoctors);
   const [selectedSpecialty, setSelectedSpecialty] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState("");
@@ -185,18 +188,56 @@ export function HomeClient({ initialDoctors }: HomeClientProps) {
             <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
               <Stethoscope className="w-6 h-6" />
             </div>
-            <div>
-              <h3 className="text-sm font-bold text-gray-900">No Doctors Registered in Catalog</h3>
-              <p className="text-xs text-gray-500 mt-0.5">
-                Onboard doctors in the Admin Desk to allow patients to book online follow-up slots.
-              </p>
-            </div>
-            <Link
-              href="/admin"
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-2xl shadow-sm transition-all"
-            >
-              Add Doctor in Admin Desk
-            </Link>
+
+            {doctors.length === 0 ? (
+              // Case A: The overall database has no registered active doctors yet
+              <div>
+                <h3 className="text-sm font-bold text-gray-900">
+                  {isSuperAdmin ? "No Doctors Registered in Catalog" : "Consultation Slots Opening Soon"}
+                </h3>
+                <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                  {isSuperAdmin
+                    ? "Onboard doctors in the Admin Desk to allow patients to book online follow-up slots."
+                    : "Our partnered clinic specialists and consultation slots are being updated. Please check back shortly."}
+                </p>
+                {isSuperAdmin && (
+                  <Link
+                    href="/admin/doctor"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 mt-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-2xl shadow-sm transition-all"
+                  >
+                    Add Doctor in Admin Desk
+                  </Link>
+                )}
+              </div>
+            ) : (
+              // Case B: Filter or search yielded 0 results (e.g. user selected Cardiology)
+              <div>
+                <h3 className="text-sm font-bold text-gray-900">No Doctors Found</h3>
+                <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                  No specialists available {selectedSpecialty !== "All" ? `in ${selectedSpecialty}` : ""} matching your search.
+                </p>
+                <div className="flex items-center justify-center gap-2 pt-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedSpecialty("All");
+                      setSearchQuery("");
+                    }}
+                    className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-2xl transition-all shadow-xs cursor-pointer"
+                  >
+                    View All Doctors
+                  </button>
+                  {isSuperAdmin && (
+                    <Link
+                      href="/admin/doctor"
+                      className="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold rounded-2xl border border-emerald-200 transition-all"
+                    >
+                      Add Doctor
+                    </Link>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">

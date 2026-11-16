@@ -8,11 +8,14 @@ import {
   getDoctorDailySales, 
   getAppointments,
   subscribeToDoctors,
-  toggleDoctorStatus,
-  addDoctor,
   updateAppointmentStatus,
   AppointmentStatus
 } from "@/lib/firebase";
+import { 
+  addDoctorServerAction, 
+  toggleDoctorStatusServerAction,
+  updateDoctorServerAction
+} from "@/app/actions/doctorActions";
 import { 
   BarChart3, 
   Stethoscope, 
@@ -27,6 +30,7 @@ import { AdminKpiCards } from "./components/AdminKpiCards";
 import { AdminBookingsTable } from "./components/AdminBookingsTable";
 import { AdminDoctorCatalog } from "./components/AdminDoctorCatalog";
 import { AddDoctorModal } from "./components/AddDoctorModal";
+import { EditDoctorModal } from "./components/EditDoctorModal";
 
 import { 
   revalidateDoctorsCatalogAction, 
@@ -72,6 +76,7 @@ export function AdminClient({
 
   const [doctorsList, setDoctorsList] = useState<Doctor[]>(initialDoctors);
   const [isAddDoctorModalOpen, setIsAddDoctorModalOpen] = useState(false);
+  const [editingDoctor, setEditingDoctor] = useState<Doctor | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -139,9 +144,11 @@ export function AdminClient({
 
   const handleToggleDoctor = async (docId: string, currentStatus?: boolean) => {
     const nextStatus = currentStatus === false ? true : false;
-    await toggleDoctorStatus(docId, nextStatus);
-    // Purge Vercel Edge Cache on-demand for doctors catalog
-    await revalidateDoctorsCatalogAction();
+    const res = await toggleDoctorStatusServerAction(docId, nextStatus);
+    if (!res.success) {
+      showNotice(res.error || "Failed to update doctor visibility.");
+      return;
+    }
     showNotice(`Doctor visibility updated to: ${nextStatus ? "Active on Home Page" : "Hidden from Home Page"}`);
   };
 
@@ -153,10 +160,21 @@ export function AdminClient({
   };
 
   const handleAddDoctor = async (newDocData: Omit<Doctor, "id">) => {
-    await addDoctor(newDocData);
-    // Purge Vercel Edge Cache on-demand for doctors catalog
-    await revalidateDoctorsCatalogAction();
+    const res = await addDoctorServerAction(newDocData);
+    if (!res.success) {
+      showNotice(res.error || "Failed to add doctor.");
+      return;
+    }
     showNotice("New doctor added successfully and is now live on the Home page!");
+  };
+
+  const handleUpdateDoctor = async (id: string, updates: Partial<Doctor>) => {
+    const res = await updateDoctorServerAction(id, updates);
+    if (!res.success) {
+      showNotice(res.error || "Failed to update doctor.");
+      throw new Error(res.error || "Failed to update doctor.");
+    }
+    showNotice("Doctor details updated successfully!");
   };
 
   const currentDoctorObj = isDoctor && currentDoctorId ? doctorsList.find((d) => d.id === currentDoctorId) : null;
@@ -180,7 +198,7 @@ export function AdminClient({
                 : "Pronto Super Admin Operations Desk"}
             </h1>
             <span className="text-[10px] uppercase font-bold tracking-wider bg-emerald-400/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-400/30">
-              {isDoctor ? "Doctor Portal" : "Live Cloud Aggregation"}
+              {isDoctor ? "Doctor Portal" : "Admin Portal"}
             </span>
           </div>
           <p className="text-xs sm:text-sm text-slate-400 mt-1">
@@ -325,6 +343,7 @@ export function AdminClient({
         <AdminDoctorCatalog
           doctorsList={doctorsList}
           onOpenAddModal={() => setIsAddDoctorModalOpen(true)}
+          onEditDoctor={(doc) => setEditingDoctor(doc)}
           onToggleDoctor={handleToggleDoctor}
         />
       )}
@@ -334,6 +353,14 @@ export function AdminClient({
         isOpen={isAddDoctorModalOpen}
         onClose={() => setIsAddDoctorModalOpen(false)}
         onAddDoctor={handleAddDoctor}
+      />
+
+      {/* Edit Doctor Modal */}
+      <EditDoctorModal
+        doctor={editingDoctor}
+        isOpen={Boolean(editingDoctor)}
+        onClose={() => setEditingDoctor(null)}
+        onSaveDoctor={handleUpdateDoctor}
       />
     </div>
   );
