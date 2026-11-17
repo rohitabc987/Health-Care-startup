@@ -92,9 +92,13 @@ export function QueueManagerClient({ initialAppointments }: QueueManagerClientPr
     const origin = typeof window !== "undefined" ? window.location.origin : "https://livesehat.in";
     const roomUrl = `${origin}/room/${apt.id}`;
     const text = encodeURIComponent(
-      `Namaste ${apt.patientName || "Patient"} ji,\n\nDr. ${apt.doctorName} will consult with you in 15 minutes for your follow-up.\n\n📹 Tap this link on your phone to enter the consultation room:\n👉 ${roomUrl}\n\n(No app download or login required). Please ensure your camera and microphone are allowed.`
+      `Namaste ${apt.patientName || "Patient"} ji,\n\nDr. ${apt.doctorName} will consult with you shortly for your follow-up review.\n\n📹 Tap this link on your phone to enter the consultation room:\n👉 ${roomUrl}\n\n(No app download or login required). Please ensure your camera and microphone are allowed.`
     );
-    const cleanPhone = apt.patientPhone?.replace(/[^0-9]/g, "") || "919876543210";
+    let cleanPhone = apt.patientPhone?.replace(/[^0-9]/g, "") || "";
+    if (cleanPhone.length === 10) {
+      cleanPhone = "91" + cleanPhone;
+    }
+    if (!cleanPhone) cleanPhone = "919876543210";
     window.open(`https://wa.me/${cleanPhone}?text=${text}`, "_blank");
   };
 
@@ -234,6 +238,28 @@ export function QueueManagerClient({ initialAppointments }: QueueManagerClientPr
                     </button>
                   </div>
 
+                  {/* Pre-check & Direct Call shortcuts */}
+                  <div className="flex items-center justify-between pt-1 border-t border-gray-100 text-[11px]">
+                    <a
+                      href={`tel:${apt.patientPhone?.replace(/[^0-9]/g, "")}`}
+                      className="text-gray-600 hover:text-emerald-700 font-semibold flex items-center gap-1"
+                      title="Call patient phone for audio pre-check"
+                    >
+                      <PhoneCall className="w-3 h-3 text-emerald-600" />
+                      <span>Call Patient</span>
+                    </a>
+
+                    <Link
+                      href={`/room/${apt.id}`}
+                      target="_blank"
+                      className="text-gray-600 hover:text-emerald-700 font-semibold flex items-center gap-1"
+                      title="Test room video & audio before marking ready"
+                    >
+                      <ExternalLink className="w-3 h-3 text-emerald-600" />
+                      <span>Pre-Check Room</span>
+                    </Link>
+                  </div>
+
                   <button
                     type="button"
                     onClick={() => handleUpdateStatus(apt.id, "parked_tech_issue", "No answer / poor network")}
@@ -291,24 +317,33 @@ export function QueueManagerClient({ initialAppointments }: QueueManagerClientPr
                     </p>
                   )}
 
-                  <div className="flex items-center justify-between pt-1 text-[11px]">
-                    <Link
+                  {/* Actions for Doctor & Coordinator */}
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    {/* Direct Room Link for Doctor */}
+                    <a
                       href={`/room/${apt.id}`}
                       target="_blank"
-                      className="text-gray-500 hover:text-emerald-700 font-semibold flex items-center gap-1"
+                      rel="noopener noreferrer"
+                      className="px-2.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold rounded-xl flex items-center justify-center gap-1 transition-colors text-[11px]"
+                      title="Open direct consultation room in new tab"
                     >
-                      <ExternalLink className="w-3 h-3" />
-                      <span>Test Room Link</span>
-                    </Link>
+                      <ExternalLink className="w-3.5 h-3.5 text-emerald-700" />
+                      <span>Doctor Direct Link</span>
+                    </a>
 
+                    {/* Start Consult & Bridge */}
                     <button
                       type="button"
                       disabled={isUpdating === apt.id}
-                      onClick={() => handleUpdateStatus(apt.id, "in_consultation")}
-                      className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl flex items-center gap-1 shadow-xs transition-all text-xs cursor-pointer"
+                      onClick={async () => {
+                        await handleUpdateStatus(apt.id, "in_consultation");
+                        window.open(`/room/${apt.id}`, "_blank");
+                      }}
+                      className="px-2.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl flex items-center justify-center gap-1 shadow-xs transition-all text-[11px] cursor-pointer"
+                      title="Mark live and open consultation room"
                     >
                       <Video className="w-3.5 h-3.5" />
-                      <span>Start Consult</span>
+                      <span>Start &amp; Join 🩺</span>
                     </button>
                   </div>
                 </div>
@@ -363,6 +398,21 @@ export function QueueManagerClient({ initialAppointments }: QueueManagerClientPr
                   </div>
 
                   <p className="text-[11px] text-gray-500">Dr. {apt.doctorName} • {apt.clinicName}</p>
+
+                  {/* Direct Rejoin Link for Doctor when Consultation is Active */}
+                  {apt.queueStatus === "in_consultation" && (
+                    <div className="pt-1">
+                      <a
+                        href={`/room/${apt.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl flex items-center justify-center gap-1.5 text-xs shadow-xs transition-all"
+                      >
+                        <Video className="w-3.5 h-3.5" />
+                        <span>Rejoin Live Room (Doctor Link)</span>
+                      </a>
+                    </div>
+                  )}
 
                   {apt.queueStatus === "parked_tech_issue" && (
                     <button

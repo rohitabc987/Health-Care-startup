@@ -17,6 +17,11 @@ export function BottomNav() {
     setMounted(true);
   }, []);
 
+  // Hide mobile bottom navigation bar inside active video consultation rooms
+  if (pathname.startsWith("/room/")) {
+    return null;
+  }
+
   const isSuperAdmin = mounted ? user?.role === "super_admin" : false;
   const isDoctor = mounted ? user?.role === "doctor" : false;
 

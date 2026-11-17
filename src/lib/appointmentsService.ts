@@ -15,9 +15,10 @@ import {
   count, 
   sum 
 } from "firebase/firestore";
-import { Appointment, AppointmentStatus, AppointmentQueueStatus } from "./types";
+import { Appointment, AppointmentStatus, AppointmentQueueStatus, Doctor } from "./types";
 import { db, isLiveFirebaseConfigured } from "@/lib/firebaseConfig";
 import { generateAppointmentKeywords, normalizePhoneDigits, normalizeSearchQuery } from "./searchUtils";
+import { getStoredDoctors } from "./doctorsService";
 
 const LOCAL_STORAGE_KEY_APPOINTMENTS = "pronto_medical_appointments";
 const appointmentSubscribers: Array<(appointments: Appointment[]) => void> = [];
@@ -395,7 +396,17 @@ export async function getAppointmentById(appointmentId: string): Promise<Appoint
       const snap = await getDocs(query(collection(db, "appointments"), where("__name__", "==", appointmentId)));
       if (!snap.empty) {
         const d = snap.docs[0];
-        return { id: d.id, ...(d.data() as Omit<Appointment, "id">) };
+        const aptData = { id: d.id, ...(d.data() as Omit<Appointment, "id">) };
+        if (!aptData.doctorName || aptData.doctorName === "undefined") {
+          const docs: Doctor[] = getStoredDoctors();
+          const found = docs.find((doc: Doctor) => doc.id === aptData.doctorId) || docs[0];
+          if (found) {
+            aptData.doctorName = found.name;
+            aptData.doctorSpecialty = found.specialty;
+            aptData.clinicName = found.clinic;
+          }
+        }
+        return aptData;
       }
     } catch (err) {
       console.warn("getAppointmentById Firestore lookup error:", err);
@@ -403,7 +414,17 @@ export async function getAppointmentById(appointmentId: string): Promise<Appoint
   }
 
   const list = getStoredAppointments();
-  return list.find((a) => a.id === appointmentId) || null;
+  const foundApt = list.find((a) => a.id === appointmentId) || null;
+  if (foundApt && (!foundApt.doctorName || foundApt.doctorName === "undefined")) {
+    const docs: Doctor[] = getStoredDoctors();
+    const docFound = docs.find((d: Doctor) => d.id === foundApt.doctorId) || docs[0];
+    if (docFound) {
+      foundApt.doctorName = docFound.name;
+      foundApt.doctorSpecialty = docFound.specialty;
+      foundApt.clinicName = docFound.clinic;
+    }
+  }
+  return foundApt;
 }
 
 /**

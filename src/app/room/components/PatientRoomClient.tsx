@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Appointment, subscribeToAppointments } from "@/lib/firebase";
+import { Appointment, subscribeToAppointments, updateAppointmentQueueStatus } from "@/lib/firebase";
 import { TeleConsultationRoom } from "@/app/components/TeleConsultationRoom";
 import {
   Video,
@@ -13,7 +13,8 @@ import {
   CheckCircle2,
   AlertCircle,
   HelpCircle,
-  ArrowLeft
+  ArrowLeft,
+  ExternalLink
 } from "lucide-react";
 
 interface PatientRoomClientProps {
@@ -48,138 +49,131 @@ export function PatientRoomClient({ appointment: initialAppointment }: PatientRo
     `Namaste LiveSehat Team, I am ${appointment.patientName} (Booking #${appointment.id.replace("apt-", "")}). I need help connecting to Dr. ${appointment.doctorName}.`
   );
 
-  return (
-    <div className="min-h-screen bg-gray-50/70 py-4 px-3 sm:px-6">
-      <div className="max-w-4xl mx-auto space-y-4">
-        {/* Top Header Card */}
-        <div className="bg-white rounded-3xl border border-gray-150 p-4 sm:p-5 shadow-xs flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-700 font-bold shrink-0">
-              <Video className="w-6 h-6 stroke-[2.2]" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">
-                  LiveSehat Follow-Up Desk
-                </span>
-                <span className="text-[10px] font-mono text-gray-400">
-                  #{appointment.id.replace("apt-", "")}
-                </span>
-              </div>
-              <h1 className="text-base sm:text-lg font-black text-gray-900 mt-0.5">
-                {appointment.doctorName}
-              </h1>
-              <p className="text-xs text-gray-500">{appointment.clinicName || "Clinic Follow-Up"}</p>
-            </div>
-          </div>
+  const doctorDisplayName = appointment.doctorName && appointment.doctorName !== "undefined"
+    ? (appointment.doctorName.startsWith("Dr.") ? appointment.doctorName : `Dr. ${appointment.doctorName}`)
+    : "Dr. Consulting Doctor";
 
-          <div className="text-right shrink-0">
-            <span className="text-[10px] text-gray-400 block font-bold uppercase tracking-wider">
-              Health ID
-            </span>
-            <span className="text-xs font-mono font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
-              {appointment.patientHealthId || "#IND-XXXXXX"}
-            </span>
+  return (
+    <div className="fixed inset-0 z-50 bg-slate-950 flex flex-col text-white overflow-hidden">
+      {/* Top Header Bar - Clean WhatsApp Call Style */}
+      <header className="p-3 sm:p-4 bg-slate-900/90 backdrop-blur-md border-b border-white/10 flex items-center justify-between gap-3 shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-emerald-600 border border-emerald-400/30 flex items-center justify-center text-white font-bold text-base shadow-sm shrink-0">
+            {doctorDisplayName.replace("Dr. ", "").charAt(0)}
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+              <h1 className="text-sm sm:text-base font-bold text-white tracking-tight">
+                {doctorDisplayName}
+              </h1>
+            </div>
+            <p className="text-[11px] text-gray-400 truncate max-w-[200px] sm:max-w-xs">
+              {appointment.clinicName || "Pronto Health Partner Clinic"}
+            </p>
           </div>
         </div>
 
-        {/* Dynamic Status / Video Container */}
-        {hasJoinedVideo ? (
-          /* Live Video Room View */
-          <div className="space-y-3 animate-in fade-in zoom-in-95 duration-200">
-            {/* Live Queue Notice Banner */}
-            <div className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-2xl p-3 px-4 flex items-center justify-between text-xs font-medium shadow-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-2.5 h-2.5 rounded-full bg-white animate-ping" />
-                <span>
-                  {appointment.queueStatus === "in_consultation"
-                    ? `Doctor is connected with you right now!`
-                    : `You are in the doctor's ready queue. Please stay on this screen.`}
-                </span>
-              </div>
-              <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-md font-mono font-bold">
-                Token #{appointment.queueOrder || 1}
-              </span>
-            </div>
-
-            {/* Embedded WebRTC Room */}
-            <div className="h-[480px] sm:h-[580px] w-full">
-              <TeleConsultationRoom
-                roomUrl={meetingUrl}
-                userName={appointment.patientName || "Patient"}
-                counterpartName={appointment.doctorName}
-                isDoctor={false}
-                onEndCall={() => setHasJoinedVideo(false)}
-              />
-            </div>
-          </div>
-        ) : (
-          /* Pre-Join Waiting Lobby */
-          <div className="bg-white rounded-3xl border border-gray-150 p-6 sm:p-8 text-center max-w-lg mx-auto shadow-sm space-y-5 animate-in fade-in duration-200">
-            <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center mx-auto shadow-lg shadow-emerald-600/20">
-              <Video className="w-8 h-8 stroke-[2.2]" />
-            </div>
-
-            <div className="space-y-1.5">
-              <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100 inline-block">
-                ₹149 Follow-up Pass Active
-              </span>
-              <h2 className="text-xl font-black text-gray-900">
-                Namaste {appointment.patientName || "Patient"}!
-              </h2>
-              <p className="text-xs text-gray-500 max-w-sm mx-auto leading-relaxed">
-                Your follow-up review with <strong>{appointment.doctorName}</strong> is scheduled. Tap below to enter the consultation room.
-              </p>
-            </div>
-
-            {/* Pre-call checklist cards */}
-            <div className="grid grid-cols-2 gap-2.5 text-left py-1">
-              <div className="p-3 bg-gray-50 rounded-2xl border border-gray-100 flex items-start gap-2.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-xs font-bold text-gray-900">No App Needed</p>
-                  <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">Runs in Chrome/Safari</p>
-                </div>
-              </div>
-
-              <div className="p-3 bg-gray-50 rounded-2xl border border-gray-100 flex items-start gap-2.5">
-                <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-xs font-bold text-gray-900">Private &amp; Safe</p>
-                  <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">1-on-1 with Doctor</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Main Action Button */}
-            <button
-              type="button"
-              onClick={() => setHasJoinedVideo(true)}
-              className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold rounded-2xl shadow-lg shadow-emerald-600/25 text-sm flex items-center justify-center gap-2 transition-all"
-            >
-              <Video className="w-4 h-4 stroke-[2.5]" />
-              <span>Enter Doctor Consultation Room</span>
-            </button>
-          </div>
-        )}
-
-        {/* Bottom Help & Fallback Row */}
-        <div className="bg-white rounded-2xl border border-gray-150 p-3.5 flex flex-wrap items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-2 text-gray-600">
-            <HelpCircle className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>Having camera or audio issues? Our care team is on standby.</span>
-          </div>
-
+        {/* Support & Quick Exit */}
+        <div className="flex items-center gap-2">
           <a
             href={`https://wa.me/${coordinatorWhatsAppNumber}?text=${coordinatorHelpText}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-semibold flex items-center gap-1.5 transition-colors"
+            className="px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+            title="Chat with clinic support on WhatsApp"
           >
-            <PhoneCall className="w-3.5 h-3.5 text-emerald-700" />
-            <span>WhatsApp Care Coordinator</span>
+            <PhoneCall className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="hidden sm:inline">WhatsApp Help</span>
           </a>
+
+          <Link
+            href="/bookings"
+            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white transition-colors"
+            title="Return to Bookings"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Link>
         </div>
+      </header>
+
+      {/* Main Dynamic View: Video Screen vs WhatsApp-Style Pre-Call Lobby */}
+      <div className="flex-1 w-full relative flex flex-col items-center justify-center p-2 sm:p-4 overflow-hidden">
+        {hasJoinedVideo ? (
+          /* Live Connected Screen */
+          <div className="w-full h-full max-w-5xl mx-auto flex flex-col relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl">
+            <TeleConsultationRoom
+              roomUrl={meetingUrl}
+              userName={appointment.patientName || "Patient"}
+              counterpartName={doctorDisplayName}
+              isDoctor={false}
+              onEndCall={() => setHasJoinedVideo(false)}
+            />
+          </div>
+        ) : (
+          /* Pre-Call Lobby - Simple & Familiar like WhatsApp Incoming Video Call */
+          <div className="w-full max-w-sm mx-auto bg-slate-900/90 border border-white/10 rounded-3xl p-6 sm:p-8 text-center space-y-6 shadow-2xl animate-in fade-in duration-200">
+            {/* Pulsing Doctor Avatar */}
+            <div className="relative w-24 h-24 mx-auto flex items-center justify-center">
+              <div className="absolute inset-0 rounded-full bg-emerald-500/20 animate-ping" />
+              <div className="relative w-24 h-24 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 border-2 border-emerald-400/50 flex items-center justify-center text-white text-3xl font-black shadow-xl">
+                {doctorDisplayName.replace("Dr. ", "").charAt(0)}
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full inline-block">
+                Ready for Consultation
+              </span>
+              <h2 className="text-xl font-black text-white">
+                {doctorDisplayName}
+              </h2>
+              <p className="text-xs text-gray-400 leading-relaxed max-w-xs mx-auto">
+                Tap below to start your video consultation. No login or app download required.
+              </p>
+            </div>
+
+            {/* WhatsApp Browser Permission Guidance */}
+            <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-left flex items-start gap-2.5 text-xs text-amber-200">
+              <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+              <p className="text-[11px] leading-tight">
+                Opening from WhatsApp? If camera is blocked, tap <strong>⋮ (three dots)</strong> at top right and select <strong>&quot;Open in Chrome / Safari&quot;</strong>.
+              </p>
+            </div>
+
+            {/* Main Action Button - Big Green WhatsApp Style */}
+            <button
+              type="button"
+              onClick={async () => {
+                setHasJoinedVideo(true);
+                try {
+                  if (appointment.queueStatus === "waiting_precheck") {
+                    await updateAppointmentQueueStatus(appointment.id, "ready_for_doctor", {
+                      preCheckNotes: "Patient online in room ✅",
+                    });
+                  }
+                } catch (err) {
+                  console.warn("Could not auto-advance queue status:", err);
+                }
+              }}
+              className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] text-white font-black rounded-2xl shadow-lg shadow-emerald-600/40 text-base flex items-center justify-center gap-2.5 transition-all cursor-pointer"
+            >
+              <Video className="w-5 h-5 stroke-[2.5]" />
+              <span>Join Video Call Now</span>
+            </button>
+
+            {/* Direct External Browser Fallback */}
+            <a
+              href={meetingUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-gray-400 hover:text-emerald-400 font-semibold flex items-center justify-center gap-1.5 transition-colors pt-1"
+            >
+              <ExternalLink className="w-3.5 h-3.5 text-gray-500" />
+              <span>Open in Fullscreen / External Browser</span>
+            </a>
+          </div>
+        )}
       </div>
     </div>
   );

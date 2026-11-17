@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import Link from "next/link";
 import { Appointment, AppointmentStatus } from "@/lib/firebase";
-import { Calendar, MapPin, Search, Hash, X } from "lucide-react";
+import { Calendar, MapPin, Search, Hash, X, Video } from "lucide-react";
 import { normalizeSearchQuery } from "@/lib/searchUtils";
 
 interface AdminBookingsTableProps {
@@ -226,15 +227,25 @@ export function AdminBookingsTable({
                   </td>
 
                   <td className="py-3 pr-2 text-right">
-                    <select
-                      value={apt.status}
-                      onChange={(e) => onStatusChange(apt.id, e.target.value as AppointmentStatus)}
-                      className="text-[11px] font-semibold bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 focus:outline-none"
-                    >
-                      <option value="Pending Screening">Pending Screening</option>
-                      <option value="Escalated to Physical Visit">Escalate to Visit</option>
-                      <option value="Screening Complete">Screening Complete</option>
-                    </select>
+                    <div className="flex items-center justify-end gap-1.5">
+                      <Link
+                        href={`/room/${apt.id}`}
+                        target="_blank"
+                        className="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 transition-colors"
+                        title="Open consultation video room for this appointment"
+                      >
+                        <Video className="w-3.5 h-3.5" />
+                      </Link>
+                      <select
+                        value={apt.status}
+                        onChange={(e) => onStatusChange(apt.id, e.target.value as AppointmentStatus)}
+                        className="text-[11px] font-semibold bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 focus:outline-none"
+                      >
+                        <option value="Pending Screening">Pending Screening</option>
+                        <option value="Escalated to Physical Visit">Escalate to Visit</option>
+                        <option value="Screening Complete">Screening Complete</option>
+                      </select>
+                    </div>
                   </td>
                 </tr>
               ))}

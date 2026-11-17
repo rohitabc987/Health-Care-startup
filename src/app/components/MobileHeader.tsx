@@ -21,6 +21,11 @@ export function MobileHeader() {
     setMounted(true);
   }, []);
 
+  // Hide mobile header inside active video consultation rooms for native call view
+  if (pathname.startsWith("/room/")) {
+    return null;
+  }
+
   const isMainTab = MAIN_TAB_ROUTES.includes(pathname);
   const showBackButton = !isMainTab;
   const isLoginPage = pathname === "/login";

@@ -24,7 +24,8 @@ import {
   X,
   AlertTriangle,
   RotateCcw,
-  Check
+  Check,
+  ExternalLink
 } from "lucide-react";
 
 interface DoctorConsultationClientProps {
@@ -210,14 +211,35 @@ export function DoctorConsultationClient({
         <div className="space-y-4">
           {/* Split Screen Layout: Left Video (55%) | Right Medical Record (45%) */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-            {/* Left Column: Embedded WebRTC Video Stream */}
-            <div className="lg:col-span-7 h-[420px] sm:h-[500px]">
-              <TeleConsultationRoom
-                roomUrl={currentConsulting.meetingRoomUrl || `https://meet.jit.si/livesehat-tele-${currentConsulting.id}`}
-                userName={activeDoctor.name}
-                counterpartName={currentConsulting.patientName || "Patient"}
-                isDoctor={true}
-              />
+            {/* Left Column: Embedded WebRTC Video Stream & Direct Link */}
+            <div className="lg:col-span-7 space-y-2">
+              <div className="flex items-center justify-between px-1">
+                <span className="text-xs font-bold text-gray-700 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>Live Video Consultation</span>
+                </span>
+
+                {/* Direct Room Link for Doctor in New Tab */}
+                <a
+                  href={`/room/${currentConsulting.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs font-bold text-emerald-800 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 px-3 py-1 rounded-xl border border-emerald-200 flex items-center gap-1.5 transition-colors shadow-2xs"
+                  title="Open direct video room in full browser tab"
+                >
+                  <ExternalLink className="w-3.5 h-3.5 text-emerald-700" />
+                  <span>Direct Room Link (New Tab)</span>
+                </a>
+              </div>
+
+              <div className="h-[420px] sm:h-[500px]">
+                <TeleConsultationRoom
+                  roomUrl={currentConsulting.meetingRoomUrl || `https://meet.jit.si/livesehat-tele-${currentConsulting.id}`}
+                  userName={activeDoctor.name}
+                  counterpartName={currentConsulting.patientName || "Patient"}
+                  isDoctor={true}
+                />
+              </div>
             </div>
 
             {/* Right Column: Patient Clinical Record & Cloudinary Slip */}
@@ -406,15 +428,28 @@ export function DoctorConsultationClient({
           </div>
 
           {nextPatient ? (
-            <button
-              type="button"
-              disabled={isSubmitting}
-              onClick={() => handleStartConsultation(nextPatient)}
-              className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold rounded-2xl shadow-lg shadow-emerald-600/25 text-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
-            >
-              <Video className="w-4 h-4 stroke-[2.5]" />
-              <span>Connect First Patient: {nextPatient.patientName}</span>
-            </button>
+            <div className="space-y-2.5">
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={() => handleStartConsultation(nextPatient)}
+                className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold rounded-2xl shadow-lg shadow-emerald-600/25 text-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
+              >
+                <Video className="w-4 h-4 stroke-[2.5]" />
+                <span>Connect First Patient: {nextPatient.patientName}</span>
+              </button>
+
+              <a
+                href={`/room/${nextPatient.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-2xl text-xs flex items-center justify-center gap-1.5 transition-colors"
+                title="Open direct room link for next patient in a new tab"
+              >
+                <ExternalLink className="w-3.5 h-3.5 text-gray-500" />
+                <span>Direct Room Link (New Tab)</span>
+              </a>
+            </div>
           ) : (
             <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 text-xs text-gray-500">
               No patients verified in the ready runway yet.

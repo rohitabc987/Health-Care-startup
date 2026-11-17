@@ -19,6 +19,11 @@ export function DesktopHeader() {
     setMounted(true);
   }, []);
 
+  // Hide desktop header inside active video consultation rooms for distraction-free view
+  if (pathname.startsWith("/room/")) {
+    return null;
+  }
+
   const getInitials = (name?: string) => {
     if (!name) return "PT";
     const parts = name.trim().split(" ");

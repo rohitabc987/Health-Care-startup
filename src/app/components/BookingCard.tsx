@@ -9,7 +9,9 @@ import {
   MapPin,
   CheckCircle2,
   Zap,
-  ChevronRight
+  ChevronRight,
+  Video,
+  ExternalLink
 } from "lucide-react";
 
 export interface BookingCardProps {
@@ -203,6 +205,31 @@ export function BookingCard({ appointment, onStatusChange, showDoctorTools }: Bo
         </div>
       )}
 
+      {/* Patient Video Room Entry Button (Visible to patient on active follow-ups) */}
+      {appointment.status !== "Screening Complete" && (
+        <div className="pt-2 border-t border-gray-100">
+          <Link
+            href={`/room/${appointment.id}`}
+            className={`w-full py-2.5 px-4 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-xs ${
+              appointment.queueStatus === "in_consultation"
+                ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white animate-pulse"
+                : appointment.queueStatus === "ready_for_doctor"
+                  ? "bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm"
+                  : "bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200"
+            }`}
+          >
+            <Video className="w-4 h-4" />
+            <span>
+              {appointment.queueStatus === "in_consultation"
+                ? "Doctor is Live - Enter Consultation Room Now 🩺"
+                : appointment.queueStatus === "ready_for_doctor"
+                  ? "Doctor is Ready - Tap to Enter Room 🟢"
+                  : "Join Online Consultation Room"}
+            </span>
+          </Link>
+        </div>
+      )}
+
       {/* 4. Doctor Consultation & Ops Controls - ONLY shown to Admin or Assigned Doctor */}
       {canAccessDoctorTools && (
         <div className="pt-2 border-t border-gray-100 flex flex-wrap items-center justify-between gap-2">
@@ -216,47 +243,60 @@ export function BookingCard({ appointment, onStatusChange, showDoctorTools }: Bo
           </button>
 
           {showDetails && (
-            <div className="w-full mt-2 pt-2 border-t border-dashed border-gray-200 flex flex-col sm:flex-row gap-2">
-              {appointment.status === "Pending Screening" && (
-                <>
-                  <button
-                    type="button"
-                    disabled={isUpdating}
-                    onClick={handleEscalate}
-                    className="flex-1 py-2 px-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition-all"
-                  >
-                    <Zap className="w-3.5 h-3.5" />
-                    <span>Doctor: Escalate to Clinic</span>
-                  </button>
+            <div className="w-full mt-2 pt-2 border-t border-dashed border-gray-200 flex flex-col gap-2">
+              {/* Doctor Direct Join Shortcut */}
+              <a
+                href={`/room/${appointment.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-2 px-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition-all"
+              >
+                <Video className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Doctor: Join Room Directly (New Tab)</span>
+              </a>
+
+              <div className="flex flex-col sm:flex-row gap-2">
+                {appointment.status === "Pending Screening" && (
+                  <>
+                    <button
+                      type="button"
+                      disabled={isUpdating}
+                      onClick={handleEscalate}
+                      className="flex-1 py-2 px-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition-all"
+                    >
+                      <Zap className="w-3.5 h-3.5" />
+                      <span>Doctor: Escalate to Clinic</span>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isUpdating}
+                      onClick={handleResolve}
+                      className="flex-1 py-2 px-3 bg-emerald-700 hover:bg-emerald-800 text-white font-medium text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition-all"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>Doctor: Complete Online Consult</span>
+                    </button>
+                  </>
+                )}
+
+                {appointment.status === "Escalated to Physical Visit" && (
                   <button
                     type="button"
                     disabled={isUpdating}
                     onClick={handleResolve}
-                    className="flex-1 py-2 px-3 bg-emerald-700 hover:bg-emerald-800 text-white font-medium text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition-all"
+                    className="w-full py-2 px-3 bg-emerald-700 hover:bg-emerald-800 text-white font-medium text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition-all"
                   >
                     <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>Doctor: Complete Online Consult</span>
+                    <span>Mark Clinic Visit Done</span>
                   </button>
-                </>
-              )}
+                )}
 
-              {appointment.status === "Escalated to Physical Visit" && (
-                <button
-                  type="button"
-                  disabled={isUpdating}
-                  onClick={handleResolve}
-                  className="w-full py-2 px-3 bg-emerald-700 hover:bg-emerald-800 text-white font-medium text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition-all"
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>Mark Clinic Visit Done</span>
-                </button>
-              )}
-
-              {appointment.status === "Screening Complete" && (
-                <p className="text-[11px] text-gray-400 py-1">
-                  ✓ Consultation & care concluded successfully. Prescription & records updated.
-                </p>
-              )}
+                {appointment.status === "Screening Complete" && (
+                  <p className="text-[11px] text-gray-400 py-1">
+                    ✓ Consultation & care concluded successfully. Prescription & records updated.
+                  </p>
+                )}
+              </div>
             </div>
           )}
         </div>
