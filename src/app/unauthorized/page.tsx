@@ -16,9 +16,6 @@ export default function UnauthorizedPage() {
         </div>
 
         <div className="space-y-1.5">
-          <span className="text-[10px] uppercase font-bold tracking-wider bg-rose-100 text-rose-800 px-2.5 py-0.5 rounded-full">
-            403 • Access Restricted
-          </span>
           <h1 className="text-xl font-black text-gray-900 pt-1">Not Authorized</h1>
           <p className="text-xs text-gray-500 leading-relaxed max-w-xs mx-auto">
             You do not have permission to access this administrative portal. This area is strictly restricted to authorized clinic operations personnel.

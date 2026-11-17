@@ -85,7 +85,7 @@ export interface Appointment {
 
   // Virtual Queue & Tele-Consult Fields:
   queueStatus?: AppointmentQueueStatus;
-  meetingRoomUrl?: string;          // e.g. https://meet.jit.si/livesehat-apt-123
+  meetingRoomUrl?: string;          // e.g. https://fairmeeting.net/livesehat-apt-123
   queueOrder?: number;              // FIFO sorting rank
   consultationOutcome?: 'continued_meds' | 'dose_adjusted' | 'escalated_to_clinic';
   consultationNotes?: string;

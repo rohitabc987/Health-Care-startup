@@ -8,6 +8,7 @@ import {
   orderBy, 
   limit, 
   getDocs, 
+  getDoc,
   onSnapshot, 
   doc, 
   updateDoc, 
@@ -39,10 +40,16 @@ export function getStoredAppointments(): Appointment[] {
                a.patientName !== "Rahul Verma" &&
                a.doctorName !== "Dr. Ananya Sharma"
       );
-      if (cleaned.length !== parsed.length) {
-        localStorage.setItem(LOCAL_STORAGE_KEY_APPOINTMENTS, JSON.stringify(cleaned));
+      // Deduplicate by appointment id
+      const uniqueMap = new Map<string, Appointment>();
+      cleaned.forEach((a) => {
+        if (a && a.id) uniqueMap.set(a.id, a);
+      });
+      const uniqueList = Array.from(uniqueMap.values());
+      if (uniqueList.length !== parsed.length) {
+        localStorage.setItem(LOCAL_STORAGE_KEY_APPOINTMENTS, JSON.stringify(uniqueList));
       }
-      return cleaned;
+      return uniqueList;
     }
     return [];
   } catch {
@@ -101,9 +108,14 @@ export async function getAppointmentsServer(patientUid?: string): Promise<Appoin
           )
         : query(collection(db, "appointments"), orderBy("createdAt", "desc"));
       const snap = await getDocs(q);
-      const list: Appointment[] = [];
-      snap.forEach((d) => list.push(sanitizeAppointmentForClient(d.data(), d.id)));
-      return list;
+      const uniqueMap = new Map<string, Appointment>();
+      snap.forEach((d) => {
+        const item = sanitizeAppointmentForClient(d.data(), d.id);
+        if (item.patientName || item.patientPhone || item.doctorName) {
+          uniqueMap.set(item.id, item);
+        }
+      });
+      return Array.from(uniqueMap.values());
     } catch (err) {
       console.warn("getAppointmentsServer error:", err);
     }
@@ -166,6 +178,78 @@ export function subscribeToAppointments(
 }
 
 /**
+ * Helper to ensure video room URLs never enforce moderator logins or restrictive auth
+ * Automatically rewrites restricted domains (like meet.jit.si) to open zero-auth instances (like fairmeeting.net).
+ */
+export function getCleanVideoRoomUrl(rawUrl?: string, fallbackId?: string): string {
+  let url = rawUrl;
+  if (!url || typeof url !== "string" || !url.trim()) {
+    url = fallbackId
+      ? `https://fairmeeting.net/livesehat-tele-${fallbackId}`
+      : "https://fairmeeting.net/livesehat-tele-consult";
+  }
+  return url
+    .replace("https://meet.jit.si/", "https://fairmeeting.net/")
+    .replace("http://meet.jit.si/", "https://fairmeeting.net/");
+}
+
+/**
+ * Robust date matching helper for virtual queue and consultations.
+ * Matches ISO target date (e.g. "2026-11-17") with:
+ * 1. followupDateIso (if set)
+ * 2. followupDate (exact string or localized weekday string, e.g. "Tue, Nov 17")
+ * 3. createdAt date timestamp
+ */
+export function isAppointmentForDate(apt: Appointment, targetDateIso?: string): boolean {
+  if (!targetDateIso || targetDateIso === "all") return true;
+
+  // 1. Check direct ISO match if present
+  if ((apt as any).followupDateIso && (apt as any).followupDateIso === targetDateIso) {
+    return true;
+  }
+
+  // 2. Direct string match on followupDate if stored in YYYY-MM-DD
+  if (apt.followupDate && apt.followupDate === targetDateIso) {
+    return true;
+  }
+
+  // 3. Match against formatted followupDate (e.g. "Tue, Nov 17" or "Nov 17")
+  if (apt.followupDate && targetDateIso.includes("-")) {
+    try {
+      const [y, m, d] = targetDateIso.split("-").map(Number);
+      const targetObj = new Date(y, m - 1, d);
+      const formattedShort = targetObj.toLocaleDateString("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+      }); // e.g. "Tue, Nov 17"
+      if (apt.followupDate.trim().toLowerCase() === formattedShort.trim().toLowerCase()) {
+        return true;
+      }
+      const monthDay = targetObj.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      }); // e.g. "Nov 17"
+      if (apt.followupDate.toLowerCase().includes(monthDay.toLowerCase())) {
+        return true;
+      }
+    } catch {}
+  }
+
+  // 4. Fallback: Check if booked for today via createdAt
+  if (apt.createdAt) {
+    const createdStr = typeof apt.createdAt === "string"
+      ? apt.createdAt
+      : (typeof apt.createdAt.toDate === "function" ? apt.createdAt.toDate().toISOString() : "");
+    if (createdStr && createdStr.slice(0, 10) === targetDateIso) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
  * 1-Write Booking Function (Strictly 1 Document Written)
  */
 export async function bookAppointment(
@@ -184,7 +268,7 @@ export async function bookAppointment(
   });
 
   const generatedId = `apt-${Date.now()}`;
-  const meetingRoomUrl = data.meetingRoomUrl || `https://meet.jit.si/livesehat-tele-${generatedId}`;
+  const meetingRoomUrl = getCleanVideoRoomUrl(data.meetingRoomUrl, generatedId);
 
   const newAppointment: Appointment = {
     ...data,
@@ -198,18 +282,20 @@ export async function bookAppointment(
     searchKeywords,
   };
 
-  let appointmentId = newAppointment.id;
+  const appointmentId = newAppointment.id;
 
   if (isLiveFirebaseConfigured && db) {
     try {
       const sanitized = Object.fromEntries(
         Object.entries(newAppointment).filter(([_, v]) => v !== undefined)
       );
-      const docRef = await addDoc(collection(db, "appointments"), {
+      // Explicitly set document with generatedId so Firestore doc key matches appointment.id everywhere
+      const docRef = doc(db, "appointments", generatedId);
+      await setDoc(docRef, {
         ...sanitized,
+        id: generatedId,
         createdAt: serverTimestamp(),
       });
-      appointmentId = docRef.id;
     } catch (err) {
       console.warn("Error adding to Firestore, saving to local store:", err);
     }
@@ -393,10 +479,11 @@ export async function updateAppointmentStatus(
 export async function getAppointmentById(appointmentId: string): Promise<Appointment | null> {
   if (isLiveFirebaseConfigured && db) {
     try {
-      const snap = await getDocs(query(collection(db, "appointments"), where("__name__", "==", appointmentId)));
-      if (!snap.empty) {
-        const d = snap.docs[0];
-        const aptData = { id: d.id, ...(d.data() as Omit<Appointment, "id">) };
+      // 1. Direct doc lookup by ID
+      const docRef = doc(db, "appointments", appointmentId);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const aptData = { ...(docSnap.data() as Appointment), id: docSnap.id };
         if (!aptData.doctorName || aptData.doctorName === "undefined") {
           const docs: Doctor[] = getStoredDoctors();
           const found = docs.find((doc: Doctor) => doc.id === aptData.doctorId) || docs[0];
@@ -406,7 +493,24 @@ export async function getAppointmentById(appointmentId: string): Promise<Appoint
             aptData.clinicName = found.clinic;
           }
         }
-        return aptData;
+        return sanitizeAppointmentForClient(aptData, docSnap.id);
+      }
+
+      // 2. Query fallback if referenced by inner id
+      const snap = await getDocs(query(collection(db, "appointments"), where("id", "==", appointmentId)));
+      if (!snap.empty) {
+        const d = snap.docs[0];
+        const aptData = { ...(d.data() as Appointment), id: d.id };
+        if (!aptData.doctorName || aptData.doctorName === "undefined") {
+          const docs: Doctor[] = getStoredDoctors();
+          const found = docs.find((doc: Doctor) => doc.id === aptData.doctorId) || docs[0];
+          if (found) {
+            aptData.doctorName = found.name;
+            aptData.doctorSpecialty = found.specialty;
+            aptData.clinicName = found.clinic;
+          }
+        }
+        return sanitizeAppointmentForClient(aptData, d.id);
       }
     } catch (err) {
       console.warn("getAppointmentById Firestore lookup error:", err);
@@ -456,12 +560,7 @@ export async function updateAppointmentQueueStatus(
   if (isLiveFirebaseConfigured && db) {
     try {
       const docRef = doc(db, "appointments", appointmentId);
-      const localItem = getStoredAppointments().find((a) => a.id === appointmentId);
-      const mergedData = localItem ? { ...localItem, ...updatePayload } : updatePayload;
-      const sanitized = Object.fromEntries(
-        Object.entries(mergedData).filter(([_, v]) => v !== undefined)
-      );
-      await setDoc(docRef, sanitized, { merge: true });
+      await setDoc(docRef, updatePayload, { merge: true });
       return;
     } catch (err) {
       console.warn("Firestore updateAppointmentQueueStatus error, updating local store:", err);
@@ -502,10 +601,15 @@ export function subscribeToDoctorQueue(
       unsubscribeFirestore = onSnapshot(
         q,
         (snapshot) => {
-          const list: Appointment[] = [];
+          const map = new Map<string, Appointment>();
           snapshot.forEach((docSnap) => {
-            list.push({ id: docSnap.id, ...(docSnap.data() as Omit<Appointment, "id">) });
+            const data = docSnap.data() as Appointment;
+            // Ensure docSnap.id is ALWAYS the id, deduplicate by id, and only include non-empty records
+            if (data.patientName || data.patientPhone || data.doctorName) {
+              map.set(docSnap.id, { ...data, id: docSnap.id });
+            }
           });
+          const list = Array.from(map.values());
           list.sort((a, b) => {
             const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
             const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
