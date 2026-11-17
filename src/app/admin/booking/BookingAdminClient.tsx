@@ -147,32 +147,47 @@ export function BookingAdminClient({
       )}
 
       {/* Date & Doctor Filter Controls Bar */}
-      <div className="bg-white p-4 sm:p-5 rounded-3xl border border-gray-150 shadow-xs flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2.5">
-          {/* Date Picker */}
-          <div className="flex items-center gap-1.5 bg-gray-50 px-3 py-2 rounded-2xl border border-gray-200">
-            <Calendar className="w-4 h-4 text-gray-500" />
-            <input
-              type="date"
-              value={todayDate}
-              onChange={(e) => setTodayDate(e.target.value)}
-              className="bg-transparent text-xs font-bold text-gray-800 focus:outline-none cursor-pointer"
-            />
+      <div className="bg-white p-3.5 sm:p-5 rounded-3xl border border-gray-150 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3 w-full max-w-full overflow-hidden">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2.5 w-full min-w-0 max-w-full flex-1">
+          {/* Top Row on Mobile: Date Picker + Refresh Button */}
+          <div className="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto min-w-0">
+            {/* Date Picker */}
+            <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-2xl border border-gray-200 min-w-0 flex-1 sm:flex-initial">
+              <Calendar className="w-4 h-4 text-gray-500 shrink-0" />
+              <input
+                type="date"
+                value={todayDate}
+                onChange={(e) => setTodayDate(e.target.value)}
+                className="bg-transparent text-xs font-bold text-gray-800 focus:outline-none cursor-pointer w-full sm:w-auto min-w-0"
+              />
+            </div>
+
+            {/* Mobile-Only Refresh Button */}
+            <button
+              type="button"
+              onClick={() => loadMetricsAndAppointments(todayDate, selectedDoctorId)}
+              disabled={isLoadingAppointments}
+              className="sm:hidden py-2 px-3 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-2xl transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 active:scale-95 shrink-0"
+              title="Refresh Data"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isLoadingAppointments ? "animate-spin" : ""}`} />
+              <span>Refresh</span>
+            </button>
           </div>
 
           {/* Doctor Filter (Hidden if logged in as Doctor) */}
           {!isDoctor && (
-            <div className="flex items-center gap-1.5 bg-gray-50 px-3 py-2 rounded-2xl border border-gray-200">
-              <Filter className="w-4 h-4 text-gray-500" />
+            <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-2xl border border-gray-200 w-full min-w-0 max-w-full sm:max-w-xs overflow-hidden flex-1">
+              <Filter className="w-4 h-4 text-gray-500 shrink-0" />
               <select
                 value={selectedDoctorId}
                 onChange={(e) => setSelectedDoctorId(e.target.value)}
-                className="bg-transparent text-xs font-bold text-gray-800 focus:outline-none cursor-pointer pr-2"
+                className="bg-transparent text-xs font-bold text-gray-800 focus:outline-none cursor-pointer w-full min-w-0 max-w-full truncate pr-1"
               >
-                <option value="all">All Doctors (Clinic Overview)</option>
+                <option value="all">All Doctors</option>
                 {doctorsList.map((doc) => (
                   <option key={doc.id} value={doc.id}>
-                    {doc.name} ({doc.specialty})
+                    {doc.name}
                   </option>
                 ))}
               </select>
@@ -180,12 +195,12 @@ export function BookingAdminClient({
           )}
         </div>
 
-        {/* Refresh Button */}
+        {/* Desktop-Only Refresh Button */}
         <button
           type="button"
           onClick={() => loadMetricsAndAppointments(todayDate, selectedDoctorId)}
           disabled={isLoadingAppointments}
-          className="py-2 px-3.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-2xl transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 active:scale-95"
+          className="hidden sm:flex py-2 px-3.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-2xl transition-all items-center gap-1.5 cursor-pointer disabled:opacity-50 active:scale-95 shrink-0"
           title="Refresh Data"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${isLoadingAppointments ? "animate-spin" : ""}`} />

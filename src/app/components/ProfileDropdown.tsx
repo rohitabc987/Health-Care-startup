@@ -4,6 +4,7 @@ import React, { useEffect, useRef } from "react";
 import Link from "next/link";
 import { useNavigation } from "@/context/NavigationContext";
 import { useAuth } from "@/context/AuthContext";
+import { generateHealthId } from "@/lib/userService";
 import {
   User,
   CalendarCheck,
@@ -14,8 +15,11 @@ import {
   LogOut,
   X,
   Check,
+  Crown,
   Stethoscope,
-  LogIn
+  LogIn,
+  LayoutDashboard,
+  Video
 } from "lucide-react";
 
 interface ProfileDropdownProps {
@@ -24,9 +28,9 @@ interface ProfileDropdownProps {
   currentLocation?: string;
 }
 
-export function ProfileDropdown({ isOpen, onClose, currentLocation = "Viram Khand 5, Gomti Nagar" }: ProfileDropdownProps) {
+export function ProfileDropdown({ isOpen, onClose }: ProfileDropdownProps) {
   const { activeBookingsCount } = useNavigation();
-  const { user, openLoginModal, logout } = useAuth();
+  const { user, logout } = useAuth();
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   const getInitials = (name?: string) => {
@@ -34,6 +38,22 @@ export function ProfileDropdown({ isOpen, onClose, currentLocation = "Viram Khan
     const parts = name.trim().split(" ");
     if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
     return name.slice(0, 2).toUpperCase();
+  };
+
+  const isSuperAdmin = user?.role === "super_admin";
+  const isDoctor = user?.role === "doctor";
+  const isPatient = Boolean(user && user.role !== "super_admin" && user.role !== "doctor");
+  const isGuest = !user;
+  const healthId = user?.healthId || (user?.phone ? generateHealthId(user.phone) : null);
+
+  const handleSupportClick = () => {
+    alert("Pronto 24/7 Operations Desk\nToll-Free: 1800-PRONTO-CARE (1800-776-686)\nClinic Ops Liaison: +91 99887 76655\nGround hours: Mon-Sun 8 AM - 10 PM");
+    onClose();
+  };
+
+  const handleLogoutClick = () => {
+    logout();
+    onClose();
   };
 
   // Close when clicking outside or pressing Escape
@@ -70,10 +90,10 @@ export function ProfileDropdown({ isOpen, onClose, currentLocation = "Viram Khan
         onClick={onClose}
       />
 
-      {/* Dropdown Container */}
+      {/* Clean Compact Dropdown Menu */}
       <div
         ref={dropdownRef}
-        className="absolute right-0 top-full mt-2 w-80 sm:w-88 bg-white rounded-3xl shadow-2xl border border-gray-200/90 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+        className="absolute right-0 top-full mt-2 w-72 sm:w-80 bg-white rounded-3xl shadow-2xl border border-gray-200/90 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
       >
         {/* Header: User Profile Info or Sign In Prompt */}
         <div className="p-4 bg-gradient-to-br from-emerald-50 via-teal-50/50 to-white border-b border-gray-150">
@@ -85,8 +105,8 @@ export function ProfileDropdown({ isOpen, onClose, currentLocation = "Viram Khan
                     <User className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-900 text-sm leading-tight">Welcome Patient</h3>
-                    <p className="text-[11px] text-gray-500">Sign in for follow-ups &amp; slips</p>
+                    <h3 className="font-bold text-gray-900 text-sm leading-tight">Welcome</h3>
+                    <p className="text-[11px] text-gray-500">Sign in to your account</p>
                   </div>
                 </div>
                 <Link
@@ -95,49 +115,54 @@ export function ProfileDropdown({ isOpen, onClose, currentLocation = "Viram Khan
                   className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition-all active:scale-95"
                 >
                   <LogIn className="w-3.5 h-3.5 stroke-[2.3]" />
-                  <span>Login with Mobile Number</span>
+                  <span>Login with Mobile</span>
                 </Link>
               </div>
             ) : (
               <Link
                 href="/profile"
                 onClick={onClose}
-                className="flex items-center gap-3 flex-1 group/user cursor-pointer pr-2 hover:opacity-95 transition-opacity"
-                title="Click photo or name to open Profile page"
+                className="flex items-center gap-3 flex-1 group/user cursor-pointer pr-2 hover:opacity-95 transition-opacity min-w-0"
+                title="View Profile"
               >
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white font-black text-lg flex items-center justify-center shadow-md shadow-emerald-600/20 group-hover/user:scale-105 group-hover/user:ring-2 group-hover/user:ring-emerald-400 transition-all">
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white font-black text-base flex items-center justify-center shadow-md shadow-emerald-600/20 group-hover/user:scale-105 transition-all shrink-0">
                   {getInitials(user?.name)}
                 </div>
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
-                    <h3 className="font-bold text-gray-900 text-sm leading-tight group-hover/user:text-emerald-700 transition-colors">
-                      {user?.name || "Patient"}
+                    <h3 className="font-bold text-gray-900 text-sm leading-tight group-hover/user:text-emerald-700 transition-colors truncate">
+                      {user?.name || "User"}
                     </h3>
-                    <span
-                      className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-emerald-500 text-white shrink-0 shadow-2xs"
-                      title="Verified"
-                    >
-                      <Check className="w-2.5 h-2.5 stroke-[3]" />
-                    </span>
+                    {isSuperAdmin ? (
+                      <span
+                        className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-amber-500 text-slate-950 shrink-0 shadow-2xs"
+                        title="Super Admin"
+                      >
+                        <Crown className="w-2.5 h-2.5 stroke-[2.8]" />
+                      </span>
+                    ) : isDoctor ? (
+                      <span
+                        className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-teal-600 text-white shrink-0 shadow-2xs"
+                        title="Doctor"
+                      >
+                        <Stethoscope className="w-2.5 h-2.5 stroke-[2.8]" />
+                      </span>
+                    ) : (
+                      <span
+                        className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-emerald-500 text-white shrink-0 shadow-2xs"
+                        title="Verified Patient"
+                      >
+                        <Check className="w-2.5 h-2.5 stroke-[3]" />
+                      </span>
+                    )}
                   </div>
-                  <p className="text-xs text-gray-500 font-mono mt-0.5">{user?.phone || ""}</p>
-                  {user?.role === "super_admin" && (
-                    <span className="inline-flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded-full mt-1">
-                      👑 Super Admin
-                    </span>
-                  )}
-                  {user?.role === "doctor" && (
-                    <span className="inline-flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-900 border border-emerald-300 px-2 py-0.5 rounded-full mt-1">
-                      🩺 Doctor
-                    </span>
-                  )}
-                  {(!user?.role || user?.role === "patient") && (
-                    <span className="inline-flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200 px-2 py-0.5 rounded-full mt-1">
-                      👤 Patient
-                    </span>
-                  )}
-                  {user?.healthId && (
-                    <p className="text-[10px] font-mono text-emerald-700 font-semibold mt-0.5">{user.healthId}</p>
+                  <p className="text-xs text-gray-500 font-mono mt-0.5 truncate">{user?.phone || ""}</p>
+                  {healthId && (
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <span className="text-[11px] font-mono font-bold text-emerald-800 bg-emerald-100/70 border border-emerald-200/80 px-1.5 py-0.2 rounded select-all">
+                        {healthId}
+                      </span>
+                    </div>
                   )}
                 </div>
               </Link>
@@ -154,243 +179,436 @@ export function ProfileDropdown({ isOpen, onClose, currentLocation = "Viram Khan
           </div>
         </div>
 
-        {/* Dropdown Menu Items */}
-        <div className="p-2 space-y-1 text-xs">
-          {/* Profile Section */}
-          <Link
-            href="/profile"
-            onClick={onClose}
-            className="w-full p-2.5 rounded-2xl hover:bg-emerald-50/70 text-gray-700 hover:text-emerald-950 transition-colors flex items-center justify-between group"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-emerald-100/70 group-hover:bg-emerald-100 text-emerald-700 flex items-center justify-center transition-colors">
-                <User className="w-4 h-4" />
-              </div>
-              <div className="text-left">
-                <p className="font-bold text-gray-900 group-hover:text-emerald-900">My Profile</p>
-                <p className="text-[11px] text-gray-400">Health ID, address details &amp; records</p>
-              </div>
-            </div>
-            <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
-          </Link>
-
-          {/* Item 1: My Follow-ups */}
-          <Link
-            href="/bookings"
-            onClick={onClose}
-            className="w-full p-2.5 rounded-2xl hover:bg-emerald-50/70 text-gray-700 hover:text-emerald-950 transition-colors flex items-center justify-between group"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-gray-100 group-hover:bg-emerald-100 text-gray-600 group-hover:text-emerald-700 flex items-center justify-center transition-colors">
-                <CalendarCheck className="w-4 h-4" />
-              </div>
-              <div className="text-left">
-                <p className="font-bold text-gray-900 group-hover:text-emerald-900">My Booking</p>
-                <p className="text-[11px] text-gray-400">Track active follow-up triage & clinic pass</p>
-              </div>
-            </div>
-            {activeBookingsCount > 0 ? (
-              <span className="bg-emerald-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full">
-                {activeBookingsCount}
-              </span>
-            ) : (
-              <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
-            )}
-          </Link>
-
-          {/* Item 2: Prescription Vault */}
-          <Link
-            href="/prescriptions"
-            onClick={onClose}
-            className="w-full p-2.5 rounded-2xl hover:bg-emerald-50/70 text-gray-700 hover:text-emerald-950 transition-colors flex items-center justify-between group"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-gray-100 group-hover:bg-emerald-100 text-gray-600 group-hover:text-emerald-700 flex items-center justify-center transition-colors">
-                <FileText className="w-4 h-4" />
-              </div>
-              <div className="text-left">
-                <p className="font-bold text-gray-900 group-hover:text-emerald-900">My Prescription</p>
-                <p className="text-[11px] text-gray-400">View & snapshot paper slips</p>
-              </div>
-            </div>
-            <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
-          </Link>
-
-
-
-          {/* Item 4: Switch Account / Zero-Captcha Phone Login */}
-          <div className="pt-1 border-t border-gray-150">
-
-          </div>
-
-          {/* Item 3: Find Doctors */}
-          <Link
-            href="/"
-            onClick={onClose}
-            className="w-full p-2.5 rounded-2xl hover:bg-emerald-50/70 text-gray-700 hover:text-emerald-950 transition-colors flex items-center justify-between group"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-gray-100 group-hover:bg-emerald-100 text-gray-600 group-hover:text-emerald-700 flex items-center justify-center transition-colors">
-                <Stethoscope className="w-4 h-4" />
-              </div>
-              <div className="text-left">
-                <p className="font-bold text-gray-900 group-hover:text-emerald-900">Find Doctors</p>
-                <p className="text-[11px] text-gray-400">Directory & book follow-ups</p>
-              </div>
-            </div>
-            <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
-          </Link>
-
-          {/* Item 5: Booking & Triage Support */}
-          <div>
-            <button
-              type="button"
-              onClick={() => {
-                alert("Pronto 24/7 Operations Desk\nToll-Free: 1800-PRONTO-CARE (1800-776-686)\nClinic Ops Liaison: +91 99887 76655\nGround hours: Mon-Sun 8 AM - 10 PM");
-                onClose();
-              }}
-              className="w-full p-2.5 rounded-2xl hover:bg-slate-50 text-gray-700 transition-colors flex items-center justify-between group"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                  <PhoneCall className="w-4 h-4" />
-                </div>
-                <div className="text-left">
-                  <p className="font-bold text-gray-900">Healthcare Support</p>
-                  <p className="text-[11px] text-gray-400">Call helpline (1800-PRONTO)</p>
-                </div>
-              </div>
-              <span className="text-[10px] bg-indigo-100 text-indigo-800 font-bold px-2 py-0.5 rounded-full">
-                24/7
-              </span>
-            </button>
-          </div>
-
-          {/* Live Virtual Queue & Doctor Hot-Seat Links */}
-          <div className="pt-1 border-t border-gray-150 space-y-1">
-            <Link
-              href="/admin/queue"
-              onClick={onClose}
-              className="w-full p-2.5 rounded-2xl bg-amber-500/10 hover:bg-amber-500/15 text-amber-900 border border-amber-500/20 transition-colors flex items-center justify-between group"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-bold">
-                  <ShieldCheck className="w-4 h-4" />
-                </div>
-                <div className="text-left">
-                  <p className="font-bold text-gray-900 group-hover:text-amber-950">Live Queue Runway</p>
-                  <p className="text-[11px] text-amber-800/80">Care team pre-check &amp; staging</p>
-                </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-amber-600 group-hover:translate-x-0.5 transition-transform" />
-            </Link>
-
-            <Link
-              href="/doctor/consultation"
-              onClick={onClose}
-              className="w-full p-2.5 rounded-2xl bg-emerald-500/10 hover:bg-emerald-500/15 text-emerald-900 border border-emerald-500/20 transition-colors flex items-center justify-between group"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold">
-                  <Stethoscope className="w-4 h-4" />
-                </div>
-                <div className="text-left">
-                  <p className="font-bold text-gray-900 group-hover:text-emerald-950">Doctor Hot-Seat</p>
-                  <p className="text-[11px] text-emerald-800/80">High-throughput consultation desk</p>
-                </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-emerald-600 group-hover:translate-x-0.5 transition-transform" />
-            </Link>
-          </div>
-
-          {/* Role-Based Operations Desk Link */}
-          {user?.role === "super_admin" ? (
-            <div>
+        {/* Clean Menu Items (Headlines Only, Zero Subtitles, Clean Section Dividers) */}
+        <div className="p-2 space-y-0.5 text-xs">
+          {/* ================= 1. PATIENT ROLE ================= */}
+          {user && isPatient && (
+            <>
+              {/* Group 1: Profile, Booking, Prescriptions */}
               <Link
-                href="/admin"
+                href="/profile"
                 onClick={onClose}
-                className="w-full p-2.5 rounded-2xl bg-amber-500/10 hover:bg-amber-500/15 text-amber-900 border border-amber-500/20 transition-colors flex items-center justify-between group"
+                className="w-full px-3 py-2 rounded-xl hover:bg-gray-100 text-gray-800 transition-colors flex items-center justify-between group"
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-bold">
-                    <ShieldCheck className="w-4 h-4" />
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center">
+                    <User className="w-3.5 h-3.5" />
                   </div>
-                  <div className="text-left">
-                    <div className="flex items-center gap-1.5">
-                      <p className="font-bold text-gray-900 group-hover:text-amber-950">Super Admin Desk</p>
-                      <span className="text-[9px] uppercase font-black bg-amber-500/20 text-amber-800 px-1.5 py-0.2 rounded-sm">Master</span>
-                    </div>
-                    <p className="text-[11px] text-amber-800/80">Manage doctors &amp; hospital sales</p>
-                  </div>
+                  <span className="font-bold text-gray-900">My Profile</span>
                 </div>
-                <ChevronRight className="w-4 h-4 text-amber-600 group-hover:translate-x-0.5 transition-transform" />
+                <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
               </Link>
-            </div>
-          ) : user?.role === "doctor" ? (
-            <div>
-              <Link
-                href="/admin"
-                onClick={onClose}
-                className="w-full p-2.5 rounded-2xl bg-emerald-500/10 hover:bg-emerald-500/15 text-emerald-900 border border-emerald-500/20 transition-colors flex items-center justify-between group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold">
-                    <Stethoscope className="w-4 h-4" />
-                  </div>
-                  <div className="text-left">
-                    <div className="flex items-center gap-1.5">
-                      <p className="font-bold text-gray-900 group-hover:text-emerald-950">Doctor Consultation Desk</p>
-                      <span className="text-[9px] uppercase font-black bg-emerald-500/20 text-emerald-800 px-1.5 py-0.2 rounded-sm">Doctor</span>
-                    </div>
-                    <p className="text-[11px] text-emerald-800/80">Your patient queue &amp; clinic sales</p>
-                  </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-emerald-600 group-hover:translate-x-0.5 transition-transform" />
-              </Link>
-            </div>
-          ) : !user ? (
-            <div>
-              <Link
-                href="/admin"
-                onClick={onClose}
-                className="w-full p-2.5 rounded-2xl hover:bg-slate-50 text-gray-700 transition-colors flex items-center justify-between group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center">
-                    <ShieldCheck className="w-4 h-4" />
-                  </div>
-                  <div className="text-left">
-                    <p className="font-bold text-gray-900 group-hover:text-emerald-950">Staff &amp; Doctor Desk</p>
-                    <p className="text-[11px] text-gray-400">Doctor roster &amp; clinic check-ins</p>
-                  </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
-              </Link>
-            </div>
-          ) : null}
 
-          {/* Item: Log Out (Visible only if authenticated) */}
-          {user && (
-            <div className="pt-1 border-t border-gray-150">
+              <Link
+                href="/bookings"
+                onClick={onClose}
+                className="w-full px-3 py-2 rounded-xl hover:bg-gray-100 text-gray-800 transition-colors flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center">
+                    <CalendarCheck className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="font-bold text-gray-900">My Bookings</span>
+                </div>
+                {activeBookingsCount > 0 ? (
+                  <span className="bg-emerald-600 text-white text-[10px] font-black px-1.5 py-0.2 rounded-full">
+                    {activeBookingsCount}
+                  </span>
+                ) : (
+                  <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+                )}
+              </Link>
+
+              <Link
+                href="/prescriptions"
+                onClick={onClose}
+                className="w-full px-3 py-2 rounded-xl hover:bg-gray-100 text-gray-800 transition-colors flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center">
+                    <FileText className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="font-bold text-gray-900">My Prescriptions</span>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+
+              {/* Section Divider */}
+              <div className="my-1.5 border-t border-gray-150" />
+
+              {/* Group 2: Find Doctors, Health Support */}
+              <Link
+                href="/"
+                onClick={onClose}
+                className="w-full px-3 py-2 rounded-xl hover:bg-gray-100 text-gray-800 transition-colors flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center">
+                    <Stethoscope className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="font-bold text-gray-900">Find Doctors</span>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+
               <button
                 type="button"
-                onClick={() => {
-                  logout();
-                  onClose();
-                }}
-                className="w-full p-2.5 rounded-2xl hover:bg-rose-50 text-rose-700 transition-colors flex items-center justify-between group"
+                onClick={handleSupportClick}
+                className="w-full px-3 py-2 rounded-xl hover:bg-gray-100 text-gray-800 transition-colors flex items-center justify-between group cursor-pointer"
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-rose-100/70 text-rose-600 flex items-center justify-center">
-                    <LogOut className="w-4 h-4" />
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                    <PhoneCall className="w-3.5 h-3.5" />
                   </div>
-                  <div className="text-left">
-                    <p className="font-bold text-gray-900 group-hover:text-rose-900">Log Out</p>
-                    <p className="text-[11px] text-gray-400">Sign out of this device</p>
-                  </div>
+                  <span className="font-bold text-gray-900">Healthcare Support</span>
                 </div>
+                <span className="text-[10px] bg-indigo-100 text-indigo-800 font-bold px-1.5 py-0.2 rounded-full">
+                  24/7
+                </span>
               </button>
-            </div>
+
+              {/* Section Divider */}
+              <div className="my-1.5 border-t border-gray-150" />
+
+              {/* Group 3: Log Out */}
+              <button
+                type="button"
+                onClick={handleLogoutClick}
+                className="w-full px-3 py-2 rounded-xl hover:bg-rose-50 text-rose-700 transition-colors flex items-center justify-between group cursor-pointer"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-rose-100/70 text-rose-600 flex items-center justify-center">
+                    <LogOut className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="font-bold text-rose-700">Log Out</span>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 text-rose-400 group-hover:translate-x-0.5 transition-transform" />
+              </button>
+            </>
+          )}
+
+          {/* ================= 2. DOCTOR ROLE ================= */}
+          {user && isDoctor && (
+            <>
+              {/* Group 1: My Profile, My Booking (Today's Bookings), Doctor Consultation */}
+              <Link
+                href="/profile"
+                onClick={onClose}
+                className="w-full px-3 py-2 rounded-xl hover:bg-gray-100 text-gray-800 transition-colors flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center">
+                    <User className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="font-bold text-gray-900">My Profile</span>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+
+              <Link
+                href="/admin/booking"
+                onClick={onClose}
+                className="w-full px-3 py-2 rounded-xl hover:bg-gray-100 text-gray-800 transition-colors flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center">
+                    <CalendarCheck className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="font-bold text-gray-900">My Bookings</span>
+                </div>
+                {activeBookingsCount > 0 ? (
+                  <span className="bg-emerald-600 text-white text-[10px] font-black px-1.5 py-0.2 rounded-full">
+                    {activeBookingsCount}
+                  </span>
+                ) : (
+                  <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+                )}
+              </Link>
+
+              <Link
+                href="/doctor/consultation"
+                onClick={onClose}
+                className="w-full px-3 py-2 rounded-xl hover:bg-emerald-50 text-emerald-950 transition-colors flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center">
+                    <Stethoscope className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="font-bold text-gray-900">Doctor Consultation</span>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 text-emerald-600 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+
+              {/* Section Divider */}
+              <div className="my-1.5 border-t border-gray-150" />
+
+              {/* Group 2: Healthcare Support */}
+              <button
+                type="button"
+                onClick={handleSupportClick}
+                className="w-full px-3 py-2 rounded-xl hover:bg-gray-100 text-gray-800 transition-colors flex items-center justify-between group cursor-pointer"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                    <PhoneCall className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="font-bold text-gray-900">Healthcare Support</span>
+                </div>
+                <span className="text-[10px] bg-indigo-100 text-indigo-800 font-bold px-1.5 py-0.2 rounded-full">
+                  24/7
+                </span>
+              </button>
+
+              {/* Section Divider */}
+              <div className="my-1.5 border-t border-gray-150" />
+
+              {/* Group 3: Log Out */}
+              <button
+                type="button"
+                onClick={handleLogoutClick}
+                className="w-full px-3 py-2 rounded-xl hover:bg-rose-50 text-rose-700 transition-colors flex items-center justify-between group cursor-pointer"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-rose-100/70 text-rose-600 flex items-center justify-center">
+                    <LogOut className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="font-bold text-rose-700">Log Out</span>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 text-rose-400 group-hover:translate-x-0.5 transition-transform" />
+              </button>
+            </>
+          )}
+
+          {/* ================= 3. SUPER ADMIN ROLE ================= */}
+          {user && isSuperAdmin && (
+            <>
+              {/* Group 1: Profile, Today's Booking, Doctor Directory */}
+              <Link
+                href="/profile"
+                onClick={onClose}
+                className="w-full px-3 py-2 rounded-xl hover:bg-gray-100 text-gray-800 transition-colors flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center">
+                    <User className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="font-bold text-gray-900">Profile</span>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+
+              <Link
+                href="/admin/booking"
+                onClick={onClose}
+                className="w-full px-3 py-2 rounded-xl hover:bg-gray-100 text-gray-800 transition-colors flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center">
+                    <CalendarCheck className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="font-bold text-gray-900">Today&apos;s Bookings</span>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+
+              <Link
+                href="/admin/doctor"
+                onClick={onClose}
+                className="w-full px-3 py-2 rounded-xl hover:bg-gray-100 text-gray-800 transition-colors flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-blue-100 text-blue-800 flex items-center justify-center">
+                    <Stethoscope className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="font-bold text-gray-900">Doctor Directory</span>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+
+              {/* Section Divider */}
+              <div className="my-1.5 border-t border-gray-150" />
+
+              {/* Group 2: Admin, Virtual Queue, Doctor Consultation */}
+              <Link
+                href="/admin"
+                onClick={onClose}
+                className="w-full px-3 py-2 rounded-xl hover:bg-amber-50 text-amber-950 transition-colors flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-amber-500 text-slate-950 flex items-center justify-center">
+                    <LayoutDashboard className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="font-bold text-gray-900">Admin Hub</span>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 text-amber-600 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+
+              <Link
+                href="/admin/queue"
+                onClick={onClose}
+                className="w-full px-3 py-2 rounded-xl hover:bg-purple-50 text-purple-950 transition-colors flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center">
+                    <Video className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="font-bold text-gray-900">Virtual Queue</span>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+
+              <Link
+                href="/doctor/consultation"
+                onClick={onClose}
+                className="w-full px-3 py-2 rounded-xl hover:bg-gray-100 text-gray-800 transition-colors flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="font-bold text-gray-900">Doctor Consultation</span>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+
+              {/* Section Divider */}
+              <div className="my-1.5 border-t border-gray-150" />
+
+              {/* Group 3: Healthcare Support */}
+              <button
+                type="button"
+                onClick={handleSupportClick}
+                className="w-full px-3 py-2 rounded-xl hover:bg-gray-100 text-gray-800 transition-colors flex items-center justify-between group cursor-pointer"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                    <PhoneCall className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="font-bold text-gray-900">Healthcare Support</span>
+                </div>
+                <span className="text-[10px] bg-indigo-100 text-indigo-800 font-bold px-1.5 py-0.2 rounded-full">
+                  24/7
+                </span>
+              </button>
+
+              {/* Section Divider */}
+              <div className="my-1.5 border-t border-gray-150" />
+
+              {/* Group 4: Log Out */}
+              <button
+                type="button"
+                onClick={handleLogoutClick}
+                className="w-full px-3 py-2 rounded-xl hover:bg-rose-50 text-rose-700 transition-colors flex items-center justify-between group cursor-pointer"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-rose-100/70 text-rose-600 flex items-center justify-center">
+                    <LogOut className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="font-bold text-rose-700">Log Out</span>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 text-rose-400 group-hover:translate-x-0.5 transition-transform" />
+              </button>
+            </>
+          )}
+
+          {/* ================= 4. GUEST / UNLOGGED USER ================= */}
+          {isGuest && (
+            <>
+              {/* Group 1: My Profile, My Booking, My Prescription */}
+              <Link
+                href="/login?redirect=/profile"
+                onClick={onClose}
+                className="w-full px-3 py-2 rounded-xl hover:bg-gray-100 text-gray-800 transition-colors flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center">
+                    <User className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="font-bold text-gray-900">My Profile</span>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+
+              <Link
+                href="/bookings"
+                onClick={onClose}
+                className="w-full px-3 py-2 rounded-xl hover:bg-gray-100 text-gray-800 transition-colors flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center">
+                    <CalendarCheck className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="font-bold text-gray-900">My Bookings</span>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+
+              <Link
+                href="/prescriptions"
+                onClick={onClose}
+                className="w-full px-3 py-2 rounded-xl hover:bg-gray-100 text-gray-800 transition-colors flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center">
+                    <FileText className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="font-bold text-gray-900">My Prescriptions</span>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+
+              {/* Section Divider */}
+              <div className="my-1.5 border-t border-gray-150" />
+
+              {/* Group 2: Find Doctors, Healthcare Support */}
+              <Link
+                href="/"
+                onClick={onClose}
+                className="w-full px-3 py-2 rounded-xl hover:bg-gray-100 text-gray-800 transition-colors flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center">
+                    <Stethoscope className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="font-bold text-gray-900">Find Doctors</span>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+
+              <button
+                type="button"
+                onClick={handleSupportClick}
+                className="w-full px-3 py-2 rounded-xl hover:bg-gray-100 text-gray-800 transition-colors flex items-center justify-between group cursor-pointer"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                    <PhoneCall className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="font-bold text-gray-900">Healthcare Support</span>
+                </div>
+                <span className="text-[10px] bg-indigo-100 text-indigo-800 font-bold px-1.5 py-0.2 rounded-full">
+                  24/7
+                </span>
+              </button>
+
+              {/* Section Divider */}
+              <div className="my-1.5 border-t border-gray-150" />
+
+              {/* Group 3: Staff & Doctor Login */}
+              <Link
+                href="/login"
+                onClick={onClose}
+                className="w-full px-3 py-2 rounded-xl hover:bg-emerald-50 text-emerald-800 transition-colors flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="font-bold text-emerald-900">Staff &amp; Doctor Login</span>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 text-emerald-600 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+            </>
           )}
         </div>
       </div>

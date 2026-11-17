@@ -1,28 +1,28 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { 
-  Appointment, 
-  Doctor, 
-  getTodayOverallSales, 
-  getDoctorDailySales, 
+import {
+  Appointment,
+  Doctor,
+  getTodayOverallSales,
+  getDoctorDailySales,
   getAppointments,
   subscribeToDoctors,
   updateAppointmentStatus,
   AppointmentStatus
 } from "@/lib/firebase";
-import { 
-  addDoctorServerAction, 
+import {
+  addDoctorServerAction,
   toggleDoctorStatusServerAction,
   updateDoctorServerAction
 } from "@/app/actions/doctorActions";
-import { 
-  BarChart3, 
-  Stethoscope, 
-  ShieldCheck, 
-  Filter, 
-  CheckCircle2, 
-  RefreshCw, 
+import {
+  BarChart3,
+  Stethoscope,
+  ShieldCheck,
+  Filter,
+  CheckCircle2,
+  RefreshCw,
   Calendar,
   LogOut
 } from "lucide-react";
@@ -32,9 +32,9 @@ import { AdminDoctorCatalog } from "./components/AdminDoctorCatalog";
 import { AddDoctorModal } from "./components/AddDoctorModal";
 import { EditDoctorModal } from "./components/EditDoctorModal";
 
-import { 
-  revalidateDoctorsCatalogAction, 
-  revalidateTodayAnalyticsAction 
+import {
+  revalidateDoctorsCatalogAction,
+  revalidateTodayAnalyticsAction
 } from "@/app/actions/cacheActions";
 import { useAuth } from "@/context/AuthContext";
 import { UserRole } from "@/lib/types";
@@ -197,9 +197,9 @@ export function AdminClient({
                 ? `Doctor Consultation Desk${currentDoctorObj?.name ? ` • ${currentDoctorObj.name}` : ""}`
                 : "Pronto Super Admin Operations Desk"}
             </h1>
-            <span className="text-[10px] uppercase font-bold tracking-wider bg-emerald-400/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-400/30">
+            {/* <span className="text-[10px] uppercase font-bold tracking-wider bg-emerald-400/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-400/30">
               {isDoctor ? "Doctor Portal" : "Admin Portal"}
-            </span>
+            </span> */}
           </div>
           <p className="text-xs sm:text-sm text-slate-400 mt-1">
             {isDoctor
@@ -216,11 +216,10 @@ export function AdminClient({
               <button
                 type="button"
                 onClick={() => setActiveTab("sales")}
-                className={`py-2 px-3.5 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer ${
-                  activeTab === "sales"
+                className={`py-2 px-3.5 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer ${activeTab === "sales"
                     ? "bg-emerald-500 text-slate-950 shadow-md"
                     : "text-slate-300 hover:text-white"
-                }`}
+                  }`}
               >
                 <BarChart3 className="w-4 h-4" />
                 <span>Today&apos;s Bookings</span>
@@ -228,11 +227,10 @@ export function AdminClient({
               <button
                 type="button"
                 onClick={() => setActiveTab("doctors")}
-                className={`py-2 px-3.5 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer ${
-                  activeTab === "doctors"
+                className={`py-2 px-3.5 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer ${activeTab === "doctors"
                     ? "bg-emerald-500 text-slate-950 shadow-md"
                     : "text-slate-300 hover:text-white"
-                }`}
+                  }`}
               >
                 <Stethoscope className="w-4 h-4" />
                 <span>Doctors ({doctorsList.length})</span>
@@ -292,18 +290,18 @@ export function AdminClient({
                   <span>Clinic: {currentDoctorObj?.name || user?.name || "My Appointments"}</span>
                 </div>
               ) : (
-                <div className="flex items-center gap-2 text-xs font-bold text-gray-700">
-                  <Filter className="w-4 h-4 text-emerald-600" />
-                  <span>Doctor Filter:</span>
+                <div className="flex items-center gap-2 text-xs font-bold text-gray-700 min-w-0 max-w-full sm:max-w-xs overflow-hidden">
+                  <Filter className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span className="shrink-0">Doctor:</span>
                   <select
                     value={selectedDoctorId}
                     onChange={(e) => setSelectedDoctorId(e.target.value)}
-                    className="px-3 py-1.5 rounded-xl border border-gray-200 text-xs font-semibold bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="px-3 py-1.5 rounded-xl border border-gray-200 text-xs font-semibold bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 w-full min-w-0 max-w-full truncate"
                   >
-                    <option value="all">All Doctors (Overall)</option>
+                    <option value="all">All Doctors</option>
                     {doctorsList.map((d) => (
                       <option key={d.id} value={d.id}>
-                        {d.name} ({d.specialty.split("&")[0]})
+                        {d.name}
                       </option>
                     ))}
                   </select>

@@ -31,9 +31,15 @@ export function DesktopHeader() {
 
   const navLinks = [
     { label: "Home", href: "/" },
-    { label: "My Bookings", href: "/bookings", count: activeBookingsCount, show: !isDoctor },
-    { label: "Prescriptions", href: "/prescriptions", show: !isDoctor },
-    { label: "Doctor Hot-Seat", href: "/doctor/consultation", show: isSuperAdmin || isDoctor },
+    {
+      label: isSuperAdmin ? "Today's Bookings" : "My Bookings",
+      href: isSuperAdmin ? "/admin/booking" : "/bookings",
+      count: activeBookingsCount,
+      show: !isDoctor,
+    },
+    { label: "Prescriptions", href: "/prescriptions", show: !isDoctor && !isSuperAdmin },
+    { label: "Virtual Queue", href: "/admin/queue", show: isSuperAdmin },
+    { label: "Doctor Consultation", href: "/doctor/consultation", show: isDoctor },
   ].filter((item) => item.show !== false);
 
   return (
@@ -59,7 +65,7 @@ export function DesktopHeader() {
           </Link>
 
           {/* Center: Clean Nav Bar (Text links, not enclosed in individual boxes) */}
-          <nav className="flex items-center gap-8">
+          <nav className="flex items-center gap-8" suppressHydrationWarning>
             {navLinks.map((item) => {
               const isActive = pathname === item.href;
               return (

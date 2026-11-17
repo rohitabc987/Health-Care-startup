@@ -5,6 +5,7 @@ import Link from "next/link";
 import { UserProfile, UserAddress } from "@/lib/firebase";
 import { revalidatePatientDataAction } from "@/app/actions/cacheActions";
 import { useAuth } from "@/context/AuthContext";
+import { generateHealthId } from "@/lib/userService";
 import {
   CheckCircle2,
   FileText,
@@ -13,6 +14,8 @@ import {
   LogIn,
   Edit3,
   Check,
+  Crown,
+  Stethoscope,
   X
 } from "lucide-react";
 
@@ -25,6 +28,8 @@ export function ProfileClient({ initialUser, serverUid }: ProfileClientProps) {
   const { user, updateUser, openLoginModal } = useAuth();
   const activeUser = user || initialUser;
   const isUserAuthenticated = Boolean(serverUid || activeUser?.uid);
+  const isSuperAdmin = activeUser?.role === "super_admin";
+  const isDoctor = activeUser?.role === "doctor";
 
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [editName, setEditName] = useState(activeUser?.name || "");
@@ -162,8 +167,8 @@ export function ProfileClient({ initialUser, serverUid }: ProfileClientProps) {
 
             <div className="flex items-center gap-2 mt-1.5">
               <span className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">Health ID:</span>
-              <span className="text-xs font-mono font-bold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-md border border-emerald-100 inline-block">
-                {activeUser.healthId || "#IND-95917348"}
+              <span className="text-xs font-mono font-bold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-md border border-emerald-100 inline-block select-all">
+                {activeUser.healthId || (activeUser.phone ? generateHealthId(activeUser.phone) : "#IND-95917348")}
               </span>
             </div>
           </div>
@@ -190,12 +195,28 @@ export function ProfileClient({ initialUser, serverUid }: ProfileClientProps) {
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <h2 className="font-bold text-gray-900 text-base">{activeUser.name}</h2>
-                            <span
-                              className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-emerald-500 text-white shrink-0 shadow-2xs"
-                              title="Verified"
-                            >
-                              <Check className="w-2.5 h-2.5 stroke-[3]" />
-                            </span>
+                            {isSuperAdmin ? (
+                              <span
+                                className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-amber-500 text-slate-950 shrink-0 shadow-2xs"
+                                title="Super Admin"
+                              >
+                                <Crown className="w-2.5 h-2.5 stroke-[2.8]" />
+                              </span>
+                            ) : isDoctor ? (
+                              <span
+                                className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-teal-600 text-white shrink-0 shadow-2xs"
+                                title="Doctor"
+                              >
+                                <Stethoscope className="w-2.5 h-2.5 stroke-[2.8]" />
+                              </span>
+                            ) : (
+                              <span
+                                className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-emerald-500 text-white shrink-0 shadow-2xs"
+                                title="Verified Patient"
+                              >
+                                <Check className="w-2.5 h-2.5 stroke-[3]" />
+                              </span>
+                            )}
                           </div>
                           <p className="text-xs text-gray-500 font-mono mt-0.5">{activeUser.phone}</p>
                         </div>

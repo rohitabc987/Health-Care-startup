@@ -2,11 +2,11 @@
 
 import React from "react";
 import Link from "next/link";
-import { 
-  CalendarCheck, 
-  Stethoscope, 
-  Video, 
-  ArrowRight, 
+import {
+  CalendarCheck,
+  Stethoscope,
+  Video,
+  ArrowRight,
   CheckCircle2,
   Clock,
   ShieldCheck,
@@ -59,10 +59,10 @@ export function AdminDashboardClient({
 
               <div>
                 <h3 className="text-lg font-black text-gray-900 group-hover:text-emerald-700 transition-colors">
-                  Today&apos;s Bookings Desk
+                  Bookings Desk
                 </h3>
                 <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-                  Review the patient consultation queue, clinical triage statuses, screening progress, and daily revenue calculations.
+                  Review the patient consultation queue, clinical triage statuses and daily revenue calculations.
                 </p>
               </div>
 

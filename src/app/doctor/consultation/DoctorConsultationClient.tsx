@@ -9,6 +9,7 @@ import {
   subscribeToDoctors,
   Doctor
 } from "@/lib/firebase";
+import { UserRole } from "@/lib/types";
 import { TeleConsultationRoom } from "@/app/components/TeleConsultationRoom";
 import {
   Video,
@@ -27,28 +28,49 @@ import {
 } from "lucide-react";
 
 interface DoctorConsultationClientProps {
+  initialDoctors: Doctor[];
   initialAppointments: Appointment[];
+  userRole: UserRole;
+  userDoctorId?: string;
 }
 
-export function DoctorConsultationClient({ initialAppointments }: DoctorConsultationClientProps) {
+export function DoctorConsultationClient({
+  initialDoctors,
+  initialAppointments,
+  userRole,
+  userDoctorId,
+}: DoctorConsultationClientProps) {
   const [appointments, setAppointments] = useState<Appointment[]>(initialAppointments);
-  const [doctors, setDoctors] = useState<Doctor[]>([]);
-  const [selectedDoctorId, setSelectedDoctorId] = useState<string>("");
+  const [doctors, setDoctors] = useState<Doctor[]>(initialDoctors);
+
+  // Authoritative default: lock to doctor's assigned doctorId if doctor role; otherwise default to first doctor
+  const initialDoctorId =
+    userDoctorId && initialDoctors.some((d) => d.id === userDoctorId)
+      ? userDoctorId
+      : initialDoctors[0]?.id || "";
+
+  const [selectedDoctorId, setSelectedDoctorId] = useState<string>(initialDoctorId);
   const [selectedOutcome, setSelectedOutcome] = useState<"continued_meds" | "dose_adjusted" | "escalated_to_clinic">("continued_meds");
   const [doctorNotes, setDoctorNotes] = useState<string>("Review complete. Patient is recovering well, continue current medication.");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewPrescriptionUrl, setPreviewPrescriptionUrl] = useState<string | null>(null);
 
-  // Subscribe to real doctors from Firestore
+  // Subscribe to real doctors from Firestore in background
   useEffect(() => {
     const unsub = subscribeToDoctors((docs) => {
-      setDoctors(docs);
-      if (docs.length > 0 && !selectedDoctorId) {
-        setSelectedDoctorId(docs[0].id);
+      if (docs && docs.length > 0) {
+        setDoctors(docs);
+        if (!selectedDoctorId) {
+          const defaultId =
+            userDoctorId && docs.some((d) => d.id === userDoctorId)
+              ? userDoctorId
+              : docs[0].id;
+          setSelectedDoctorId(defaultId);
+        }
       }
     });
     return () => unsub();
-  }, [selectedDoctorId]);
+  }, [selectedDoctorId, userDoctorId]);
 
   // Subscribe to live queue updates for this doctor
   useEffect(() => {
@@ -111,22 +133,24 @@ export function DoctorConsultationClient({ initialAppointments }: DoctorConsulta
 
   if (doctors.length === 0) {
     return (
-      <div className="max-w-md mx-auto my-12 bg-white rounded-3xl border border-gray-150 p-6 sm:p-8 text-center space-y-4 shadow-sm animate-in fade-in">
+      <div className="max-w-md mx-auto my-12 bg-white rounded-3xl border border-gray-150 p-6 sm:p-8 text-center space-y-4 shadow-sm">
         <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto shadow-inner">
           <Video className="w-7 h-7" />
         </div>
         <div>
-          <h2 className="text-base font-bold text-gray-900">No Doctors Registered in Database</h2>
+          <h2 className="text-base font-bold text-gray-900">No Doctors Registered in Catalog</h2>
           <p className="text-xs text-gray-500 mt-1">
-            Please register or add a doctor in the Admin panel to start live video consultations.
+            Doctors must be onboarded in the Admin Operations Desk to start live video consultations.
           </p>
         </div>
-        <Link
-          href="/admin"
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold rounded-2xl transition-all shadow-sm"
-        >
-          Open Admin Panel
-        </Link>
+        {userRole === "super_admin" && (
+          <Link
+            href="/admin/doctor"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold rounded-2xl transition-all shadow-sm"
+          >
+            Open Doctor Directory
+          </Link>
+        )}
       </div>
     );
   }
@@ -134,7 +158,7 @@ export function DoctorConsultationClient({ initialAppointments }: DoctorConsulta
   const doctorInitial = activeDoctor?.name?.replace("Dr. ", "").charAt(0) || "D";
 
   return (
-    <div className="max-w-7xl mx-auto p-3 sm:p-5 space-y-4 animate-in fade-in duration-200">
+    <div className="max-w-7xl mx-auto p-3 sm:p-5 space-y-4">
       {/* Top Session Bar */}
       <div className="bg-white rounded-3xl border border-gray-150 p-4 sm:p-5 shadow-xs flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
@@ -144,7 +168,7 @@ export function DoctorConsultationClient({ initialAppointments }: DoctorConsulta
           <div>
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">
-                Doctor Hot-Seat Desk
+                Doctor Consultation Desk
               </span>
               <span className="text-xs text-gray-400 font-medium">High Throughput Mode</span>
             </div>
@@ -154,26 +178,30 @@ export function DoctorConsultationClient({ initialAppointments }: DoctorConsulta
           </div>
         </div>
 
-        {/* Doctor Switcher & Queue Badge */}
+        {/* Doctor Switcher & Queue Badge (Only visible to Super Admin) */}
         <div className="flex items-center gap-3">
-          <select
-            value={selectedDoctorId}
-            onChange={(e) => setSelectedDoctorId(e.target.value)}
-            className="text-xs font-semibold bg-gray-50 border border-gray-200 rounded-2xl px-3 py-2 text-gray-800 focus:outline-emerald-500"
-          >
-            {doctors.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.name}
-              </option>
-            ))}
-          </select>
+          {userRole === "super_admin" && doctors.length > 1 && (
+            <select
+              value={selectedDoctorId}
+              onChange={(e) => setSelectedDoctorId(e.target.value)}
+              className="text-xs font-semibold bg-gray-50 border border-gray-200 rounded-2xl px-3 py-2 text-gray-800 focus:outline-emerald-500 cursor-pointer"
+            >
+              {doctors.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.name}
+                </option>
+              ))}
+            </select>
+          )}
 
-          <Link
-            href="/admin/queue"
-            className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold rounded-2xl transition-colors"
-          >
-            Open Queue Manager
-          </Link>
+          {userRole === "super_admin" && (
+            <Link
+              href="/admin/queue"
+              className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold rounded-2xl transition-colors"
+            >
+              Open Queue Manager
+            </Link>
+          )}
         </div>
       </div>
 
@@ -359,8 +387,8 @@ export function DoctorConsultationClient({ initialAppointments }: DoctorConsulta
           </div>
         </div>
       ) : (
-        /* Idle Hot-Seat Lobby when no consultation is active */
-        <div className="bg-white rounded-3xl border border-gray-150 p-8 sm:p-12 text-center max-w-md mx-auto shadow-sm space-y-5 my-6 animate-in fade-in duration-200">
+        /* Idle Consultation Lobby when no consultation is active */
+        <div className="bg-white rounded-3xl border border-gray-150 p-8 sm:p-12 text-center max-w-md mx-auto shadow-sm space-y-5 my-6">
           <div className="w-16 h-16 rounded-3xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto border border-emerald-100">
             <Video className="w-8 h-8 stroke-[2.2]" />
           </div>
@@ -389,11 +417,16 @@ export function DoctorConsultationClient({ initialAppointments }: DoctorConsulta
             </button>
           ) : (
             <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 text-xs text-gray-500">
-              No patients verified in the ready runway yet. Open the{" "}
-              <Link href="/admin/queue" className="text-emerald-700 font-bold underline">
-                Queue Manager
-              </Link>{" "}
-              to pre-check patients.
+              No patients verified in the ready runway yet.
+              {userRole === "super_admin" && (
+                <>
+                  {" "}Open the{" "}
+                  <Link href="/admin/queue" className="text-emerald-700 font-bold underline">
+                    Queue Manager
+                  </Link>{" "}
+                  to pre-check patients.
+                </>
+              )}
             </div>
           )}
         </div>

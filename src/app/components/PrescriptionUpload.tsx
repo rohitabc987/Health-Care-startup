@@ -254,7 +254,7 @@ export function PrescriptionUpload({ patientUid, onUploadSuccess }: Prescription
                 >
                   {doctors.map((d) => (
                     <option key={d.id} value={d.name}>
-                      {d.name} ({d.specialty})
+                      {d.name}
                     </option>
                   ))}
                 </select>

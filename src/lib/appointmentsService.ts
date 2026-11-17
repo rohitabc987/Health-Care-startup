@@ -60,6 +60,31 @@ export function saveStoredAppointments(data: Appointment[]) {
   appointmentSubscribers.forEach((cb) => cb(data));
 }
 
+export function sanitizeAppointmentForClient(raw: any, id?: string): Appointment {
+  const apt = { ...raw };
+  if (id) apt.id = id;
+
+  if (apt.createdAt) {
+    if (typeof apt.createdAt.toDate === "function") {
+      apt.createdAt = apt.createdAt.toDate().toISOString();
+    } else if (typeof apt.createdAt === "object" && typeof apt.createdAt.seconds === "number") {
+      apt.createdAt = new Date(apt.createdAt.seconds * 1000).toISOString();
+    }
+  }
+
+  return JSON.parse(
+    JSON.stringify(apt, (_key, val) => {
+      if (val && typeof val === "object" && typeof val.toDate === "function") {
+        return val.toDate().toISOString();
+      }
+      if (val && typeof val === "object" && typeof val.seconds === "number" && typeof val.nanoseconds === "number") {
+        return new Date(val.seconds * 1000).toISOString();
+      }
+      return val;
+    })
+  );
+}
+
 /**
  * Server-Side Fetcher for Server Components (e.g. /bookings, /admin/queue, /doctor/consultation)
  * Queries strictly from Firestore database.
@@ -76,7 +101,7 @@ export async function getAppointmentsServer(patientUid?: string): Promise<Appoin
         : query(collection(db, "appointments"), orderBy("createdAt", "desc"));
       const snap = await getDocs(q);
       const list: Appointment[] = [];
-      snap.forEach((d) => list.push({ id: d.id, ...(d.data() as Omit<Appointment, "id">) }));
+      snap.forEach((d) => list.push(sanitizeAppointmentForClient(d.data(), d.id)));
       return list;
     } catch (err) {
       console.warn("getAppointmentsServer error:", err);
@@ -311,7 +336,7 @@ export async function getAppointments(params?: {
       const queryRef = query(q, ...conditions);
       const snap = await getDocs(queryRef);
       const list: Appointment[] = [];
-      snap.forEach((d) => list.push({ id: d.id, ...(d.data() as Omit<Appointment, "id">) }));
+      snap.forEach((d) => list.push(sanitizeAppointmentForClient(d.data(), d.id)));
       if (list.length > 0) return list;
     } catch (err) {
       console.warn("getAppointments Firestore failed, using local store:", err);
