@@ -20,6 +20,7 @@ import { Appointment, AppointmentStatus, AppointmentQueueStatus, Doctor } from "
 import { db, isLiveFirebaseConfigured } from "@/lib/firebaseConfig";
 import { generateAppointmentKeywords, normalizePhoneDigits, normalizeSearchQuery } from "./searchUtils";
 import { getStoredDoctors } from "./doctorsService";
+import { getHmsRoomUrl } from "./hmsService";
 
 const LOCAL_STORAGE_KEY_APPOINTMENTS = "pronto_medical_appointments";
 const appointmentSubscribers: Array<(appointments: Appointment[]) => void> = [];
@@ -178,19 +179,20 @@ export function subscribeToAppointments(
 }
 
 /**
- * Helper to ensure video room URLs never enforce moderator logins or restrictive auth
- * Automatically rewrites restricted domains (like meet.jit.si) to open zero-auth instances (like fairmeeting.net).
+ * Helper to ensure video room URLs point to 100ms with 100% white-label, zero watermarks.
+ * Automatically rewrites any legacy third-party domains to 100ms.
  */
-export function getCleanVideoRoomUrl(rawUrl?: string, fallbackId?: string): string {
-  let url = rawUrl;
-  if (!url || typeof url !== "string" || !url.trim()) {
-    url = fallbackId
-      ? `https://fairmeeting.net/livesehat-tele-${fallbackId}`
-      : "https://fairmeeting.net/livesehat-tele-consult";
+export function getCleanVideoRoomUrl(rawUrl?: string, fallbackId?: string, isDoctor = false): string {
+  if (rawUrl && rawUrl.includes(".100ms.live")) {
+    if (isDoctor && rawUrl.includes("vlj-txsr-shb")) {
+      return getHmsRoomUrl({ isDoctor: true });
+    }
+    if (!isDoctor && rawUrl.includes("aze-ngxq-sqn")) {
+      return getHmsRoomUrl({ isDoctor: false });
+    }
+    return rawUrl;
   }
-  return url
-    .replace("https://meet.jit.si/", "https://fairmeeting.net/")
-    .replace("http://meet.jit.si/", "https://fairmeeting.net/");
+  return getHmsRoomUrl({ isDoctor });
 }
 
 /**

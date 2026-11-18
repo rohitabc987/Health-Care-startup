@@ -6,6 +6,7 @@ import { getAppointmentById } from "@/lib/appointmentsService";
 import { getUserProfileServer } from "@/lib/userService";
 import { UserRole } from "@/lib/types";
 import { PatientRoomClient } from "@/app/room/components/PatientRoomClient";
+import { create100msRoomServer } from "@/lib/hmsServerService";
 
 export const instant = false;
 
@@ -21,6 +22,9 @@ async function PatientRoomData({ params }: PatientRoomPageProps) {
   if (!appointment) {
     notFound();
   }
+
+  // Pre-initialize 100ms room on server
+  await create100msRoomServer(appointment.id);
 
   // Direct Secure Consultation Room Access:
   // - Patients joining via WhatsApp appointment link can join smoothly with zero-friction

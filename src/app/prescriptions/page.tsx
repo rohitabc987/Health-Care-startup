@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { getCachedPrescriptions } from "@/lib/firebase";
+import { sanitizePrescriptionForClient } from "@/lib/prescriptionsService";
 import { PrescriptionsClient } from "./PrescriptionsClient";
 
 function PrescriptionsSkeleton() {
@@ -18,11 +19,14 @@ function PrescriptionsSkeleton() {
 async function PrescriptionsData() {
   const cookieStore = await cookies();
   const serverUid = cookieStore.get("pronto_uid")?.value;
-  const initialPrescriptions = serverUid ? await getCachedPrescriptions(serverUid) : [];
+  const rawPrescriptions = serverUid ? await getCachedPrescriptions(serverUid) : [];
+  const safePrescriptions = Array.isArray(rawPrescriptions)
+    ? rawPrescriptions.map((p) => sanitizePrescriptionForClient(p, p.id))
+    : [];
 
   return (
     <PrescriptionsClient 
-      initialPrescriptions={initialPrescriptions} 
+      initialPrescriptions={safePrescriptions} 
       serverUid={serverUid} 
     />
   );

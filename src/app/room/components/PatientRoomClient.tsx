@@ -51,7 +51,8 @@ export function PatientRoomClient({
 
   const meetingUrl = getCleanVideoRoomUrl(
     appointment.meetingRoomUrl,
-    appointment.id
+    appointment.id,
+    isStaff
   );
 
   const coordinatorWhatsAppNumber = "919876543210";

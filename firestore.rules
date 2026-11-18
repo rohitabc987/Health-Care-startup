@@ -22,13 +22,25 @@ service cloud.firestore {
     }
 
     // =====================================================
-    // 3. APPOINTMENTS & VIRTUAL QUEUE
+    // 3. APPOINTMENTS & VIRTUAL QUEUE & WEBRTC SIGNALING
     // Patients create bookings; status updates handled in queue.
-    // Deletion blocked.
+    // WebRTC signaling subcollections allow direct real-time peer negotiation.
     // =====================================================
     match /appointments/{appointmentId} {
       allow read, create, update: if true;
       allow delete: if false;
+
+      match /{subCollection=**} {
+        allow read, write: if true;
+      }
+    }
+
+    // WebRTC Direct 1-on-1 Consultation Signals (Zero Watermark Peer-to-Peer Calls)
+    match /webrtc_calls/{callId} {
+      allow read, write: if true;
+      match /{subCollection=**} {
+        allow read, write: if true;
+      }
     }
 
     // =====================================================

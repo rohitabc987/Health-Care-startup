@@ -27,7 +27,9 @@ import {
   RotateCcw,
   Check,
   ExternalLink,
-  Calendar
+  Calendar,
+  Maximize2,
+  Minimize2
 } from "lucide-react";
 
 interface DoctorConsultationClientProps {
@@ -61,6 +63,7 @@ export function DoctorConsultationClient({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewPrescriptionUrl, setPreviewPrescriptionUrl] = useState<string | null>(null);
   const [prescriptionLoadFailed, setPrescriptionLoadFailed] = useState(false);
+  const [isTheaterMode, setIsTheaterMode] = useState(false);
 
   // Subscribe to real doctors from Firestore in background
   useEffect(() => {
@@ -183,7 +186,7 @@ export function DoctorConsultationClient({
   const doctorInitial = activeDoctor?.name?.replace("Dr. ", "").charAt(0) || "D";
 
   return (
-    <div className="max-w-7xl mx-auto p-3 sm:p-5 space-y-4">
+    <div className="max-w-7xl mx-auto p-3 sm:p-4 space-y-3">
       {/* Top Session Bar */}
       <div className="bg-white rounded-3xl border border-gray-150 p-4 sm:p-5 shadow-xs flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
@@ -198,7 +201,7 @@ export function DoctorConsultationClient({
               <span className="text-xs text-gray-400 font-medium">High Throughput Mode</span>
             </div> */}
             <h1 className="text-base sm:text-lg font-black text-gray-900 mt-0.5">
-              {activeDoctor?.name} • {activeDoctor?.specialty}
+              {activeDoctor?.name}
             </h1>
           </div>
         </div>
@@ -263,31 +266,44 @@ export function DoctorConsultationClient({
       {/* Main Consultation Workplace */}
       {currentConsulting ? (
         <div className="space-y-4">
-          {/* Split Screen Layout: Left Video (55%) | Right Medical Record (45%) */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+          {/* Split Screen Layout: Left Video (7 cols) | Right Medical Record (5 cols) */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-start">
             {/* Left Column: Embedded WebRTC Video Stream & Direct Link */}
-            <div className="lg:col-span-7 space-y-2">
+            <div className={`${isTheaterMode ? "lg:col-span-12" : "lg:col-span-7"} space-y-1.5`}>
               <div className="flex items-center justify-between px-1">
-                <span className="text-xs font-bold text-gray-700 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>Live Video Consultation</span>
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-gray-700 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>Live Video Consultation</span>
+                  </span>
+
+                  {/* Large Video / Theater Mode Toggle */}
+                  <button
+                    type="button"
+                    onClick={() => setIsTheaterMode((prev) => !prev)}
+                    className="text-xs font-bold px-2.5 py-0.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center gap-1 transition-colors cursor-pointer"
+                    title={isTheaterMode ? "Switch to Split View" : "Expand Video"}
+                  >
+                    {isTheaterMode ? <Minimize2 className="w-3 h-3 text-gray-600" /> : <Maximize2 className="w-3 h-3 text-emerald-600" />}
+                    <span>{isTheaterMode ? "Split View" : "Expand Video"}</span>
+                  </button>
+                </div>
 
                 <a
                   href={`/room/${currentConsulting.id}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs font-bold text-emerald-800 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 px-3 py-1 rounded-xl border border-emerald-200 flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+                  className="text-xs font-bold text-emerald-800 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-0.5 rounded-lg border border-emerald-200 flex items-center gap-1 transition-colors shadow-2xs cursor-pointer"
                   title="Open direct video room in full browser tab"
                 >
-                  <ExternalLink className="w-3.5 h-3.5 text-emerald-700" />
-                  <span>Direct Room Link (New Tab)</span>
+                  <ExternalLink className="w-3 h-3 text-emerald-700" />
+                  <span>Direct Room (New Tab)</span>
                 </a>
               </div>
 
-              <div className="h-[420px] sm:h-[500px]">
+              <div className={isTheaterMode ? "h-[580px] sm:h-[660px]" : "h-[430px] sm:h-[470px] lg:h-[490px]"}>
                 <TeleConsultationRoom
-                  roomUrl={getCleanVideoRoomUrl(currentConsulting.meetingRoomUrl, currentConsulting.id)}
+                  roomUrl={getCleanVideoRoomUrl(currentConsulting.meetingRoomUrl, currentConsulting.id, true)}
                   userName={activeDoctor.name || "Dr. Consulting Doctor"}
                   counterpartName={currentConsulting.patientName || "Patient"}
                   isDoctor={true}
@@ -296,7 +312,7 @@ export function DoctorConsultationClient({
             </div>
 
             {/* Right Column: Patient Clinical Record & Cloudinary Slip */}
-            <div className="lg:col-span-5 bg-white rounded-3xl border border-gray-150 p-4 sm:p-5 shadow-xs space-y-3.5 max-h-[500px] overflow-y-auto">
+            <div className={`${isTheaterMode ? "lg:col-span-12" : "lg:col-span-5"} bg-white rounded-3xl border border-gray-150 p-3.5 sm:p-4 shadow-xs space-y-3 ${isTheaterMode ? "" : "h-[430px] sm:h-[470px] lg:h-[490px] overflow-y-auto"}`}>
               {/* Patient Header */}
               <div className="flex items-start justify-between border-b border-gray-100 pb-3">
                 <div>

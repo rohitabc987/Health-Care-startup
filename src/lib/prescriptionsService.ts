@@ -13,6 +13,43 @@ import { db, isLiveFirebaseConfigured } from "@/lib/firebaseConfig";
 import { uploadSlipToCloudinary } from "./cloudinary";
 
 /**
+ * Sanitizes Firestore Prescription data for Next.js Client Components.
+ * Converts any Firestore Timestamp objects into plain ISO strings so React flight serialization succeeds.
+ */
+export function sanitizePrescriptionForClient(raw: any, id?: string): PrescriptionRecord {
+  const record = { ...raw };
+  if (id) record.id = id;
+
+  if (record.createdAt) {
+    if (typeof record.createdAt.toDate === "function") {
+      record.createdAt = record.createdAt.toDate().toISOString();
+    } else if (typeof record.createdAt === "object" && typeof record.createdAt.seconds === "number") {
+      record.createdAt = new Date(record.createdAt.seconds * 1000).toISOString();
+    }
+  }
+
+  if (record.uploadedAt) {
+    if (typeof record.uploadedAt.toDate === "function") {
+      record.uploadedAt = record.uploadedAt.toDate().toISOString();
+    } else if (typeof record.uploadedAt === "object" && typeof record.uploadedAt.seconds === "number") {
+      record.uploadedAt = new Date(record.uploadedAt.seconds * 1000).toISOString();
+    }
+  }
+
+  return JSON.parse(
+    JSON.stringify(record, (_key, val) => {
+      if (val && typeof val === "object" && typeof val.toDate === "function") {
+        return val.toDate().toISOString();
+      }
+      if (val && typeof val === "object" && typeof val.seconds === "number" && typeof val.nanoseconds === "number") {
+        return new Date(val.seconds * 1000).toISOString();
+      }
+      return val;
+    })
+  );
+}
+
+/**
  * Server-Side Fetcher for Server Components (e.g. /prescriptions page.tsx)
  * Queries strictly from Firestore database.
  */
@@ -26,7 +63,7 @@ export async function getPrescriptionsServer(patientUid = "patient-demo-001"): P
       );
       const snap = await getDocs(q);
       const list: PrescriptionRecord[] = [];
-      snap.forEach((d) => list.push({ id: d.id, ...(d.data() as Omit<PrescriptionRecord, "id">) }));
+      snap.forEach((d) => list.push(sanitizePrescriptionForClient(d.data(), d.id)));
       return list;
     } catch (err) {
       console.warn("getPrescriptionsServer Firestore error:", err);
